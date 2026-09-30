@@ -12,7 +12,8 @@
     "dev": "DEV_MODE=true node --no-warnings --watch src/server.js",
     "test": "node --no-warnings --test test/*.test.js",
     "build:script": "node scripts/build-loader.js",
-    "teste-real": "node --no-warnings scripts/teste-real.js"
+    "teste-real": "node --no-warnings scripts/teste-real.js",
+    "build:nube": "npm --prefix nube install --no-audit --no-fund && npm --prefix nube run build"
   },
   "dependencies": {
     "express": "^4.21.2",

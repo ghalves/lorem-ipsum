@@ -39,10 +39,18 @@ function mockNuvemshop() {
   });
   app.get(`/2025-03/${STORE_ID}/products`, auth, (req, res) => res.json(req.query.page === '1' ? [product(1), product(2)] : []));
   app.get(`/2025-03/${STORE_ID}/products/:id`, auth, (req, res) => res.json(product(Number(req.params.id))));
+  // pedidos 9001 a 9003: app NubeSDK grava os provados no pedido (extra.miaou)
+  const tok = (p) => require('../src/lib/session').createRecToken(STORE_ID, p, '__tryon');
+  const extras = () => ({
+    9001: { miaou: JSON.stringify({ v: 1, p: [[1, tok(1)], [2, tok(2)], [1, 'falso']] }) },
+    9002: { miaou: JSON.stringify({ v: 1, p: [[1, tok(1)]] }) },
+    9003: { miaou: JSON.stringify({ v: 1, p: [[1, 'forjado']] }) },
+  });
   app.get(`/2025-03/${STORE_ID}/orders/:id`, auth, (req, res) => res.json({
     id: Number(req.params.id),
-    // pedido 77777 foi criado há 5 dias: aviso de obrigado agora não pode valer
-    created_at: Number(req.params.id) === 77777 ? new Date(Date.now() - 5 * 864e5).toISOString() : new Date().toISOString(),
+    extra: extras()[req.params.id],
+    // pedidos 77777 e 9002 foram criados há 5 dias (9002: boleto pago agora)
+    created_at: [77777, 9002].includes(Number(req.params.id)) ? new Date(Date.now() - 5 * 864e5).toISOString() : new Date().toISOString(),
     // pedido 8888: só a Saia (produto 2); os outros: o Vestido (produto 1)
     products: Number(req.params.id) === 8888
       ? [{ product_id: 2, variant_values: ['Preto', 'G'], quantity: 1 }]
@@ -213,6 +221,18 @@ test('venda: só conta produto provado que está no pedido pago, dentro da janel
   assert.deepEqual(salesOf(7777), [1]);
   const sem = await fetch(`${base}/api/storefront/${STORE_ID}/conversion`, { method: 'POST', headers: { 'content-type': 'text/plain' }, body: JSON.stringify({ orderId: 1, tried: [] }) });
   assert.equal(sem.status, 401, 'sem token da vitrine');
+});
+
+test('venda pelo app NubeSDK: provados gravados no pedido, com token válido', async () => {
+  await hook('order/paid', 9001);
+  await wait(150);
+  assert.deepEqual(salesOf(9001), [1], 'só o Vestido estava no pedido; token falso ignorado');
+  await hook('order/paid', 9002);
+  await wait(150);
+  assert.deepEqual(salesOf(9002), [1], 'pedido pago dias depois ainda conta: o vínculo está no próprio pedido');
+  await hook('order/paid', 9003);
+  await wait(150);
+  assert.deepEqual(salesOf(9003), [], 'token forjado não vira venda');
 });
 
 test('LGPD: pedido de dados e exclusão do cliente pelo WhatsApp', async () => {

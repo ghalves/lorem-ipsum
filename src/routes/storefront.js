@@ -6,7 +6,7 @@
 const express = require('express');
 const config = require('../config');
 const svc = require('../lib/store-service');
-const { createEventToken, verifyEventToken, verifyRecToken } = require('../lib/session');
+const { createEventToken, verifyEventToken } = require('../lib/session');
 
 const router = express.Router();
 
@@ -96,13 +96,8 @@ router.post('/:storeId/conversion', loadStore, (req, res) => {
   if (!Number.isSafeInteger(orderId) || orderId <= 0) return res.status(400).json({ error: 'pedido inválido' });
   // "tried" (loader atual) ou "recs" com size "__tryon" (loader antigo ainda em cache nas lojas)
   const list = Array.isArray(b.tried) ? b.tried : (Array.isArray(b.recs) ? b.recs.filter((r) => r && r.size === '__tryon') : []);
-  const tried = list.slice(0, 20)
-    .filter((r) => r && typeof r === 'object')
-    .map((r) => ({ productId: Number(r.productId), size: '__tryon', token: typeof r.token === 'string' ? r.token.slice(0, 500) : '' }))
-    .filter((r) => Number.isSafeInteger(r.productId) && r.productId > 0)
-    // a prova precisa ter sido registrada por este servidor
-    .filter((r) => verifyRecToken(r.token, req.store.id, r.productId, '__tryon'))
-    .filter((r) => svc.getProduct(req.store.id, r.productId));
+  // a prova precisa ter sido registrada por este servidor
+  const tried = require('../lib/sync').verifiedTried(req.store.id, list);
   if (!tried.length) return res.json({ ok: true, saved: 0 });
   const saved = svc.saveOrderClaims(req.store.id, orderId, tried);
   // o pagamento já tinha sido confirmado antes desta página abrir: importa agora,

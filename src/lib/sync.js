@@ -2,6 +2,7 @@
 const config = require('../config');
 const ns = require('./nuvemshop');
 const svc = require('./store-service');
+const { verifyRecToken } = require('./session');
 
 const WEBHOOK_EVENTS = [
   'product/created', 'product/updated', 'product/deleted',
@@ -85,13 +86,47 @@ async function importOrder(storeId, orderId) {
   const store = svc.getStore(storeId);
   if (!store || store.access_token === 'dev-token') return 0;
   const order = await ns.client(store.id, store.access_token).getOrder(orderId);
+  // app NubeSDK: os provados vêm gravados no próprio pedido (feito no checkout)
+  const fromExtra = claimsFromOrderExtra(store.id, orderId, order);
   let saved = 0;
   for (const item of order?.products || []) {
     const productId = Number(item.product_id);
     const c = svc.claimFor(store.id, orderId, productId);
-    if (c && c.size === '__tryon' && claimMatchesOrder(c, order)) saved += require('../tryon/service').recordSale(store.id, orderId, productId);
+    if (c && c.size === '__tryon' && (fromExtra.has(productId) || claimMatchesOrder(c, order))) {
+      saved += require('../tryon/service').recordSale(store.id, orderId, productId);
+    }
   }
   return saved;
+}
+
+/**
+ * Produtos provados com token válido deste servidor (a assinatura impede que
+ * alguém invente provas). Usado pela página de obrigado e pelo pedido.
+ */
+function verifiedTried(storeId, list) {
+  return (Array.isArray(list) ? list : []).slice(0, 20)
+    .filter((r) => r && typeof r === 'object')
+    .map((r) => ({ productId: Number(r.productId), size: '__tryon', token: typeof r.token === 'string' ? r.token.slice(0, 500) : '' }))
+    .filter((r) => Number.isSafeInteger(r.productId) && r.productId > 0)
+    .filter((r) => verifyRecToken(r.token, storeId, r.productId, '__tryon'))
+    .filter((r) => svc.getProduct(storeId, r.productId));
+}
+
+/**
+ * Lê o campo "miaou" que o app NubeSDK grava no pedido durante o checkout
+ * ({ v: 1, p: [[productId, token], ...] }) e registra os produtos provados.
+ * Devolve os ids registrados: eles pertencem a este pedido, então dispensam a
+ * janela de tempo da página de obrigado (boleto pode pagar dias depois).
+ */
+function claimsFromOrderExtra(storeId, orderId, order) {
+  let extra = order?.extra;
+  if (typeof extra === 'string') { try { extra = JSON.parse(extra); } catch { extra = null; } }
+  let raw = extra && typeof extra === 'object' ? extra.miaou : null;
+  if (typeof raw === 'string') { try { raw = JSON.parse(raw); } catch { raw = null; } }
+  const pairs = raw && Array.isArray(raw.p) ? raw.p : [];
+  const tried = verifiedTried(storeId, pairs.filter(Array.isArray).map(([productId, token]) => ({ productId, token })));
+  if (tried.length) svc.saveOrderClaims(storeId, orderId, tried);
+  return new Set(tried.map((r) => r.productId));
 }
 
 /**
@@ -149,4 +184,4 @@ async function onInstall(storeId) {
   return steps;
 }
 
-module.exports = { refreshDomainsThrottled, resetDomainRefresh, syncAllProducts, syncProduct, importOrder, claimMatchesOrder, ensureWebhooks, ensureScript, onInstall, WEBHOOK_EVENTS };
+module.exports = { refreshDomainsThrottled, resetDomainRefresh, syncAllProducts, syncProduct, importOrder, claimMatchesOrder, verifiedTried, claimsFromOrderExtra, ensureWebhooks, ensureScript, onInstall, WEBHOOK_EVENTS };

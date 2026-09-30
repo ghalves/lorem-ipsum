@@ -47,10 +47,15 @@ function createApp({ schedulePurge = false } = {}) {
 
   // Script da vitrine com a URL da API embutida (em produção o mesmo arquivo
   // é gerado por `npm run build:script` e enviado ao Portal de Parceiros).
-  const { renderLoader } = require('../scripts/build-loader');
+  const { renderLoader, renderNubeApp } = require('../scripts/build-loader');
   app.get('/storefront/loader.js', (req, res) => {
     res.type('application/javascript').set('Cache-Control', 'public, max-age=300')
       .set('Access-Control-Allow-Origin', '*').send(renderLoader(config.appUrl));
+  });
+  // app NubeSDK (o arquivo enviado ao Portal é o dist/miaou-nube.js, igual a este)
+  app.get('/storefront/nube-app.js', (req, res) => {
+    res.type('application/javascript').set('Cache-Control', 'public, max-age=300')
+      .set('Access-Control-Allow-Origin', '*').send(renderNubeApp(config.appUrl));
   });
 
   app.use('/auth', require('./routes/auth'));

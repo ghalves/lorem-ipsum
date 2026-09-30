@@ -1,0 +1,14 @@
+{
+  "name": "miaou-nube",
+  "private": true,
+  "description": "Miaou na vitrine via NubeSDK (gera public/storefront/nube-app.js)",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "devDependencies": {
+    "@tiendanube/nube-sdk-types": "^0.100.0",
+    "@tiendanube/nube-sdk-ui": "^0.23.0",
+    "esbuild": "^0.25.0"
+  }
+}

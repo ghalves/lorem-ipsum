@@ -21,17 +21,14 @@ Portal de Parceiros ou uma loja sua). Siga na ordem.
 
 1. **App**: URL de redirecionamento `https://SEU_DOMINIO/auth/callback`; permissões
    `read_products`, `write_scripts`, `read_orders`.
-2. **Script da vitrine**: gere o arquivo com o endereço do seu servidor:
-   ```bash
-   APP_URL=https://SEU_DOMINIO npm run build:script     # cria dist/loader.js
-   ```
-   - Script 1: envie `dist/loader.js`, location **store**, evento **onfirstinteraction**,
-     não auto-instalável. Publique e copie o id para `NUVEMSHOP_SCRIPT_ID`.
-   - Script 2: o **mesmo** `dist/loader.js`, location **página de obrigado** (thank you page).
-     Publique e copie o id para `NUVEMSHOP_SCRIPT_ID_THANKYOU`.
+2. **Script da vitrine (NubeSDK)**: o instalador já gera `dist/miaou-nube.js` com o endereço do
+   servidor (ou `APP_URL=https://SEU_DOMINIO npm run build:script`).
+   - Crie o script como **NubeSDK**, envie `dist/miaou-nube.js`, não auto-instalável, ativo na
+     vitrine e no checkout. Publique e copie o id para `NUVEMSHOP_SCRIPT_ID`.
+   - O script da página de obrigado não é mais necessário.
 3. **Webhooks de LGPD**: `…/webhooks/lgpd/store-redact`, `…/customers-redact`,
    `…/customers-data-request`.
-4. Reinicie o servidor com os ids dos scripts no `.env`.
+4. Reinicie o servidor com o id do script no `.env` (`sudo miaou reiniciar`).
 
 ## 3. Plano da loja de teste
 
@@ -51,28 +48,30 @@ Marque cada item. Se algo falhar, anote a tela, o aparelho e o navegador.
 - [ ] *Planos*: mostra o plano ativo e o uso do mês.
 
 ### Página do produto (celular e computador)
-- [ ] Abaixo das variações aparece o botão **Provar virtualmente**, legível no tema da loja.
+- [ ] Antes do botão Comprar aparece o botão **Provar virtualmente**, legível no tema da loja.
 - [ ] **Loja com domínio próprio** (www.sualoja.com.br): o provador abre e o X fecha. (É o teste
       mais importante: se falhar, abra o painel do app uma vez e tente de novo.)
 - [ ] Produto sem foto: o botão não aparece.
 
 ### Provador
-- [ ] Celular: o card sobe de baixo; arrastar para baixo fecha. Computador: painel lateral.
+- [ ] Celular: o provador abre numa janela (modal). Computador: gaveta lateral. O X fecha nos dois.
+- [ ] **Enviar foto** funciona dentro da janela (teste novo com o NubeSDK: se falhar, anote o aparelho).
 - [ ] Celular: "Tirar foto" abre a câmera traseira (óculos: "Tirar selfie", câmera frontal).
       Computador: só "Escolher foto".
 - [ ] A prova sai em cerca de 20 s, com o rosto e o fundo iguais aos da foto enviada.
 - [ ] Óculos: sai com a pessoa inteira na foto (não só o rosto).
 - [ ] 2ª prova: pede o WhatsApp (se estiver ligado em Preferências) e o número aparece em *Leads*.
 - [ ] Compartilhar: o link abre a prévia com "Provar em mim" e "Ver produto na loja".
-- [ ] "Comprar" fecha o provador e adiciona à sacola (ou leva até os tamanhos).
+- [ ] "Comprar" fecha o provador. Produto com uma só variação: vai para a sacola. Com tamanhos:
+      aparece o aviso "Escolha o tamanho e toque em Comprar".
 - [ ] "Apagar agora" remove as provas do histórico.
 
 ### Vendas
 - [ ] Prove um produto, feche o provador, escolha o tamanho pela página e pague o pedido. Em
       alguns minutos, *Visão geral › Vendas com o provador* sobe 1.
 - [ ] Faça outro pedido **sem** provar: ele **não** conta.
+- [ ] Pedido pago por boleto dias depois: ainda conta (o vínculo vai gravado no pedido).
 
 ### Limites conhecidos
 - Venda feita em outro aparelho (provou no celular e comprou no computador) não é ligada ao provador.
-- A página de obrigado precisa estar no mesmo endereço da loja para informar o pedido.
 - Textos só em português (lançamento pensado para o Brasil).

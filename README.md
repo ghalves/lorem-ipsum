@@ -27,7 +27,7 @@ npm run dev                 # DEV_MODE=true, sem .env: tudo em http://localhost:
 
 | Parte | Onde | O que faz |
 | --- | --- | --- |
-| Botão na loja | `public/storefront/loader.js` | "Provar virtualmente" na página de produto; `?provar=1` abre direto (link compartilhado). Na página de obrigado, informa os produtos provados |
+| Botão na loja | `nube/src/main.js` (NubeSDK) → `public/storefront/nube-app.js` | "Provar virtualmente" antes do "Comprar"; o provador abre em modal (celular) ou gaveta (desktop); `?provar=1` abre direto. No checkout grava no pedido (`extra.miaou`) os produtos provados. `loader.js` é a versão antiga (Script API), mantida por compatibilidade |
 | Tela do provador | `public/tryon/` | Card que sobe de baixo (celular, arrastar fecha) e painel lateral (desktop) |
 | API do provador | `src/routes/tryon.js` | Sessão, foto, prova, histórico, joinha, compartilhar, WhatsApp, "apagar agora" |
 | Geração | `src/tryon/service.js`, `provider.js` | **Roupas e óculos:** Muse (US$ 0,01) começa na hora; se falhar ou passar de 30 s sem responder, o Nano Banana 2 (US$ 0,068) dispara em paralelo e vale a primeira imagem |
@@ -74,12 +74,13 @@ Miaou" com link para `MIAOU_SITE_URL`. O e-mail de suporte (`MIAOU_SUPPORT_EMAIL
 2. **Suba o servidor** com HTTPS. No servidor Ubuntu com WordOps (veja *Servidor* abaixo):
    `sudo ./scripts/instalar.sh`. Com Docker:
    `docker build -t miaou . && docker run -p 3000:3000 -v miaou-data:/data --env-file .env miaou`
-3. **Cadastre o script da vitrine** no portal (app > Scripts > Criar script):
-   - Gere o arquivo: `APP_URL=https://SEU_DOMINIO npm run build:script` → `dist/loader.js`
-   - Location `store` · evento `onfirstinteraction` · **não** auto-instalável. Publique e copie o id
-     para `NUVEMSHOP_SCRIPT_ID`.
-   - Um segundo script com o **mesmo** arquivo, location **página de obrigado**; id em
-     `NUVEMSHOP_SCRIPT_ID_THANKYOU`. É ele que liga o pedido pago ao provador.
+3. **Cadastre o script da vitrine** no portal (app > Scripts > Criar script), como script **NubeSDK**:
+   - O instalador gera `dist/miaou-nube.js` com o endereço do servidor (ou
+     `APP_URL=https://SEU_DOMINIO npm run build:script`).
+   - Envie `dist/miaou-nube.js`, **não** auto-instalável, ativo na vitrine e no checkout (é no
+     checkout que ele liga o pedido ao provador). Publique e copie o id para `NUVEMSHOP_SCRIPT_ID`.
+   - Não precisa mais do script da página de obrigado: a venda é ligada pelo próprio pedido.
+   - Mudou `nube/src/main.js`? Rode `npm run build:nube` e faça commit de `public/storefront/nube-app.js`.
 4. **Webhooks de LGPD** (portal > app > Webhooks obrigatórios):
    - store/redact → `https://SEU_DOMINIO/webhooks/lgpd/store-redact`
    - customers/redact → `https://SEU_DOMINIO/webhooks/lgpd/customers-redact`
@@ -115,7 +116,7 @@ O `instalar.sh`:
   pedindo os dados da Nuvemshop; preencha e rode de novo;
 - guarda banco, fotos e provas em `/var/www/app.miaou.com.br/data`, fora do `htdocs`, então o `rsync`
   nunca apaga dados;
-- instala o serviço `miaou` (systemd, usuário `www-data`, reinicia sozinho), gera `dist/loader.js`
+- instala o serviço `miaou` (systemd, usuário `www-data`, reinicia sozinho), gera `dist/miaou-nube.js`
   e confere se o nginx repassa o IP do comprador (sem isso o limite por IP trava a loja);
 - instala o comando `sudo miaou` (`plano`, `logs`, `status`, `reiniciar`, `backup`) e um backup
   diário do banco em `/var/www/app.miaou.com.br/backup` (14 dias).

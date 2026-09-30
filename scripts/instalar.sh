@@ -134,8 +134,8 @@ ok "Dependências instaladas"
 
 # ---------- Script da vitrine ----------
 (cd "$APP_DIR" && "$NODE_BIN" --no-warnings scripts/build-loader.js >/dev/null) \
-  && ok "Script da vitrine gerado em $APP_DIR/dist/loader.js" \
-  || warn "Não consegui gerar dist/loader.js"
+  && ok "Script da vitrine (NubeSDK) gerado em $APP_DIR/dist/miaou-nube.js" \
+  || warn "Não consegui gerar dist/miaou-nube.js"
 
 # ---------- Comando "miaou" ----------
 cat > /usr/local/bin/miaou <<EOF
