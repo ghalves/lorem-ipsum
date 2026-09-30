@@ -51,8 +51,8 @@ Escalar R$ 497 (1.200). Acima disso, o **Volume**: uma barra com degraus fixos, 
 (R$ 997) a 10.000 (R$ 2.997), e o preço por prova sempre cai de um degrau para o outro. Escalar e
 Volume podem remover a marca Miaou do provador. Sem teste grátis e sem provas extras. Aos 80% o
 painel avisa; com a cota no fim, o botão sai da loja até o dia 1º. Enquanto a cobrança não estiver
-ligada, o plano é definido pelo operador: `node scripts/set-plan.js <loja> crescer` (ou
-`volume-4000`, `none`...).
+ligada, o plano é definido pelo operador: `sudo miaou plano <loja> crescer` no servidor, ou
+`node scripts/set-plan.js <loja> crescer` (ou `volume-4000`, `none`...).
 
 **Proteção da cota:** cada comprador faz no máximo 10 provas por dia (o lojista ajusta em
 *Preferências*) e cada IP, 20 por dia em cada loja (`TRYON_IP_DAILY_LIMIT`). A mesma foto no mesmo
@@ -71,7 +71,8 @@ Miaou" com link para `MIAOU_SITE_URL`. O e-mail de suporte (`MIAOU_SUPPORT_EMAIL
    - URL de redirecionamento: `https://SEU_DOMINIO/auth/callback`
    - Permissões: `read_products`, `write_scripts`, `read_orders`
    - Copie o *App ID* e o *Client Secret* para o `.env`.
-2. **Suba o servidor** com HTTPS (Render, Railway, Fly.io, VPS com Docker):
+2. **Suba o servidor** com HTTPS. No servidor Ubuntu com WordOps (veja *Servidor* abaixo):
+   `sudo ./scripts/instalar.sh`. Com Docker:
    `docker build -t miaou . && docker run -p 3000:3000 -v miaou-data:/data --env-file .env miaou`
 3. **Cadastre o script da vitrine** no portal (app > Scripts > Criar script):
    - Gere o arquivo: `APP_URL=https://SEU_DOMINIO npm run build:script` → `dist/loader.js`
@@ -84,6 +85,38 @@ Miaou" com link para `MIAOU_SITE_URL`. O e-mail de suporte (`MIAOU_SUPPORT_EMAIL
    - customers/redact → `https://SEU_DOMINIO/webhooks/lgpd/customers-redact`
    - customers/data_request → `https://SEU_DOMINIO/webhooks/lgpd/customers-data-request`
 5. **Teste numa loja real** seguindo `TESTE-LOJA-REAL.md`.
+
+## Servidor (Ubuntu + WordOps)
+
+Primeira vez (o site do nginx aponta para a porta do app):
+```bash
+sudo wo site create miaou.com.br --proxy=127.0.0.1:3009 --le --force
+```
+
+Instalar e atualizar (sempre igual):
+```bash
+# no Mac: zip com a pasta miaou/ dentro
+git archive --prefix=miaou/ -o miaou.zip HEAD
+scp miaou.zip ubuntu@SERVIDOR:/tmp/
+
+# no servidor
+rm -rf /tmp/cm && unzip -q -o /tmp/miaou.zip -d /tmp/cm
+sudo rsync -a /tmp/cm/miaou/ /var/www/miaou.com.br/htdocs/
+cd /var/www/miaou.com.br/htdocs
+sudo ./scripts/instalar.sh
+```
+
+O `instalar.sh`:
+- usa o Node do sistema se for 22.13 ou mais novo; senão baixa um Node 22 só para o Miaou em
+  `/opt/miaou-node` (os outros projetos continuam no Node deles);
+- na primeira vez cria `/var/www/miaou.com.br/miaou.env` (com `SESSION_SECRET` gerado) e para,
+  pedindo os dados da Nuvemshop; preencha e rode de novo;
+- guarda banco, fotos e provas em `/var/www/miaou.com.br/data`, fora do `htdocs`, então o `rsync`
+  nunca apaga dados;
+- instala o serviço `miaou` (systemd, usuário `www-data`, reinicia sozinho), gera `dist/loader.js`
+  e confere se o nginx repassa o IP do comprador (sem isso o limite por IP trava a loja);
+- instala o comando `sudo miaou` (`plano`, `logs`, `status`, `reiniciar`, `backup`) e um backup
+  diário do banco em `/var/www/miaou.com.br/backup` (14 dias).
 
 ## Privacidade e LGPD
 
