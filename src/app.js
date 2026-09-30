@@ -43,6 +43,7 @@ function createApp({ schedulePurge = false } = {}) {
   });
 
   app.get('/health', (req, res) => res.json({ ok: true }));
+  app.get('/favicon.ico', (req, res) => res.set('Cache-Control', 'public, max-age=604800').sendFile(path.join(__dirname, '..', 'public', 'favicon.ico')));
 
   // Script da vitrine com a URL da API embutida (em produção o mesmo arquivo
   // é gerado por `npm run build:script` e enviado ao Portal de Parceiros).

@@ -82,7 +82,8 @@ router.get('/:id', (req, res) => {
 <meta property="og:image" content="${esc(img)}">
 <meta property="og:url" content="${esc(self)}">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="/brand/miaou-mark.png">
+<link rel="icon" href="/brand/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
 <style>
 :root{--ink:#1e1d1c;--muted:#78756f;--border:#dfdcd9;--soft:#f7f6f3}
 *{box-sizing:border-box}

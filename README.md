@@ -88,9 +88,11 @@ Miaou" com link para `MIAOU_SITE_URL`. O e-mail de suporte (`MIAOU_SUPPORT_EMAIL
 
 ## Servidor (Ubuntu + WordOps)
 
+O app fica em `app.miaou.com.br`; `miaou.com.br` é o site (landing page e funis).
+
 Primeira vez (o site do nginx aponta para a porta do app):
 ```bash
-sudo wo site create miaou.com.br --proxy=127.0.0.1:3009 --le --force
+sudo wo site create app.miaou.com.br --proxy=127.0.0.1:3009 --le
 ```
 
 Instalar e atualizar (sempre igual):
@@ -101,22 +103,22 @@ scp miaou.zip ubuntu@SERVIDOR:/tmp/
 
 # no servidor
 rm -rf /tmp/cm && unzip -q -o /tmp/miaou.zip -d /tmp/cm
-sudo rsync -a /tmp/cm/miaou/ /var/www/miaou.com.br/htdocs/
-cd /var/www/miaou.com.br/htdocs
+sudo rsync -a /tmp/cm/miaou/ /var/www/app.miaou.com.br/htdocs/
+cd /var/www/app.miaou.com.br/htdocs
 sudo ./scripts/instalar.sh
 ```
 
 O `instalar.sh`:
 - usa o Node do sistema se for 22.13 ou mais novo; senão baixa um Node 22 só para o Miaou em
   `/opt/miaou-node` (os outros projetos continuam no Node deles);
-- na primeira vez cria `/var/www/miaou.com.br/miaou.env` (com `SESSION_SECRET` gerado) e para,
+- na primeira vez cria `/var/www/app.miaou.com.br/miaou.env` (com `SESSION_SECRET` gerado) e para,
   pedindo os dados da Nuvemshop; preencha e rode de novo;
-- guarda banco, fotos e provas em `/var/www/miaou.com.br/data`, fora do `htdocs`, então o `rsync`
+- guarda banco, fotos e provas em `/var/www/app.miaou.com.br/data`, fora do `htdocs`, então o `rsync`
   nunca apaga dados;
 - instala o serviço `miaou` (systemd, usuário `www-data`, reinicia sozinho), gera `dist/loader.js`
   e confere se o nginx repassa o IP do comprador (sem isso o limite por IP trava a loja);
 - instala o comando `sudo miaou` (`plano`, `logs`, `status`, `reiniciar`, `backup`) e um backup
-  diário do banco em `/var/www/miaou.com.br/backup` (14 dias).
+  diário do banco em `/var/www/app.miaou.com.br/backup` (14 dias).
 
 ## Privacidade e LGPD
 
