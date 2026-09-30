@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacidade · Miaou</title>
+  <link rel="icon" href="/brand/miaou-mark.png">
+  <style>
+    /* Design system: Warm Neutral SaaS (v1) */
+    :root { --ink:#1e1d1c; --muted:#78756f; --line:rgba(30,29,28,.06); --border:#dfdcd9; --panel:#f7f6f3;
+      --accent:#00bb7f; --accent-ink:#007956; --bad:#fb2c36;
+      font-family:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--ink);
+      font-feature-settings:"cv11","ss01"; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--panel); line-height:1.7; -webkit-font-smoothing:antialiased; }
+    main { max-width:704px; margin:0 auto; padding:80px 24px; background:#fff; min-height:100vh; }
+    h1 { font-size:44px; line-height:1.12; letter-spacing:-.015em; font-weight:400; margin:0 0 8px; }
+    h2 { font-size:24px; line-height:1.22; letter-spacing:-.02em; font-weight:500; margin:3.6rem 0 .9rem; }
+    p, li { font-size:15px; line-height:1.7; letter-spacing:-.003em; color:var(--ink); }
+    .sub { color:var(--muted); margin:0 0 8px; }
+    ol, ul { padding-left:20px; }
+    li { margin-bottom:10px; }
+    b { font-weight:500; color:var(--ink); }
+    a { color:inherit; text-decoration:none; }
+    a:hover { text-decoration:underline; text-underline-offset:3px; }
+    .box { border:0; border-radius:24px; background:var(--panel); padding:40px; margin:3.6rem 0 0; }
+    .box h2 { margin-top:0; }
+    button { font:inherit; height:46px; padding:0 28px; border-radius:9999px; font-weight:500; font-size:15px; cursor:pointer;
+      background:var(--ink); color:#f7f6f3; border:1px solid var(--ink); transition:150ms cubic-bezier(.4,0,.2,1); }
+    button:hover { opacity:.9; }
+    button:disabled { background:var(--border); border-color:var(--border); color:#fff; cursor:not-allowed; opacity:1; }
+    .msg { font-size:14px; margin:12px 0 0; }
+    .msg.ok { color:var(--accent-ink); } .msg.err { color:var(--bad); }
+    footer { color:var(--muted); font-size:13px; margin-top:80px; border-top:1px solid var(--line); padding-top:20px; }
+    .logo { height:30px; width:auto; display:block; margin:0 0 32px; }
+    @media (max-width:768px) { main { padding:52px 20px; } h1 { font-size:32px; } .logo { height:26px; margin-bottom:24px; } }
+  </style>
+</head>
+<body>
+<main>
+  <img class="logo" src="/brand/miaou.png" alt="Miaou" width="108" height="36">
+  <h1>Privacidade no provador virtual</h1>
+  <p class="sub">Como a prova virtual usa a sua foto nesta loja.</p>
+
+  <h2>Que dados usamos</h2>
+  <ul>
+    <li><b>A foto que você envia.</b> Só ela: não acessamos sua câmera nem sua galeria sem você escolher a foto.</li>
+    <li><b>A imagem da prova</b>, gerada a partir da sua foto e da foto do produto.</li>
+    <li><b>Seu WhatsApp, se você informar</b> para continuar provando. Ele fica com a loja, para ela falar com você.</li>
+    <li><b>Um código aleatório</b> guardado no seu navegador, para lembrar das suas provas. Não pedimos nome nem e-mail.</li>
+  </ul>
+
+  <h2>Como a prova é feita</h2>
+  <p>Sua foto e a foto do produto são enviadas a um serviço de inteligência artificial de imagem, que
+    desenha a peça (ou os óculos) em você. Depois, o rosto e o fundo da sua foto original são colados de
+    volta, para a imagem mudar só na peça. Sua foto é usada apenas para gerar a prova que você pediu.</p>
+  <p><b>A IA pode errar</b> no caimento, na cor ou em detalhes da peça. A prova é uma simulação para ajudar
+    na escolha, não uma foto real do produto em você.</p>
+
+  <h2>Por quanto tempo guardamos</h2>
+  <ul>
+    <li><b>Sua foto:</b> apagada em até 24 horas.</li>
+    <li><b>As provas e os links de compartilhamento:</b> apagados em até 7 dias.</li>
+    <li><b>Depois de 30 dias</b>, o registro da prova vira só estatística, sem ligação com você.</li>
+    <li><b>O WhatsApp</b> fica com a loja até você pedir para ela apagar.</li>
+  </ul>
+
+  <h2>Seus direitos (LGPD)</h2>
+  <p>Você pode apagar suas fotos, provas e links a qualquer momento, no próprio provador: depois de uma
+    prova, toque em <b>Apagar agora</b>. Para apagar o seu WhatsApp, peça à loja.</p>
+
+  <footer id="foot"></footer>
+</main>
+<script>
+  (function () {
+    var store = new URLSearchParams(location.search).get('store');
+    document.getElementById('foot').textContent = 'Miaou' + (store ? ' · loja ' + store : '');
+  })();
+</script>
+</body>
+</html>

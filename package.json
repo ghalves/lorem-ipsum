@@ -1,0 +1,21 @@
+{
+  "name": "miaou-provador-nuvemshop",
+  "version": "3.3.0",
+  "description": "Miaou: provador virtual para lojas Nuvemshop",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=22.5"
+  },
+  "scripts": {
+    "start": "node --no-warnings src/server.js",
+    "dev": "DEV_MODE=true node --no-warnings --watch src/server.js",
+    "test": "node --no-warnings --test test/*.test.js",
+    "build:script": "node scripts/build-loader.js",
+    "teste-real": "node --no-warnings scripts/teste-real.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "sharp": "^0.35.5"
+  }
+}

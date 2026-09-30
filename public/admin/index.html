@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Miaou · Painel</title>
+  <link rel="icon" href="../brand/miaou-mark.png">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <div class="shell">
+    <header class="mbar">
+      <button class="mbar-btn" type="button" id="btnNav" aria-label="Abrir menu" aria-expanded="false" aria-controls="side">
+        <span id="navIco"></span>
+      </button>
+      <div class="brand"><img src="../brand/miaou.png" alt="Miaou" width="84" height="28"></div>
+    </header>
+
+    <aside class="side" id="side">
+      <div class="brand">
+        <img src="../brand/miaou.png" alt="Miaou" width="90" height="30">
+      </div>
+      <nav class="tabs" id="tabs" role="tablist" aria-label="Seções do painel">
+        <button role="tab" data-tab="tryon" data-icon="home4" aria-selected="true">Visão geral</button>
+        <button role="tab" data-tab="products" data-icon="bag" aria-selected="false">Produtos</button>
+        <button role="tab" data-tab="leads" data-icon="users" aria-selected="false">Leads</button>
+        <button role="tab" data-tab="plan" data-icon="dashboard-speed" aria-selected="false">Planos</button>
+        <button role="tab" data-tab="prefs" data-icon="settings" aria-selected="false">Preferências</button>
+      </nav>
+      <div class="side-foot">
+        <div class="store-row">
+          <div class="store-id">
+            <b id="storeName">Loja</b>
+            <span id="enabledLabel">Ativo na loja</span>
+          </div>
+          <label class="switch" title="Ativar ou desativar na loja">
+            <input type="checkbox" id="enabled"><span></span>
+          </label>
+        </div>
+      </div>
+    </aside>
+    <div class="scrim" id="scrim"></div>
+
+    <main id="view" class="view"><p class="muted">Carregando…</p></main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="icons.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
