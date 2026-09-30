@@ -427,7 +427,7 @@
     var me = state.me;
     return h('div', { class: 'card' }, h('div', { class: 'card-head' }, h('h2', { text: 'Instalação na loja' }),
       h('span', { class: 'chip' + (me.scriptInstalled ? ' ok' : ' warn'), text: me.scriptInstalled ? 'Instalado' : 'Não instalado' })),
-      me.scriptInstalled ? h('p', { class: 'muted', style: 'margin:0', text: 'O botão aparece sozinho nas páginas de produto e a página de obrigado informa as vendas.' })
+      me.scriptInstalled ? h('p', { class: 'muted', style: 'margin:0', text: 'O botão aparece sozinho nas páginas de produto e o checkout liga as vendas ao provador.' })
         : h('div', null,
           me.scriptConfigured ? h('p', null, h('button', { class: 'btn sm primary', type: 'button', text: 'Instalar na loja', onclick: installScript })) : null,
           h('p', { class: 'muted', text: 'Ou cole esta linha no código do tema (Minha Nuvemshop › Layout › Editar código, antes de </body>):' }),

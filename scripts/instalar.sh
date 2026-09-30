@@ -112,6 +112,15 @@ if [ ! -f "$ENV_FILE" ]; then
   set_env SESSION_SECRET "$("$NODE_BIN" -e 'console.log(require("crypto").randomBytes(32).toString("hex"))')"
   ok "Criado $ENV_FILE (SESSION_SECRET gerado)"
 fi
+# variáveis novas das versões seguintes entram vazias no fim do arquivo
+ADDED=()
+while IFS= read -r line; do
+  key="${line%%=*}"
+  if [[ "$line" =~ ^[A-Z0-9_]+= ]] && ! grep -qE "^$key=" "$ENV_FILE"; then
+    printf '%s=\n' "$key" >> "$ENV_FILE"; ADDED+=("$key")
+  fi
+done < "$APP_DIR/.env.example"
+[ ${#ADDED[@]} -gt 0 ] && info "Variáveis novas no $ENV_FILE: ${ADDED[*]}"
 chown "root:$APP_USER" "$ENV_FILE"
 chmod 640 "$ENV_FILE"
 ln -sfn "$ENV_FILE" "$APP_DIR/.env"
