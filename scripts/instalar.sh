@@ -129,7 +129,7 @@ EMAIL="$(get_env NUVEMSHOP_CONTACT_EMAIL)"
 
 # ---------- Dependências ----------
 info "Instalando dependências (npm ci)"
-(cd "$APP_DIR" && npm ci --omit=dev --no-audit --no-fund --loglevel=error)
+(cd "$APP_DIR" && npm ci --omit=dev --no-audit --no-fund --no-update-notifier --loglevel=error)
 ok "Dependências instaladas"
 
 # ---------- Script da vitrine ----------
@@ -190,7 +190,7 @@ if [ ${#MISSING[@]} -gt 0 ]; then
   systemctl stop "$SERVICE" 2>/dev/null || true
   echo
   warn "Falta preencher no $ENV_FILE: ${MISSING[*]}"
-  echo "  sudo nano $ENV_FILE"
+  echo "  sudo vim $ENV_FILE"
   echo "  depois rode de novo: sudo ./scripts/instalar.sh"
   exit 0
 fi
