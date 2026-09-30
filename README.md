@@ -77,9 +77,10 @@ Miaou" com link para `MIAOU_SITE_URL`. O e-mail de suporte (`MIAOU_SUPPORT_EMAIL
 3. **Cadastre o script da vitrine** no portal (app > Scripts > Criar script), como script **NubeSDK**:
    - O instalador gera `dist/miaou-nube.js` com o endereço do servidor (ou
      `APP_URL=https://SEU_DOMINIO npm run build:script`).
-   - Envie `dist/miaou-nube.js`, **não** auto-instalável, ativo na vitrine e no checkout (é no
-     checkout que ele liga o pedido ao provador). Publique e copie o id para `NUVEMSHOP_SCRIPT_ID`.
-   - Não precisa mais do script da página de obrigado: a venda é ligada pelo próprio pedido.
+   - Script 1: `dist/miaou-nube.js`, *Use NubeSDK* ligado, local **Store**, evento **onload**, **não**
+     auto-instalável. Publique e copie o id para `NUVEMSHOP_SCRIPT_ID`.
+   - Script 2: o **mesmo** arquivo, *Use NubeSDK* ligado, local **Checkout**, não auto-instalável.
+     Id em `NUVEMSHOP_SCRIPT_ID_CHECKOUT`. É ele que grava no pedido o que foi provado.
    - Mudou `nube/src/main.js`? Rode `npm run build:nube` e faça commit de `public/storefront/nube-app.js`.
 4. **Webhooks de LGPD** (portal > app > Webhooks obrigatórios):
    - store/redact → `https://SEU_DOMINIO/webhooks/lgpd/store-redact`

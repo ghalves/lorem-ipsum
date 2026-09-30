@@ -23,12 +23,13 @@ Portal de Parceiros ou uma loja sua). Siga na ordem.
    `read_products`, `write_scripts`, `read_orders`.
 2. **Script da vitrine (NubeSDK)**: o instalador já gera `dist/miaou-nube.js` com o endereço do
    servidor (ou `APP_URL=https://SEU_DOMINIO npm run build:script`).
-   - Crie o script como **NubeSDK**, envie `dist/miaou-nube.js`, não auto-instalável, ativo na
-     vitrine e no checkout. Publique e copie o id para `NUVEMSHOP_SCRIPT_ID`.
-   - O script da página de obrigado não é mais necessário.
+   - Script 1: *Use NubeSDK* ligado, local **Store**, evento **onload**, envie `dist/miaou-nube.js`,
+     não auto-instalável. Publique e copie o id para `NUVEMSHOP_SCRIPT_ID`.
+   - Script 2: o **mesmo** arquivo, *Use NubeSDK* ligado, local **Checkout**, não auto-instalável.
+     Id em `NUVEMSHOP_SCRIPT_ID_CHECKOUT`.
 3. **Webhooks de LGPD**: `…/webhooks/lgpd/store-redact`, `…/customers-redact`,
    `…/customers-data-request`.
-4. Reinicie o servidor com o id do script no `.env` (`sudo miaou reiniciar`).
+4. Reinicie o servidor com os ids dos scripts no `.env` (`sudo miaou reiniciar`).
 
 ## 3. Plano da loja de teste
 

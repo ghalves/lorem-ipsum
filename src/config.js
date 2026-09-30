@@ -35,8 +35,9 @@ const config = {
     authBase: (env.NUVEMSHOP_AUTH_BASE || 'https://www.tiendanube.com').replace(/\/$/, ''),
     /** id do script cadastrado no Portal de Parceiros (não auto-instalável) */
     scriptId: env.NUVEMSHOP_SCRIPT_ID ? Number(env.NUVEMSHOP_SCRIPT_ID) : null,
-    // mesmo loader.js publicado com location "página de obrigado": liga o pedido ao provador
-    thankYouScriptId: env.NUVEMSHOP_SCRIPT_ID_THANKYOU ? Number(env.NUVEMSHOP_SCRIPT_ID_THANKYOU) : null,
+    // segundo script (mesmo arquivo): no app NubeSDK é o do checkout, que grava os
+    // provados no pedido; no loader.js antigo era o da página de obrigado
+    thankYouScriptId: Number(env.NUVEMSHOP_SCRIPT_ID_CHECKOUT || env.NUVEMSHOP_SCRIPT_ID_THANKYOU) || null,
     contactEmail: env.NUVEMSHOP_CONTACT_EMAIL || 'contato@example.com',
   },
   /**
