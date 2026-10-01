@@ -135,7 +135,7 @@ html.drawer h1 { font-size: 26px; }
 .tip p:last-child { margin: 0; font-size: 14px; line-height: 1.45; transition: opacity .3s var(--ease); }
 
 /* WhatsApp */
-.lead-ico { width: 52px; height: 52px; border-radius: var(--r-pill); background: var(--accent-soft); color: var(--accent-ink); display: grid; place-items: center; margin: 10px 0 16px; }
+.lead-ico { width: 52px; height: 52px; border-radius: var(--r-pill); background: #000; color: #fff; box-shadow: 0 4px 14px rgba(0,0,0,.18); display: grid; place-items: center; margin: 10px 0 16px; }
 .lead-ico svg { width: 26px; height: 26px; }
 .phone { display: flex; align-items: center; gap: 10px; height: 54px; border: 1px solid var(--border); border-radius: 14px; padding: 0 16px; margin-bottom: 12px; transition: border-color 150ms var(--ease); }
 .phone:focus-within { border-color: var(--ink); }
