@@ -2,16 +2,24 @@
  * Miaou na vitrine, via NubeSDK (substitui o loader.js da Script API).
  *
  * Roda num web worker da Nuvemshop, sem acesso ao DOM:
- * - página de produto: botão "Provar virtualmente" antes do "Comprar"; o
- *   provador (a mesma tela /tryon/ de sempre) abre num iframe, em modal no
- *   celular e em gaveta lateral no computador;
+ * - página de produto: botão "Provar virtualmente" (com a varinha) antes do
+ *   "Comprar"; o provador (a mesma tela /tryon/ de sempre) abre num iframe, em
+ *   modal no celular e em gaveta lateral no computador, com a foto da variação
+ *   escolhida; o "Comprar" do provador põe essa variação no carrinho;
  * - checkout: grava no pedido (order extra) os produtos provados, cada um com
  *   o token assinado pelo servidor. Quando a Nuvemshop avisa que o pedido foi
  *   pago, o servidor lê esse campo e conta a venda.
  *
  * __APP_URL__ é trocado pelo endereço do servidor em scripts/build-loader.js.
  */
-import { button, iframe } from "@tiendanube/nube-sdk-ui";
+import {
+	button,
+	iframe,
+	keyframes,
+	styled,
+	svgPath,
+	svgRoot,
+} from "@tiendanube/nube-sdk-ui";
 
 const API = "__APP_URL__";
 const BUTTON_SLOT = "before_product_detail_add_to_cart";
@@ -20,6 +28,45 @@ const TOKEN_KEY = "szp_tok";
 const VISIT_KEY = "szp_visit";
 const WEEK = 7 * 864e5;
 const EXTRA_KEY = "miaou";
+const PICK_OPTIONS = "Escolha as opções e toque em Comprar";
+
+// Varinha do botão: a mesma da espera da prova (Hugeicons Free AiBeautify,
+// Stroke Rounded, MIT · Copyright (c) 2025 Hugeicons). Gira de leve e as
+// estrelinhas piscam; o lojista desliga a animação em Preferências.
+const WAND =
+	"M14 12.6483L16.3708 10.2775C16.6636 9.98469 16.81 9.83827 16.8883 9.68032C17.0372 9.3798 17.0372 9.02696 16.8883 8.72644C16.81 8.56849 16.6636 8.42207 16.3708 8.12923C16.0779 7.83638 15.9315 7.68996 15.7736 7.61169C15.473 7.46277 15.1202 7.46277 14.8197 7.61169C14.6617 7.68996 14.5153 7.83638 14.2225 8.12923L11.8517 10.5M14 12.6483L5.77754 20.8708C5.4847 21.1636 5.33827 21.31 5.18032 21.3883C4.8798 21.5372 4.52696 21.5372 4.22644 21.3883C4.06849 21.31 3.92207 21.1636 3.62923 20.8708C3.33639 20.5779 3.18996 20.4315 3.11169 20.2736C2.96277 19.973 2.96277 19.6202 3.11169 19.3197C3.18996 19.1617 3.33639 19.0153 3.62923 18.7225L11.8517 10.5M14 12.6483L11.8517 10.5";
+const SPARKS = [
+	"M19.5 2.5L19.3895 2.79873C19.2445 3.19044 19.172 3.38629 19.0292 3.52917C18.8863 3.67204 18.6904 3.74452 18.2987 3.88946L18 4L18.2987 4.11054C18.6904 4.25548 18.8863 4.32796 19.0292 4.47083C19.172 4.61371 19.2445 4.80956 19.3895 5.20127L19.5 5.5L19.6105 5.20127C19.7555 4.80956 19.828 4.61371 19.9708 4.47083C20.1137 4.32796 20.3096 4.25548 20.7013 4.11054L21 4L20.7013 3.88946C20.3096 3.74452 20.1137 3.67204 19.9708 3.52917C19.828 3.38629 19.7555 3.19044 19.6105 2.79873L19.5 2.5Z",
+	"M19.5 12.5L19.3895 12.7987C19.2445 13.1904 19.172 13.3863 19.0292 13.5292C18.8863 13.672 18.6904 13.7445 18.2987 13.8895L18 14L18.2987 14.1105C18.6904 14.2555 18.8863 14.328 19.0292 14.4708C19.172 14.6137 19.2445 14.8096 19.3895 15.2013L19.5 15.5L19.6105 15.2013C19.7555 14.8096 19.828 14.6137 19.9708 14.4708C20.1137 14.328 20.3096 14.2555 20.7013 14.1105L21 14L20.7013 13.8895C20.3096 13.7445 20.1137 13.672 19.9708 13.5292C19.828 13.3863 19.7555 13.1904 19.6105 12.7987L19.5 12.5Z",
+	"M10.5 2.5L10.3895 2.79873C10.2445 3.19044 10.172 3.38629 10.0292 3.52917C9.88629 3.67204 9.69044 3.74452 9.29873 3.88946L9 4L9.29873 4.11054C9.69044 4.25548 9.88629 4.32796 10.0292 4.47083C10.172 4.61371 10.2445 4.80956 10.3895 5.20127L10.5 5.5L10.6105 5.20127C10.7555 4.80956 10.828 4.61371 10.9708 4.47083C11.1137 4.32796 11.3096 4.25548 11.7013 4.11054L12 4L11.7013 3.88946C11.3096 3.74452 11.1137 3.67204 10.9708 3.52917C10.828 3.38629 10.7555 3.19044 10.6105 2.79873L10.5 2.5Z",
+];
+const WAVE = keyframes`0%,100%{transform:rotate(-10deg)}50%{transform:rotate(12deg)}`;
+const TWINKLE = keyframes`0%,100%{opacity:.15}40%{opacity:1}`;
+const WavingSvg = styled(svgRoot)`
+	animation: ${WAVE} 1.6s ease-in-out infinite;
+	transform-origin: 20% 85%;
+`;
+const TWINKLES = [0, 0.6, 1.2].map(
+	(delay) => styled(svgPath)`
+		animation: ${TWINKLE} 1.8s ease-in-out ${delay}s infinite;
+	`,
+);
+
+function wandIcon(animate) {
+	const Root = animate ? WavingSvg : svgRoot;
+	const line = { stroke: "currentColor", strokeWidth: 1.5, strokeLinejoin: "round" };
+	return Root({
+		width: 22,
+		height: 22,
+		viewBox: "0 0 24 24",
+		fill: "none",
+		style: { flexShrink: 0 },
+		children: [
+			svgPath({ d: WAND, ...line, strokeLinecap: "round" }),
+			...SPARKS.map((d, i) => (animate ? TWINKLES[i] : svgPath)({ d, ...line })),
+		],
+	});
+}
 
 export function App(nube) {
 	const browser = nube.getBrowserAPIs();
@@ -103,11 +150,45 @@ export function App(nube) {
 		}
 	}
 
+	// ---------- variação escolhida na página ----------
+	// A prova usa a foto da variação (cor) e o "Comprar" põe essa variação no
+	// carrinho. Até o cliente mexer, vale a primeira, como no tema.
+	let selectedVariantId = null;
+	let warnedPayload = false;
+
+	function pageProduct() {
+		const page = nube.getState().location.page;
+		return page?.type === "product" ? page.data.product : null;
+	}
+	function selectedVariant() {
+		const variants = pageProduct()?.variants || [];
+		return variants.find((v) => v.id === selectedVariantId) || variants[0] || null;
+	}
+	// o formato do aviso não é documentado: aceita os nomes mais prováveis
+	function variantIdFrom(payload) {
+		const p = payload || {};
+		for (const v of [p.variant?.id, p.variant_id, p.variantId, p.selected_variant?.id, p.id]) {
+			const n = Number(v);
+			if (Number.isSafeInteger(n) && n > 0) return n;
+		}
+		return null;
+	}
+
 	// ---------- provador ----------
+	let openCount = 0;
+
 	function closeTryon() {
 		if (!openSlot) return;
 		nube.clearSlot(openSlot);
 		openSlot = null;
+	}
+
+	function toast(text) {
+		nube.render("corner_top_right", {
+			type: "toastRoot",
+			variant: "info",
+			children: [{ type: "toastTitle", children: text }],
+		});
 	}
 
 	function onMessage({ value }) {
@@ -121,50 +202,53 @@ export function App(nube) {
 		}
 	}
 
-	// Com uma só variação dá para pôr no carrinho direto; com tamanhos, o
-	// cliente escolhe na página, então só fechamos o provador e avisamos.
+	// "Comprar" do provador: a variação selecionada na página vai para o carrinho
+	let addingToCart = false;
 	function addToCart() {
-		const page = nube.getState().location.page;
-		const variants = page?.type === "product" ? page.data.product.variants : [];
-		if (variants?.length === 1) {
-			nube.send("cart:add", () => ({
-				cart: { items: [{ variant_id: variants[0].id, quantity: 1 }] },
-			}));
-			return;
-		}
-		nube.render("corner_top_right", {
-			type: "toastRoot",
-			variant: "info",
-			children: [
-				{ type: "toastTitle", children: "Escolha o tamanho e toque em Comprar" },
-			],
-		});
+		const variant = selectedVariant();
+		if (!variant) return toast(PICK_OPTIONS);
+		addingToCart = true;
+		nube.send("cart:add", () => ({
+			cart: { items: [{ variant_id: variant.id, quantity: 1 }] },
+		}));
 	}
 
 	function openTryon() {
-		if (!current || openSlot) return;
+		if (!current) return;
+		// a loja fecha a janela sozinha (clique fora) sem avisar o app: o botão
+		// sempre reabre, limpando o que tiver ficado
+		if (openSlot) nube.clearSlot(openSlot);
 		const state = nube.getState();
 		const phone = state.device.type === "mobile";
-		const screen = state.device.screen;
+		const screen = state.device.screen || {};
+		const vw = screen.innerWidth || screen.width || 390;
+		const vh = screen.innerHeight || screen.height || 720;
 		const product = state.location.page?.data?.product;
-		const image = product?.images?.[0]?.src || current.cfg.product?.image || "";
+		const variant = selectedVariant();
+		const photo =
+			product?.images?.find((i) => i.id === variant?.image_id) || product?.images?.[0];
 		const q = new URLSearchParams({
 			store: String(current.storeId),
 			product: String(current.productId),
 			visit: current.visit,
 			origin: originOf(state.location.url),
-			image,
-			layout: "drawer",
+			image: photo?.src || current.cfg.product?.image || "",
+			// celular: janela do SDK, com a altura ajustada pelo próprio provador
+			layout: phone ? "modal" : "drawer",
+			maxh: String(Math.round(vh * 0.9)),
+			n: String(++openCount),
 		});
+		if (photo?.id) q.set("imageId", String(photo.id));
 		openSlot = phone ? "modal_content" : "drawer_right";
 		nube.render(
 			openSlot,
 			iframe({
 				src: `${API}/tryon/?${q.toString()}`,
-				width: "100%",
-				height: Math.round(
-					(screen?.innerHeight || screen?.height || 720) * (phone ? 0.85 : 1),
-				),
+				// largura em px: "100%" dentro da janela do SDK no celular encolhia o provador
+				width: phone ? Math.min(vw - 24, 560) : "100%",
+				height: Math.round(phone ? vh * 0.8 : vh),
+				autoresize: phone,
+				style: { maxWidth: "100%" },
 				onMessage,
 			}),
 		);
@@ -178,6 +262,7 @@ export function App(nube) {
 		closeTryon();
 		nube.clearSlot(BUTTON_SLOT);
 		current = null;
+		selectedVariantId = null;
 		let cfg;
 		try {
 			const r = await fetch(
@@ -199,10 +284,11 @@ export function App(nube) {
 		nube.render(
 			BUTTON_SLOT,
 			button({
-				children: cfg.tryon.button || "Provar virtualmente",
+				children: [wandIcon(cfg.tryon.animate !== false), cfg.tryon.button || "Provar virtualmente"],
 				variant: "secondary",
 				width: "100%",
 				ariaLabel: "Provar virtualmente",
+				style: { display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" },
 				onClick: openTryon,
 			}),
 		);
@@ -237,6 +323,24 @@ export function App(nube) {
 	nube.on("page:loaded", handle);
 	nube.on("location:updated", handle);
 	nube.on("checkout:ready", () => onCheckout());
+	nube.on("product:variant_selected", (state) => {
+		const id = variantIdFrom(state.eventPayload);
+		if (id) selectedVariantId = id;
+		else if (!warnedPayload) {
+			warnedPayload = true;
+			console.warn("[provador] variação sem id reconhecido:", JSON.stringify(state.eventPayload ?? null));
+		}
+	});
+	nube.on("cart:add:success", () => {
+		if (!addingToCart) return;
+		addingToCart = false;
+		nube.send("cart:open");
+	});
+	nube.on("cart:add:fail", () => {
+		if (!addingToCart) return;
+		addingToCart = false;
+		toast(PICK_OPTIONS);
+	});
 	// compra concluída: o pedido já leva os provados, então a lista recomeça
 	nube.on("checkout:success", () => {
 		writeJSON(local, TRIED_KEY, []);

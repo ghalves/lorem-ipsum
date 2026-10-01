@@ -71,7 +71,9 @@ router.get('/:storeId/session', (req, res) => {
   const avail = tryon.availability(req.store, product);
   const parentOrigin = allowedOrigin(req.store, req.query.origin);
   if (!parentOrigin && req.query.origin) require('../lib/sync').refreshDomainsThrottled(req.store.id).catch(() => {});
-  if (avail.enabled) tryon.prepare(req.store.id, product);
+  // foto da variação escolhida na página (cor); só vale se for uma foto deste produto
+  const image = svc.productImage(product, req.query.imageId);
+  if (avail.enabled) tryon.prepare(req.store.id, product, image);
   const t = req.store.settings.tryon;
   res.set('Cache-Control', 'no-store').json({
     token: createEventToken(req.store.id),
@@ -79,7 +81,7 @@ router.get('/:storeId/session', (req, res) => {
     available: avail.enabled,
     reason: avail.enabled ? null : avail.reason,
     kind: avail.kind || tryon.productKind(product),
-    product: { id: product.id, name: product.name, image: product.image, price: product.price },
+    product: { id: product.id, name: product.name, image, price: product.price },
     needsLead: shopper ? tryon.needsLead(req.store, shopper) : false,
     hasLead: shopper ? tryon.hasLead(req.store.id, shopper) : false,
     history: shopper ? tryon.history(req.store.id, shopper, 1).length > 0 : false,
@@ -112,7 +114,9 @@ router.post('/:storeId/jobs', requireToken, (req, res) => {
     return res.status(429).json({ error: 'muitas provas em pouco tempo: tente mais tarde', code: 'rate' });
   }
   try {
-    const job = tryon.createJob(req.store, { shopperId: req.shopper, photoId: req.body.photoId, productId: req.body.productId, ip: req.ip });
+    const job = tryon.createJob(req.store, {
+      shopperId: req.shopper, photoId: req.body.photoId, productId: req.body.productId, imageId: req.body.imageId, ip: req.ip,
+    });
     if (job.reused) return res.status(200).json({ job: tryon.publicJob(job), reused: true });
     const v = typeof req.body.visitId === 'string' && /^[a-z0-9]{6,40}$/i.test(req.body.visitId) ? req.body.visitId : undefined;
     svc.logEvent(req.store.id, { type: 'tryon_open', productId: job.product_id, meta: { v, job: job.id } });

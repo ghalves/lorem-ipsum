@@ -9,9 +9,17 @@
   var API = '/api/tryon/' + encodeURIComponent(STORE);
   var $ = function (id) { return document.getElementById(id); };
   var sheet = $('sheet');
-  // painel lateral (desktop) ou card que sobe de baixo (celular): quem decide é a loja
-  var DRAWER = params.get('layout') === 'drawer';
+  // painel lateral (desktop) ou card que sobe de baixo (celular): quem decide é a loja.
+  // "modal": janela do NubeSDK no celular; a loja não arrasta o card, então sem alça,
+  // e a altura vai para o SDK (autoresize) até MAXH
+  var LAYOUT = params.get('layout');
+  var DRAWER = LAYOUT === 'drawer';
+  var MODAL = LAYOUT === 'modal';
+  var MAXH = Math.max(320, Number(params.get('maxh')) || 0);
+  // foto da variação escolhida na página (cor); o servidor confere se é deste produto
+  var IMAGE_ID = /^\d{1,15}$/.test(params.get('imageId') || '') ? params.get('imageId') : '';
   document.documentElement.classList.toggle('drawer', DRAWER);
+  document.documentElement.classList.toggle('modal', MODAL);
 
   // ---------- estado ----------
   var S = {
@@ -50,6 +58,10 @@
     msg.source = 'mq';
     if (window.parent !== window && S.parent) window.parent.postMessage(msg, S.parent);
   }
+  // NubeSDK (iframe com autoresize): a loja ajusta a altura com { type: 'resize', height }
+  function postResize(h) {
+    if (window.parent !== window && S.parent) window.parent.postMessage({ type: 'resize', height: h }, S.parent);
+  }
 
   // ---------- API ----------
   function req(method, path, body, headers) {
@@ -86,10 +98,14 @@
   var FULL = { saved: 1, result: 1, history: 1 };
   function reportHeight() {
     var screen = sheet.getAttribute('data-screen');
-    if (FULL[screen]) return post({ type: 'height', value: 'full' });
+    if (FULL[screen]) {
+      if (MODAL) postResize(MAXH);
+      return post({ type: 'height', value: 'full' });
+    }
     var el = document.querySelector('.screen[data-for="' + screen + '"]');
     // a linha da marca (quando aparece) também entra na altura do card
     var h = ($('grab').offsetHeight || 0) + $('head').offsetHeight + (el ? el.scrollHeight : 300) + ($('brandline').offsetHeight || 0) + 8;
+    if (MODAL) postResize(Math.min(MAXH, Math.max(320, Math.ceil(h))));
     post({ type: 'height', value: Math.ceil(h) });
   }
   window.addEventListener('resize', function () { requestAnimationFrame(reportHeight); });
@@ -158,7 +174,7 @@
 
   // ---------- prova ----------
   function createJob() {
-    return req('POST', '/jobs', { photoId: S.photoId, productId: S.product.id, shopperId: SHOPPER, token: S.token, visitId: VISIT })
+    return req('POST', '/jobs', { photoId: S.photoId, productId: S.product.id, imageId: IMAGE_ID || undefined, shopperId: SHOPPER, token: S.token, visitId: VISIT })
       .then(function (r) { S.job = r.job; poll(); })
       .catch(function (e) {
         if (e.code === 'lead') { S.pendingAfterLead = { retry: true }; return showLead(); }
@@ -424,7 +440,7 @@
   (function () {
     var drag = null;
     function down(e) {
-      if (DRAWER || e.target.closest('button')) return;
+      if (DRAWER || MODAL || e.target.closest('button')) return;
       drag = { y: e.screenY, t: Date.now(), dy: 0 };
       try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) { /* noop */ }
     }
@@ -474,7 +490,8 @@
   }
 
   function init() {
-    var q = '?product=' + encodeURIComponent(PRODUCT) + '&origin=' + encodeURIComponent(params.get('origin') || '') + '&shopper=' + encodeURIComponent(SHOPPER);
+    var q = '?product=' + encodeURIComponent(PRODUCT) + '&origin=' + encodeURIComponent(params.get('origin') || '') + '&shopper=' + encodeURIComponent(SHOPPER) +
+      (IMAGE_ID ? '&imageId=' + IMAGE_ID : '');
     Array.prototype.forEach.call(document.querySelectorAll('.privacy-link'), function (a) {
       a.href = '/privacidade/?store=' + encodeURIComponent(STORE);
     });

@@ -33,7 +33,8 @@ a:hover { color: var(--accent-ink); }
 /* alça do card (celular): arrastar para baixo fecha */
 .grab { flex: none; height: 24px; display: flex; align-items: flex-start; justify-content: center; padding-top: 8px; touch-action: none; cursor: grab; }
 .grab span { width: 36px; height: 5px; border-radius: var(--r-pill); background: var(--border); }
-html.drawer .grab { display: none; }
+html.drawer .grab, html.modal .grab { display: none; }
+html.modal .head { padding-top: 16px; }
 
 .head { flex: none; display: flex; align-items: center; gap: 10px; padding: 0 16px 14px; border-bottom: 1px solid var(--line); touch-action: none; }
 html.drawer .head { padding: 18px 20px 16px; }

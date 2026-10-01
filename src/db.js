@@ -98,6 +98,17 @@ CREATE INDEX IF NOT EXISTS idx_tryon_jobs_store_time ON tryon_jobs(store_id, cre
 CREATE INDEX IF NOT EXISTS idx_tryon_jobs_shopper ON tryon_jobs(store_id, shopper_id);
 
 -- Descrição da peça (feita uma vez por imagem de produto) usada no prompt.
+-- Tipo e descrição da peça por foto de produto (cada variação de cor é uma
+-- peça diferente para a IA). Substitui tryon_products, que era por produto.
+CREATE TABLE IF NOT EXISTS tryon_image_info (
+  store_id INTEGER NOT NULL,
+  image TEXT NOT NULL,
+  type TEXT,
+  description TEXT,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (store_id, image)
+);
+
 CREATE TABLE IF NOT EXISTS tryon_products (
   store_id INTEGER NOT NULL,
   product_id INTEGER NOT NULL,
@@ -160,6 +171,8 @@ const MIGRATIONS = [
   ['tryon_jobs', 'post', 'TEXT'],       // JSON: recorte e colagem aplicados na prova
   ['tryon_photos', 'hash', 'TEXT'],     // sha256 da foto: a mesma foto no mesmo produto não gera outra prova
   ['tryon_jobs', 'ip', 'TEXT'],         // hash do IP (com segredo): limite diário por IP em cada loja
+  ['products', 'images', 'TEXT'],       // JSON [{id, src}]: todas as fotos (variações usam image_id)
+  ['tryon_jobs', 'product_image', 'TEXT'],  // foto do produto usada (a da variação escolhida)
 ];
 
 function migrate(conn) {

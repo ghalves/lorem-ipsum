@@ -88,7 +88,7 @@ function redactStore(storeId) {
   const id = Number(storeId);
   try { require('../tryon/service').deleteStoreFiles(id); } catch { /* sem arquivos */ }
   for (const t of ['events', 'products', 'order_claims',
-    'tryon_photos', 'tryon_jobs', 'tryon_products', 'tryon_leads', 'tryon_lead_links', 'tryon_shares', 'tryon_sales']) {
+    'tryon_photos', 'tryon_jobs', 'tryon_products', 'tryon_image_info', 'tryon_leads', 'tryon_lead_links', 'tryon_shares', 'tryon_sales']) {
     db.prepare(`DELETE FROM ${t} WHERE store_id = ?`).run(id);
   }
   db.prepare('DELETE FROM stores WHERE id = ?').run(id);
@@ -105,6 +105,8 @@ function normalizeProduct(p) {
     name: localized(p.name),
     handle: localized(p.handle),
     image: p.images?.[0]?.src || null,
+    images: (p.images || []).filter((i) => i && typeof i.src === 'string')
+      .map((i) => ({ id: Number(i.id) || null, src: i.src })).slice(0, 50),
     categories: (p.categories || []).map((c) => ({ id: Number(c.id), name: localized(c.name) })),
     url: typeof p.canonical_url === 'string' ? p.canonical_url : null,
     price: price != null && price !== '' ? String(price) : null,
@@ -114,13 +116,13 @@ function normalizeProduct(p) {
 function upsertProduct(storeId, product) {
   const p = normalizeProduct(product);
   getDb().prepare(`
-    INSERT INTO products (store_id, id, name, handle, image, categories, url, price, deleted, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, datetime('now'))
+    INSERT INTO products (store_id, id, name, handle, image, images, categories, url, price, deleted, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, datetime('now'))
     ON CONFLICT(store_id, id) DO UPDATE SET
-      name = excluded.name, handle = excluded.handle, image = excluded.image,
+      name = excluded.name, handle = excluded.handle, image = excluded.image, images = excluded.images,
       categories = excluded.categories, url = excluded.url, price = excluded.price,
       deleted = 0, updated_at = datetime('now')
-  `).run(Number(storeId), p.id, p.name, p.handle, p.image, JSON.stringify(p.categories), p.url, p.price);
+  `).run(Number(storeId), p.id, p.name, p.handle, p.image, JSON.stringify(p.images), JSON.stringify(p.categories), p.url, p.price);
   return p;
 }
 
@@ -130,7 +132,21 @@ function markProductDeleted(storeId, productId) {
 
 function rowToProduct(row) {
   if (!row) return null;
-  return { ...row, categories: parse(row.categories, []) };
+  return { ...row, categories: parse(row.categories, []), images: parse(row.images, []) };
+}
+
+/**
+ * Foto do produto para a prova: a da variação escolhida (image_id), desde que
+ * seja mesmo uma foto deste produto; senão, a principal. Nunca aceita URL de
+ * fora, então ninguém usa o provador com imagens que não são da loja.
+ */
+function productImage(product, imageId) {
+  const id = Number(imageId);
+  if (product && id) {
+    const hit = (product.images || []).find((i) => i.id === id);
+    if (hit) return hit.src;
+  }
+  return product?.image || null;
 }
 
 function getProduct(storeId, productId) {
@@ -210,5 +226,5 @@ module.exports = {
   DEFAULT_SETTINGS, localized, normalizeProduct,
   getStore, upsertStore, updateSettings, setStoreField, markUninstalled, redactStore,
   upsertProduct, markProductDeleted, getProduct, listProducts, updateProductTryonKind,
-  saveOrderClaims, claimFor, orderWasPaid, logEvent, purgeOldData,
+  saveOrderClaims, claimFor, orderWasPaid, logEvent, purgeOldData, productImage,
 };

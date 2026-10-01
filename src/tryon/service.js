@@ -153,27 +153,30 @@ async function productImageDataUrl(url) {
 }
 
 const describing = new Map();
-/** Tipo e descrição da peça, calculados uma vez por imagem de produto. */
-async function productInfo(storeId, product) {
+/**
+ * Tipo e descrição da peça, calculados uma vez por foto de produto: cada cor
+ * (foto da variação) é uma peça diferente para a IA.
+ */
+async function productInfo(storeId, product, image = product.image) {
   const db = getDb();
-  const row = db.prepare('SELECT * FROM tryon_products WHERE store_id = ? AND product_id = ?').get(Number(storeId), product.id);
-  if (row && row.image === product.image && row.type) return { type: row.type, description: row.description || '' };
+  const row = image ? db.prepare('SELECT * FROM tryon_image_info WHERE store_id = ? AND image = ?').get(Number(storeId), image) : null;
+  if (row && row.type) return { type: row.type, description: row.description || '' };
   const guess = { type: prompts.guessType(product.name), description: '' };
-  if (cfg.mock || !product.image) return guess;
-  const key = `${storeId}:${product.id}:${product.image}`;
+  if (cfg.mock || !image) return guess;
+  const key = `${storeId}:${image}`;
   if (!describing.has(key)) {
     describing.set(key, (async () => {
       let info = guess;
       try {
-        const text = await provider.describe(product.image, prompts.DESCRIBE_PROMPT, AbortSignal.timeout(20000));
+        const text = await provider.describe(image, prompts.DESCRIBE_PROMPT, AbortSignal.timeout(20000));
         const parsed = prompts.parseDescription(text);
         // o nome do produto manda quando diz "óculos" e a descrição discorda
         if (parsed) info = { type: guess.type === 'glasses' ? 'glasses' : parsed.type, description: parsed.description };
       } catch (e) { console.warn(`[provador] descrição do produto ${product.id}: ${e.message}`); }
-      db.prepare(`INSERT INTO tryon_products (store_id, product_id, image, type, description) VALUES (?, ?, ?, ?, ?)
-        ON CONFLICT(store_id, product_id) DO UPDATE SET image = excluded.image, type = excluded.type,
+      db.prepare(`INSERT INTO tryon_image_info (store_id, image, type, description) VALUES (?, ?, ?, ?)
+        ON CONFLICT(store_id, image) DO UPDATE SET type = excluded.type,
         description = excluded.description, updated_at = datetime('now')`)
-        .run(Number(storeId), product.id, product.image, info.type, info.description);
+        .run(Number(storeId), image, info.type, info.description);
       return info;
     })().finally(() => describing.delete(key)));
   }
@@ -192,10 +195,10 @@ function productKind(product) {
  * Abrir o provador já adianta o que dá: descrição da peça e foto do produto
  * ficam prontas antes do comprador escolher a foto dele.
  */
-function prepare(storeId, product) {
-  if (!product || cfg.mock) return;
-  productInfo(storeId, product).catch(() => {});
-  productImageDataUrl(product.image).catch(() => {});
+function prepare(storeId, product, image = product?.image) {
+  if (!product || cfg.mock || !image) return;
+  productInfo(storeId, product, image).catch(() => {});
+  productImageDataUrl(image).catch(() => {});
 }
 
 // ---------- cota ----------
@@ -402,18 +405,21 @@ function uploadBlocked(store, shopperId, ip) {
  * Mesma foto (mesmo arquivo, mesmo enviado de novo) no mesmo produto: devolve
  * a prova que já existe (pronta ou em andamento) sem gastar a cota outra vez.
  */
-function sameJob(storeId, shopperId, photo, productId) {
+function sameJob(storeId, shopperId, photo, product, image) {
+  // provas antigas não guardavam a foto do produto: valiam a principal
   const row = getDb().prepare(`SELECT j.* FROM tryon_jobs j JOIN tryon_photos p ON p.id = j.photo_id
     WHERE j.store_id = ? AND j.shopper_id = ? AND j.product_id = ?
+      AND IFNULL(j.product_image, ?) = ?
       AND (j.photo_id = ? OR (p.hash IS NOT NULL AND p.hash = ?))
       AND (j.status IN ('queued', 'running') OR (j.status = 'done' AND j.output_path IS NOT NULL))
-    ORDER BY j.created_at DESC LIMIT 1`).get(Number(storeId), shopperId, Number(productId), photo.id, photo.hash || null);
+    ORDER BY j.created_at DESC LIMIT 1`).get(Number(storeId), shopperId, Number(product.id), product.image || '', image || '',
+    photo.id, photo.hash || null);
   if (!row) return null;
   if (row.status === 'done' && !fs.existsSync(row.output_path)) return null;
   return rowToJob(row);
 }
 
-function createJob(store, { shopperId, photoId, productId, ip }) {
+function createJob(store, { shopperId, photoId, productId, imageId, ip }) {
   const shopper = validShopper(shopperId);
   if (!shopper) throw err('comprador inválido', 400);
   const product = svc.getProduct(store.id, productId);
@@ -424,14 +430,16 @@ function createJob(store, { shopperId, photoId, productId, ip }) {
   }
   const photo = getPhoto(store.id, photoId, shopper);
   if (!photo) throw err('foto expirada: envie de novo', 410, 'photo_expired');
-  const again = sameJob(store.id, shopper, photo, product.id);
+  // foto da variação escolhida na página (cor), conferida contra as fotos do produto
+  const image = svc.productImage(product, imageId);
+  const again = sameJob(store.id, shopper, photo, product, image);
   if (again) return { ...again, reused: true };
   if (needsLead(store, shopper)) throw err('informe seu WhatsApp para continuar provando', 402, 'lead');
   const hit = dailyLimitHit(store, shopper, ip);
   if (hit) throw err('você chegou ao limite de provas de hoje', 429, hit);
   const id = newId();
-  getDb().prepare(`INSERT INTO tryon_jobs (id, store_id, shopper_id, photo_id, product_id, kind, status, ip)
-    VALUES (?, ?, ?, ?, ?, ?, 'queued', ?)`).run(id, store.id, shopper, photo.id, product.id, avail.kind, ipKey(ip));
+  getDb().prepare(`INSERT INTO tryon_jobs (id, store_id, shopper_id, photo_id, product_id, product_image, kind, status, ip)
+    VALUES (?, ?, ?, ?, ?, ?, ?, 'queued', ?)`).run(id, store.id, shopper, photo.id, product.id, image, avail.kind, ipKey(ip));
   runJob(store.id, id).catch((e) => console.error('[provador]', e));
   return getJob(store.id, id);
 }
@@ -582,14 +590,15 @@ async function runJob(storeId, jobId) {
     if (cfg.mock) {
       out = await produceMock(photo.path, product);
     } else {
-      const info = await productInfo(storeId, product);
+      const image = job.product_image || product.image;
+      const info = await productInfo(storeId, product, image);
       const type = job.kind === 'glasses' ? 'glasses' : (info.type === 'glasses' ? 'other' : info.type);
       const prep = await prepareInput(photo, job.kind);
       post = prep.post;
       const input = {
         prompt: prompts.garmentPrompt(type, info.description),
         person: prep.person,
-        product: await productImageDataUrl(product.image),
+        product: await productImageDataUrl(image),
       };
       out = await produce(input, job.kind);
       out = await finishOutput(out, prep, photo, job.kind);
@@ -625,11 +634,11 @@ function publicJob(job) {
 }
 
 function history(storeId, shopperId, limit = 20) {
-  return getDb().prepare(`SELECT j.*, p.name AS product_name, p.image AS product_image, p.price AS product_price
+  return getDb().prepare(`SELECT j.*, j.product_image AS used_image, p.name AS product_name, p.image AS product_image, p.price AS product_price
     FROM tryon_jobs j LEFT JOIN products p ON p.store_id = j.store_id AND p.id = j.product_id
     WHERE j.store_id = ? AND j.shopper_id = ? AND j.status = 'done' AND j.output_path IS NOT NULL
     ORDER BY j.created_at DESC LIMIT ?`).all(Number(storeId), shopperId, limit)
-    .map((j) => ({ ...publicJob(rowToJob(j)), productName: j.product_name, productImage: j.product_image, productPrice: j.product_price }));
+    .map((j) => ({ ...publicJob(rowToJob(j)), productName: j.product_name, productImage: j.used_image || j.product_image, productPrice: j.product_price }));
 }
 
 function setFeedback(job, value) {

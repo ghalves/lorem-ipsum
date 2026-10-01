@@ -49,13 +49,18 @@ Marque cada item. Se algo falhar, anote a tela, o aparelho e o navegador.
 - [ ] *Planos*: mostra o plano ativo e o uso do mês.
 
 ### Página do produto (celular e computador)
-- [ ] Antes do botão Comprar aparece o botão **Provar virtualmente**, legível no tema da loja.
+- [ ] Antes do botão Comprar aparece o botão **Provar virtualmente**, no estilo do tema, com a
+      varinha animada (sem animação se desligada em Preferências).
 - [ ] **Loja com domínio próprio** (www.sualoja.com.br): o provador abre e o X fecha. (É o teste
       mais importante: se falhar, abra o painel do app uma vez e tente de novo.)
 - [ ] Produto sem foto: o botão não aparece.
 
 ### Provador
-- [ ] Celular: o provador abre numa janela (modal). Computador: gaveta lateral. O X fecha nos dois.
+- [ ] Celular: o provador abre numa janela (modal) com a largura da tela, sem espremer. Computador:
+      gaveta lateral. O X fecha nos dois.
+- [ ] Fechar clicando fora e tocar em **Provar virtualmente** de novo: o provador reabre.
+- [ ] Produto com cor que troca a foto: escolha outra cor, abra o provador e prove. A prova usa a
+      peça da cor escolhida.
 - [ ] **Enviar foto** funciona dentro da janela (teste novo com o NubeSDK: se falhar, anote o aparelho).
 - [ ] Celular: "Tirar foto" abre a câmera traseira (óculos: "Tirar selfie", câmera frontal).
       Computador: só "Escolher foto".
@@ -63,8 +68,8 @@ Marque cada item. Se algo falhar, anote a tela, o aparelho e o navegador.
 - [ ] Óculos: sai com a pessoa inteira na foto (não só o rosto).
 - [ ] 2ª prova: pede o WhatsApp (se estiver ligado em Preferências) e o número aparece em *Leads*.
 - [ ] Compartilhar: o link abre a prévia com "Provar em mim" e "Ver produto na loja".
-- [ ] "Comprar" fecha o provador. Produto com uma só variação: vai para a sacola. Com tamanhos:
-      aparece o aviso "Escolha o tamanho e toque em Comprar".
+- [ ] "Comprar" fecha o provador e põe na sacola a variação selecionada na página (cor, tamanho
+      etc.), abrindo o carrinho.
 - [ ] "Apagar agora" remove as provas do histórico.
 
 ### Vendas

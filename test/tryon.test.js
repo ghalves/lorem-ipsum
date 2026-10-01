@@ -23,6 +23,7 @@ const GEM_OUT = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 
 // comportamento do "Muse" falso em cada teste: ok | slow | block
 let museMode = 'ok';
 const orCalls = [];
+const imgCalls = [];   // fotos de produto que o servidor baixou (para a IA)
 
 function mockNuvemshop(selfUrl) {
   const app = express();
@@ -37,15 +38,19 @@ function mockNuvemshop(selfUrl) {
     id, name: { pt: id === 1 ? 'Vestido azulejo' : 'Óculos havana' }, handle: { pt: `p${id}` },
     canonical_url: `https://www.lojaia.com.br/produtos/p${id}/`,
     attributes: [{ pt: 'Tamanho' }],
-    variants: [{ id: id * 10, values: [{ pt: 'M' }], price: '199.90', stock: 5 }],
-    categories: [{ id: 3, name: { pt: 'Moda' } }], images: [{ src: `${selfUrl()}/img/${id}.jpg` }],
+    // vestido: a variação amarela tem foto própria (image_id 102)
+    variants: [{ id: id * 10, values: [{ pt: 'M' }], price: '199.90', stock: 5, image_id: id * 100 + 1 }]
+      .concat(id === 1 ? [{ id: 11, values: [{ pt: 'Amarelo' }], price: '199.90', stock: 5, image_id: 102 }] : []),
+    categories: [{ id: 3, name: { pt: 'Moda' } }],
+    images: [{ id: id * 100 + 1, src: `${selfUrl()}/img/${id}.jpg` }]
+      .concat(id === 1 ? [{ id: 102, src: `${selfUrl()}/img/1-amarelo.jpg` }] : []),
   });
   app.get(`/2025-03/${STORE_ID}/products`, auth, (req, res) => res.json(req.query.page === '1' ? [product(1), product(2)] : []));
   app.get(`/2025-03/${STORE_ID}/products/:id`, auth, (req, res) => res.json(product(Number(req.params.id))));
   // pedido 4242: só o vestido (produto 1), tamanho M
   app.get(`/2025-03/${STORE_ID}/orders/:id`, auth, (req, res) => res.json({ id: Number(req.params.id), created_at: new Date().toISOString(),
     products: req.params.id === '4242' ? [{ product_id: 1, variant_values: ['M'] }] : [] }));
-  app.get('/img/:id.jpg', (req, res) => res.type('image/jpeg').send(JPEG));
+  app.get('/img/:id.jpg', (req, res) => { imgCalls.push(req.params.id); res.type('image/jpeg').send(JPEG); });
   return app;
 }
 
@@ -195,8 +200,8 @@ async function upload(shopper, token, body = JPEG) {
   const r = await fetch(api('/photo'), { method: 'POST', headers: { 'content-type': 'image/jpeg', 'x-shopper': shopper, 'x-szp-token': token }, body });
   return { status: r.status, body: await r.json() };
 }
-async function createJob(shopper, token, photoId, productId = 1) {
-  const r = await fetch(api('/jobs'), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ shopperId: shopper, token, photoId, productId }) });
+async function createJob(shopper, token, photoId, productId = 1, imageId) {
+  const r = await fetch(api('/jobs'), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ shopperId: shopper, token, photoId, productId, imageId }) });
   return { status: r.status, body: await r.json() };
 }
 async function waitJob(shopper, id, ms = 5000) {
@@ -294,6 +299,29 @@ test('prova com o Muse, prompt com a descrição da peça e WhatsApp na 2ª', as
   assert.equal(leads.body.leads[0].phone, '+5521975395040');
   const csv = await admin('GET', '/tryon/leads.csv');
   assert.match(csv.text, /\+5521975395040/);
+});
+
+test('variação com foto própria: a prova usa a foto da cor escolhida, conferida no servidor', async () => {
+  museMode = 'ok';
+  const shopper = newShopper();
+  imgCalls.length = 0;
+  const amarelo = await (await fetch(api(`/session?product=1&shopper=${shopper}&imageId=102&origin=https://www.lojaia.com.br`))).json();
+  assert.match(amarelo.product.image, /1-amarelo\.jpg$/, 'a sessão mostra a foto da variação');
+  const fora = await (await fetch(api(`/session?product=1&shopper=${shopper}&imageId=999&origin=https://www.lojaia.com.br`))).json();
+  assert.match(fora.product.image, /\/img\/1\.jpg$/, 'foto que não é do produto: vale a principal');
+  assert.ok(imgCalls.includes('1-amarelo'), 'abrir na cor amarela já prepara a foto dela');
+  const { body: { photoId } } = await upload(shopper, amarelo.token);
+  const c = await createJob(shopper, amarelo.token, photoId, 1, 102);
+  assert.equal(c.status, 201);
+  assert.equal((await waitJob(shopper, c.body.job.id)).status, 'done');
+  const used = require('../src/db').getDb().prepare('SELECT product_image FROM tryon_jobs WHERE id = ?').get(c.body.job.id);
+  assert.match(used.product_image, /1-amarelo\.jpg$/, 'a prova foi gerada com a foto da variação amarela');
+  const same = await createJob(shopper, amarelo.token, photoId, 1, 102);
+  assert.equal(same.body.reused, true, 'mesma foto e mesma cor: reaproveita');
+  const other = await createJob(shopper, amarelo.token, photoId, 1);
+  assert.notEqual(other.body.reused, true, 'outra cor do mesmo produto é outra prova');
+  const hist = await (await fetch(api(`/history?shopper=${shopper}`))).json();
+  assert.match(hist.items[0].productImage, /1-amarelo\.jpg$/, 'o histórico mostra a peça provada');
 });
 
 test('Muse recusa a foto: a reserva (Nano Banana 2) entra na hora', async () => {
