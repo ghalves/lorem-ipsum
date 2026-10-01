@@ -30,6 +30,19 @@ a:hover { color: var(--accent-ink); }
 
 .sheet { height: 100%; display: flex; flex-direction: column; position: relative; overflow: hidden; }
 
+/* overlay: o iframe ocupa a tela inteira (slot corner_* da loja), transparente;
+   o fundo escuro e o card são desenhados aqui: card que sobe de baixo no
+   celular, gaveta flutuante à direita no computador. Nada aparece antes de o
+   provador conferir que está inteiro na tela (classe is-open). */
+html.overlay, html.overlay body { background: transparent; }
+#backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.4); opacity: 0; transition: opacity 240ms var(--ease); }
+html.overlay.is-open #backdrop { opacity: 1; }
+html.overlay .sheet { position: fixed; background: #fff; transition: transform 280ms cubic-bezier(.2,.8,.2,1), height 240ms var(--ease); }
+html.ov-phone .sheet { left: 0; right: 0; bottom: 0; height: 72%; max-height: calc(100% - 24px); border-radius: 24px 24px 0 0; box-shadow: 0 -8px 32px rgba(0,0,0,.12); transform: translateY(105%); }
+html.ov-desk .sheet { right: 16px; top: 16px; bottom: 16px; width: 440px; height: auto; max-width: calc(100% - 32px); border-radius: 20px; box-shadow: 0 8px 40px rgba(0,0,0,.14); transform: translateX(calc(100% + 32px)); }
+html.overlay.is-open .sheet { transform: none; }
+@media (prefers-reduced-motion: reduce) { html.overlay .sheet, #backdrop { transition: none; } }
+
 /* alça do card (celular): arrastar para baixo fecha */
 .grab { flex: none; height: 24px; display: flex; align-items: flex-start; justify-content: center; padding-top: 8px; touch-action: none; cursor: grab; }
 .grab span { width: 36px; height: 5px; border-radius: var(--r-pill); background: var(--border); }

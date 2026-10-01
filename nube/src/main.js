@@ -4,7 +4,8 @@
  * Roda num web worker da Nuvemshop, sem acesso ao DOM:
  * - página de produto: botão "Provar virtualmente" (com a varinha) logo abaixo
  *   do "Comprar", depois das variações; o provador (a mesma tela /tryon/ de sempre) abre num iframe, em
- *   cartão na janela oficial (modal_content), com a foto da variação
+ *   card que sobe de baixo (celular) ou gaveta à direita (computador) no slot
+ *   corner_bottom_right, ou cartão no centro (modal_content), com a foto da variação
  *   escolhida; o "Comprar" do provador põe essa variação no carrinho;
  * - checkout: grava no pedido (order extra) os produtos provados, cada um com
  *   o token assinado pelo servidor. Quando a Nuvemshop avisa que o pedido foi
@@ -210,7 +211,7 @@ export function App(nube) {
 
 	// fecha sempre: o aviso de "janela fechou" pode chegar depois de uma reabertura
 	function closeTryon() {
-		nube.clearSlot("modal_content");
+		if (openSlot) nube.clearSlot(openSlot);
 		openSlot = null;
 		writeJSON(session, REOPEN_KEY, null);
 	}
@@ -219,6 +220,8 @@ export function App(nube) {
 		nube.render("corner_top_right", {
 			type: "toastRoot",
 			variant: "info",
+			duration: 6000,
+			style: { maxWidth: "calc(100vw - 32px)", whiteSpace: "normal" },
 			children: [{ type: "toastTitle", children: text }],
 		});
 	}
@@ -228,6 +231,13 @@ export function App(nube) {
 		if (d?.type !== "height" && d?.type !== "drag" && d?.type !== "resize") dbg("mensagem", d);
 		if (!d || d.source !== "mq") return;
 		if (d.type === "close") closeTryon();
+		else if (d.type === "overlay-ok") writeJSON(session, LAYOUT_KEY, "overlay");
+		else if (d.type === "fallback" && openSlot === CORNER) {
+			// o canto não mostrou o provador inteiro: cartão no centro, nesta sessão
+			writeJSON(session, LAYOUT_KEY, "card");
+			cardOnly = true;
+			openTryon(lastResume);
+		}
 		else if (d.type === "picking" && current) {
 			writeJSON(session, REOPEN_KEY, { p: current.productId, t: Date.now() });
 		} else if (d.type === "picked") writeJSON(session, REOPEN_KEY, null);
@@ -270,7 +280,20 @@ export function App(nube) {
 	// mostrou 1282x623); o que passar disso é cortado. O provador abre como um
 	// cartão que cabe nesse limite.
 	const MODAL = "modal_content";
-	function openTryon(resume) {
+	// Gaveta (computador) e card que sobe de baixo (celular): slot corner_*,
+	// fixo na tela e sem tamanho máximo na documentação (Slots > Fixed slots;
+	// só os edge_* têm limite). O iframe ocupa a tela inteira, transparente, e o
+	// provador desenha o fundo escuro e o card. Antes de mostrar, o provador
+	// confere se aparece inteiro; se não, pede "fallback" sem ter mostrado nada
+	// e abre o cartão no centro (modal_content).
+	const CORNER = "corner_bottom_right";
+	const LAYOUT_KEY = "szp_layout";
+	let cardOnly = false;
+	let lastResume;
+	async function openTryon(resume) {
+		if (!current) return;
+		lastResume = resume;
+		if (!cardOnly && (await readJSON(session, LAYOUT_KEY, null)) === "card") cardOnly = true;
 		if (!current) return;
 		// limpa o que tiver ficado de uma abertura anterior
 		if (openSlot) nube.clearSlot(openSlot);
@@ -294,7 +317,7 @@ export function App(nube) {
 			visit: current.visit,
 			origin: originOf(state.location.url),
 			image: photo?.src || current.cfg.product?.image || "",
-			layout: phone ? "modal" : "drawer",
+			layout: cardOnly ? (phone ? "modal" : "drawer") : "overlay",
 			device: phone ? "phone" : "desktop",
 			vw: String(vw),
 			vh: String(vh),
@@ -304,6 +327,24 @@ export function App(nube) {
 		if (variantPhoto?.id) q.set("imageId", String(variantPhoto.id));
 		if (variant?.id) q.set("variantId", String(variant.id));
 		if (resume === "camera") q.set("resume", "camera");
+		if (!cardOnly) {
+			openSlot = CORNER;
+			dbg("abrir", { slot: openSlot, resume: resume || null, screen, width: vw, height: vh, variant: variant?.id ?? null });
+			nube.render(
+				openSlot,
+				iframe({
+					src: `${API}/tryon/?${q.toString()}`,
+					width: vw,
+					height: vh,
+					style: {
+						width: `${vw}px`, minWidth: `${vw}px`, height: `${vh}px`,
+						border: "0", display: "block", background: "transparent",
+					},
+					onMessage,
+				}),
+			);
+			return;
+		}
 		openSlot = MODAL;
 		// celular: a largura toda que a janela mostra, e a altura acompanha a tela
 		// do provador (autoresize) até o limite; computador: 440 de largura
@@ -436,7 +477,7 @@ export function App(nube) {
 	// a janela fechou (clique fora, Esc ou pelo app): a loja avisa
 	nube.on("custom:modal:close", () => {
 		dbg("janela:fechou", null);
-		openSlot = null;
+		if (openSlot === MODAL) openSlot = null;
 	});
 	nube.on("product:variant_selected", (state) => {
 		const id = variantIdFrom(state.eventPayload);
