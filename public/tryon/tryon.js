@@ -113,8 +113,10 @@
       if ('IntersectionObserver' in window) {
         var io = new IntersectionObserver(function (entries) {
           io.disconnect();
-          var r = entries[0] ? entries[0].intersectionRatio : 1;
-          dbg('overlay:visivel', { ratio: r });
+          var en = entries[0];
+          var r = en ? en.intersectionRatio : 1;
+          var box = function (b) { return b ? [Math.round(b.x), Math.round(b.y), Math.round(b.width), Math.round(b.height)] : null; };
+          dbg('overlay:visivel', { ratio: r, visivel: en && box(en.intersectionRect), iframe: en && box(en.boundingClientRect) });
           if (r < 0.8) fallback('fora da tela');
         }, { threshold: [0, 0.5, 0.8, 1] });
         io.observe(document.documentElement);

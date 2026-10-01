@@ -181,6 +181,12 @@ export function App(nube) {
 		const variants = pageProduct()?.variants || [];
 		return variants.find((v) => v.id === selectedVariantId) || variants[0] || null;
 	}
+	// Foto da prova: a principal, até o cliente mexer nas opções. O tema marca
+	// uma variação por padrão (ex.: P / Amarelo), mas isso não é escolha dele.
+	function chosenVariant() {
+		const variants = pageProduct()?.variants || [];
+		return variants.find((v) => v.id === selectedVariantId) || null;
+	}
 	// o formato do aviso não é documentado: aceita os nomes mais prováveis
 	function variantIdFrom(payload) {
 		const p = payload || {};
@@ -261,7 +267,7 @@ export function App(nube) {
 		const vw = screen.innerWidth || screen.width || 390;
 		const vh = screen.innerHeight || screen.height || 720;
 		const product = state.location.page?.data?.product;
-		const variant = selectedVariant();
+		const variant = chosenVariant();
 		// na loja real as variações vêm sem image_id: o servidor acha a foto da
 		// cor pelo id da variação (dados da API)
 		const variantPhoto = product?.images?.find((i) => i.id === variant?.image_id);
@@ -285,7 +291,8 @@ export function App(nube) {
 		if (variant?.id) q.set("variantId", String(variant.id));
 		if (resume === "camera") q.set("resume", "camera");
 		openSlot = overlayBroken ? (phone ? "modal_content" : "drawer_right") : OVERLAY_SLOT;
-		const phoneWidth = Math.min(vw - 24, 560);
+		// a janela do SDK tem margem interna: um pouco menos que a tela, sem cortar
+		const phoneWidth = Math.min(vw - 48, 560);
 		dbg("abrir", {
 			slot: openSlot, modo: overlayBroken ? "janela" : "tela inteira", resume: resume || null, screen,
 			width: phone ? phoneWidth : "100%", height: Math.round(phone ? vh * 0.8 : vh),
@@ -298,7 +305,10 @@ export function App(nube) {
 					src: `${API}/tryon/?${q.toString()}`,
 					width: vw,
 					height: vh,
+					// o espaço da loja (edge_bottom_center) deixava parte do iframe fora da
+					// tela: fixo no canto de cima da tela, cobrindo tudo
 					style: {
+						position: "fixed", top: "0px", left: "0px", zIndex: 2147483000,
 						width: `${vw}px`, height: `${vh}px`, minWidth: `${vw}px`, minHeight: `${vh}px`,
 						border: "0", display: "block", background: "transparent",
 					},
