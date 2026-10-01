@@ -174,5 +174,5 @@ html.drawer h1 { font-size: 26px; }
 .spin { width: 32px; height: 32px; border: 2.5px solid var(--soft-2); border-top-color: var(--ink); border-radius: 50%; animation: rot .8s linear infinite; margin: 90px auto; }
 @keyframes rot { to { transform: rotate(360deg); } }
 
-.toast { position: absolute; left: 50%; bottom: 18px; transform: translate(-50%, 20px); background: var(--ink); color: #fff; font-size: 14px; padding: 10px 16px; border-radius: var(--r-pill); opacity: 0; pointer-events: none; transition: 200ms var(--ease); white-space: nowrap; }
+.toast { position: absolute; left: 50%; bottom: 18px; transform: translate(-50%, 20px); background: var(--ink); color: #fff; font-size: 14px; padding: 10px 16px; border-radius: var(--r-pill); opacity: 0; pointer-events: none; transition: 200ms var(--ease); width: max-content; max-width: calc(100% - 32px); text-align: center; }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }

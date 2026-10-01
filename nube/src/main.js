@@ -2,8 +2,8 @@
  * Miaou na vitrine, via NubeSDK (substitui o loader.js da Script API).
  *
  * Roda num web worker da Nuvemshop, sem acesso ao DOM:
- * - página de produto: botão "Provar virtualmente" (com a varinha) antes do
- *   "Comprar"; o provador (a mesma tela /tryon/ de sempre) abre num iframe, em
+ * - página de produto: botão "Provar virtualmente" (com a varinha) logo abaixo
+ *   do "Comprar", depois das variações; o provador (a mesma tela /tryon/ de sempre) abre num iframe, em
  *   modal no celular e em gaveta lateral no computador, com a foto da variação
  *   escolhida; o "Comprar" do provador põe essa variação no carrinho;
  * - checkout: grava no pedido (order extra) os produtos provados, cada um com
@@ -22,10 +22,17 @@ import {
 } from "@tiendanube/nube-sdk-ui";
 
 const API = "__APP_URL__";
-const BUTTON_SLOT = "before_product_detail_add_to_cart";
+// Depois das variações: nos temas da Nuvemshop o "before_..._add_to_cart" fica
+// acima das variações (o tema trata variações + Comprar como um bloco) e o SDK
+// não tem um lugar entre as variações e o Comprar. Logo abaixo do Comprar, o
+// cliente já escolheu a cor, e é com ela que a prova é feita.
+const BUTTON_SLOT = "after_product_detail_add_to_cart";
 const TRIED_KEY = "szp_tried";
 const TOKEN_KEY = "szp_tok";
 const VISIT_KEY = "szp_visit";
+// câmera aberta no celular: se o sistema descartar a página, reabre o provador
+const REOPEN_KEY = "szp_reopen";
+const REOPEN_MS = 5 * 60 * 1000;
 const WEEK = 7 * 864e5;
 const EXTRA_KEY = "miaou";
 const PICK_OPTIONS = "Escolha as opções e toque em Comprar";
@@ -181,6 +188,7 @@ export function App(nube) {
 		if (!openSlot) return;
 		nube.clearSlot(openSlot);
 		openSlot = null;
+		writeJSON(session, REOPEN_KEY, null);
 	}
 
 	function toast(text) {
@@ -195,6 +203,9 @@ export function App(nube) {
 		const d = value;
 		if (!d || d.source !== "mq") return;
 		if (d.type === "close") closeTryon();
+		else if (d.type === "picking" && current) {
+			writeJSON(session, REOPEN_KEY, { p: current.productId, t: Date.now() });
+		} else if (d.type === "picked") writeJSON(session, REOPEN_KEY, null);
 		else if (d.type === "tried") rememberTried(d.productId, d.token);
 		else if (d.type === "buy") {
 			closeTryon();
@@ -213,7 +224,7 @@ export function App(nube) {
 		}));
 	}
 
-	function openTryon() {
+	function openTryon(resume) {
 		if (!current) return;
 		// a loja fecha a janela sozinha (clique fora) sem avisar o app: o botão
 		// sempre reabre, limpando o que tiver ficado
@@ -239,6 +250,7 @@ export function App(nube) {
 			n: String(++openCount),
 		});
 		if (photo?.id) q.set("imageId", String(photo.id));
+		if (resume === "camera") q.set("resume", "camera");
 		openSlot = phone ? "modal_content" : "drawer_right";
 		nube.render(
 			openSlot,
@@ -289,10 +301,17 @@ export function App(nube) {
 				width: "100%",
 				ariaLabel: "Provar virtualmente",
 				style: { display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" },
-				onClick: openTryon,
+				onClick: () => openTryon(),
 			}),
 		);
 		track("tryon_view");
+		// a página recarregou com a câmera aberta (celular): volta ao provador
+		const reopen = await readJSON(session, REOPEN_KEY, null);
+		if (reopen && reopen.p === productId && Date.now() - reopen.t < REOPEN_MS) {
+			await writeJSON(session, REOPEN_KEY, null);
+			openTryon("camera");
+			return;
+		}
 		// veio do link compartilhado ("Provar em mim"): abre o provador direto
 		if (state.location.queries?.provar === "1") openTryon();
 	}

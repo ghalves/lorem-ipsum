@@ -49,8 +49,8 @@ Marque cada item. Se algo falhar, anote a tela, o aparelho e o navegador.
 - [ ] *Planos*: mostra o plano ativo e o uso do mês.
 
 ### Página do produto (celular e computador)
-- [ ] Antes do botão Comprar aparece o botão **Provar virtualmente**, no estilo do tema, com a
-      varinha animada (sem animação se desligada em Preferências).
+- [ ] Logo abaixo do botão Comprar (depois das variações) aparece o botão **Provar virtualmente**, no
+      estilo do tema, com a varinha animada (sem animação se desligada em Preferências).
 - [ ] **Loja com domínio próprio** (www.sualoja.com.br): o provador abre e o X fecha. (É o teste
       mais importante: se falhar, abra o painel do app uma vez e tente de novo.)
 - [ ] Produto sem foto: o botão não aparece.
@@ -63,6 +63,7 @@ Marque cada item. Se algo falhar, anote a tela, o aparelho e o navegador.
       peça da cor escolhida.
 - [ ] **Enviar foto** funciona dentro da janela (teste novo com o NubeSDK: se falhar, anote o aparelho).
 - [ ] Celular: "Tirar foto" abre a câmera traseira (óculos: "Tirar selfie", câmera frontal).
+      Se a página da loja recarregar ao voltar da câmera, o provador reabre sozinho com um aviso.
       Computador: só "Escolher foto".
 - [ ] A prova sai em cerca de 20 s, com o rosto e o fundo iguais aos da foto enviada.
 - [ ] Óculos: sai com a pessoa inteira na foto (não só o rosto).

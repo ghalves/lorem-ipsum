@@ -358,7 +358,10 @@
 
   // ---------- ações ----------
   ['filePick', 'fileCamera', 'fileSwap', 'fileRetry'].forEach(function (id) {
-    $(id).addEventListener('change', function (e) { onFile(e.target); });
+    // no celular a câmera/galeria tira o navegador da frente e o sistema pode
+    // descartar a página da loja: a loja anota, e se recarregar reabre o provador
+    $(id).addEventListener('click', function () { post({ type: 'picking' }); });
+    $(id).addEventListener('change', function (e) { post({ type: 'picked' }); onFile(e.target); });
   });
   $('btnTry').addEventListener('click', tryAgainWithSaved);
   $('btnRetry').addEventListener('click', tryAgainWithSaved);
@@ -510,7 +513,11 @@
         return show('off');
       }
       return req('GET', '/history').then(function (h) { S.historyItems = h.items || []; }).catch(function () {})
-        .then(enterStart);
+        .then(enterStart)
+        .then(function () {
+          // a página da loja recarregou enquanto a câmera estava aberta
+          if (params.get('resume') === 'camera') toast('A página recarregou. Tente de novo ou escolha da galeria');
+        });
     }).catch(function () {
       $('offText').textContent = 'Não foi possível abrir o provador agora.';
       show('off');
