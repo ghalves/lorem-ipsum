@@ -194,9 +194,9 @@ export function App(nube) {
 	// ---------- provador ----------
 	let openCount = 0;
 
+	// fecha sempre: o aviso de "janela fechou" pode chegar depois de uma reabertura
 	function closeTryon() {
-		if (!openSlot) return;
-		nube.clearSlot(openSlot);
+		nube.clearSlot("modal_content");
 		openSlot = null;
 		writeJSON(session, REOPEN_KEY, null);
 	}
@@ -217,7 +217,11 @@ export function App(nube) {
 		else if (d.type === "picking" && current) {
 			writeJSON(session, REOPEN_KEY, { p: current.productId, t: Date.now() });
 		} else if (d.type === "picked") writeJSON(session, REOPEN_KEY, null);
-		else if (d.type === "tried") rememberTried(d.productId, d.token);
+		else if (d.type === "fallback") {
+			// a janela não deu a tela inteira: cartão do tamanho que couber
+			cardMode = true;
+			openTryon(lastResume);
+		} else if (d.type === "tried") rememberTried(d.productId, d.token);
 		else if (d.type === "buy") {
 			closeTryon();
 			addToCart();
@@ -248,10 +252,18 @@ export function App(nube) {
 		}));
 	}
 
+	// Tudo pela janela oficial (modal_content). Primeiro em tela inteira, com o
+	// iframe transparente e sem borda: o provador desenha o card que sobe de
+	// baixo (celular) ou a gaveta (computador). Se a janela não der a tela
+	// inteira, o provador pede ("fallback") e vira um cartão do tamanho que
+	// couber, nesta sessão.
+	const MODAL = "modal_content";
+	let cardMode = false;
+	let lastResume;
 	function openTryon(resume) {
 		if (!current) return;
-		// a loja fecha a janela sozinha (clique fora) sem avisar o app: o botão
-		// sempre reabre, limpando o que tiver ficado
+		lastResume = resume;
+		// limpa o que tiver ficado de uma abertura anterior
 		if (openSlot) nube.clearSlot(openSlot);
 		const state = nube.getState();
 		const phone = state.device.type === "mobile";
@@ -270,33 +282,39 @@ export function App(nube) {
 			visit: current.visit,
 			origin: originOf(state.location.url),
 			image: photo?.src || current.cfg.product?.image || "",
-			// celular: janela do SDK, com a altura ajustada pelo próprio provador;
-			// computador: gaveta lateral do SDK
-			layout: phone ? "modal" : "drawer",
+			layout: cardMode ? (phone ? "modal" : "drawer") : "overlay",
+			device: phone ? "phone" : "desktop",
+			vw: String(vw),
+			vh: String(vh),
 			maxh: String(Math.round(vh * 0.9)),
 			n: String(++openCount),
 		});
 		if (variantPhoto?.id) q.set("imageId", String(variantPhoto.id));
 		if (variant?.id) q.set("variantId", String(variant.id));
 		if (resume === "camera") q.set("resume", "camera");
-		openSlot = phone ? "modal_content" : "drawer_right";
-		// a janela do SDK tem margem interna: um pouco menos que a tela, sem cortar
-		const phoneWidth = Math.min(vw - 48, 560);
+		openSlot = MODAL;
+		// cartão: um pouco menos que a tela no celular; no computador, a largura da gaveta
+		const w = cardMode ? (phone ? Math.min(vw - 48, 560) : Math.min(440, vw - 32)) : vw;
+		const h = cardMode ? Math.round(vh * (phone ? 0.8 : 0.9)) : vh;
 		dbg("abrir", {
-			slot: openSlot, resume: resume || null, screen,
-			width: phone ? phoneWidth : "100%", height: Math.round(phone ? vh * 0.8 : vh),
-			variant: variant?.id ?? null, imageId: variantPhoto?.id ?? null,
+			slot: openSlot, modo: cardMode ? "cartão" : "tela inteira", resume: resume || null, screen,
+			width: w, height: h, variant: variant?.id ?? null, imageId: variantPhoto?.id ?? null,
 		});
 		nube.render(
 			openSlot,
 			iframe({
 				src: `${API}/tryon/?${q.toString()}`,
-				// celular: a janela do SDK ignora o atributo width e encolhia o provador
-				// para ~150 px; a largura vai no estilo, com mínimo, para a janela crescer
-				width: phone ? phoneWidth : "100%",
-				height: Math.round(phone ? vh * 0.8 : vh),
-				autoresize: phone,
-				style: phone ? { width: `${phoneWidth}px`, minWidth: `${phoneWidth}px` } : { width: "100%" },
+				width: w,
+				height: h,
+				autoresize: cardMode && phone,
+				// sem a borda padrão do iframe; em tela inteira, transparente (o card
+				// é desenhado dentro); no cartão, cantos arredondados
+				style: {
+					width: `${w}px`, minWidth: `${w}px`, height: `${h}px`,
+					border: "0", display: "block",
+					background: cardMode ? "#fff" : "transparent",
+					borderRadius: cardMode ? "20px" : "0",
+				},
 				onMessage,
 			}),
 		);
@@ -307,7 +325,12 @@ export function App(nube) {
 		const storeId = state.store.id;
 		const productId = state.location.page.data.product.id;
 		if (current?.productId === productId) return;
-		closeTryon();
+		// troca de produto: some com o provador aberto, mas sem apagar a anotação
+		// da câmera (a página pode ter acabado de recarregar com ela aberta)
+		if (openSlot) {
+			nube.clearSlot(openSlot);
+			openSlot = null;
+		}
 		nube.clearSlot(BUTTON_SLOT);
 		current = null;
 		selectedVariantId = null;
@@ -377,7 +400,7 @@ export function App(nube) {
 		lastPage = key;
 		if (page?.type === "product") onProductPage(state);
 		else {
-			closeTryon();
+			if (openSlot) closeTryon();
 			current = null;
 			if (page?.type === "checkout") onCheckout();
 		}
@@ -386,6 +409,11 @@ export function App(nube) {
 	nube.on("page:loaded", handle);
 	nube.on("location:updated", handle);
 	nube.on("checkout:ready", () => onCheckout());
+	// a janela fechou (clique fora, Esc ou pelo app): a loja avisa
+	nube.on("custom:modal:close", () => {
+		dbg("janela:fechou", null);
+		openSlot = null;
+	});
 	nube.on("product:variant_selected", (state) => {
 		const id = variantIdFrom(state.eventPayload);
 		const pp = state.location.page?.data?.product;
