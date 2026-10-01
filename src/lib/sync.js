@@ -10,6 +10,22 @@ const WEBHOOK_EVENTS = [
 ];
 
 /**
+ * Produto importado por uma versão antiga (sem fotos nem mapa variação → foto):
+ * atualiza em segundo plano na primeira visita, no máximo a cada 10 minutos.
+ */
+const lastProductRefresh = new Map();
+function refreshProductIfStale(storeId, product) {
+  if (!product?.needsImages) return;
+  const key = `${storeId}:${product.id}`;
+  if (Date.now() - (lastProductRefresh.get(key) || 0) < 10 * 60 * 1000) return;
+  lastProductRefresh.set(key, Date.now());
+  if (lastProductRefresh.size > 20000) lastProductRefresh.clear();
+  const store = svc.getStore(storeId);
+  if (!store || store.uninstalled_at || store.access_token === 'dev-token') return;
+  syncProduct(storeId, product.id).catch((e) => console.warn(`[produto] ${product.id}: ${e.message}`));
+}
+
+/**
  * Atualiza os endereços da loja (original + domínios próprios). O provador só
  * conversa com páginas nesses endereços; um domínio novo passa a valer aqui.
  */
@@ -184,4 +200,4 @@ async function onInstall(storeId) {
   return steps;
 }
 
-module.exports = { refreshDomainsThrottled, resetDomainRefresh, syncAllProducts, syncProduct, importOrder, claimMatchesOrder, verifiedTried, claimsFromOrderExtra, ensureWebhooks, ensureScript, onInstall, WEBHOOK_EVENTS };
+module.exports = { refreshProductIfStale, refreshDomainsThrottled, resetDomainRefresh, syncAllProducts, syncProduct, importOrder, claimMatchesOrder, verifiedTried, claimsFromOrderExtra, ensureWebhooks, ensureScript, onInstall, WEBHOOK_EVENTS };

@@ -107,6 +107,8 @@ function normalizeProduct(p) {
     image: p.images?.[0]?.src || null,
     images: (p.images || []).filter((i) => i && typeof i.src === 'string')
       .map((i) => ({ id: Number(i.id) || null, src: i.src })).slice(0, 50),
+    variantImages: Object.fromEntries((p.variants || [])
+      .filter((v) => v && v.id && v.image_id).map((v) => [String(v.id), Number(v.image_id)])),
     categories: (p.categories || []).map((c) => ({ id: Number(c.id), name: localized(c.name) })),
     url: typeof p.canonical_url === 'string' ? p.canonical_url : null,
     price: price != null && price !== '' ? String(price) : null,
@@ -116,13 +118,15 @@ function normalizeProduct(p) {
 function upsertProduct(storeId, product) {
   const p = normalizeProduct(product);
   getDb().prepare(`
-    INSERT INTO products (store_id, id, name, handle, image, images, categories, url, price, deleted, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, datetime('now'))
+    INSERT INTO products (store_id, id, name, handle, image, images, variant_images, categories, url, price, deleted, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, datetime('now'))
     ON CONFLICT(store_id, id) DO UPDATE SET
       name = excluded.name, handle = excluded.handle, image = excluded.image, images = excluded.images,
+      variant_images = excluded.variant_images,
       categories = excluded.categories, url = excluded.url, price = excluded.price,
       deleted = 0, updated_at = datetime('now')
-  `).run(Number(storeId), p.id, p.name, p.handle, p.image, JSON.stringify(p.images), JSON.stringify(p.categories), p.url, p.price);
+  `).run(Number(storeId), p.id, p.name, p.handle, p.image, JSON.stringify(p.images), JSON.stringify(p.variantImages),
+    JSON.stringify(p.categories), p.url, p.price);
   return p;
 }
 
@@ -132,16 +136,22 @@ function markProductDeleted(storeId, productId) {
 
 function rowToProduct(row) {
   if (!row) return null;
-  return { ...row, categories: parse(row.categories, []), images: parse(row.images, []) };
+  return {
+    ...row, categories: parse(row.categories, []), images: parse(row.images, []),
+    variantImages: parse(row.variant_images, {}),
+    // produto importado antes de guardarmos as fotos: precisa ser atualizado
+    needsImages: row.images == null || row.variant_images == null,
+  };
 }
 
 /**
- * Foto do produto para a prova: a da variação escolhida (image_id), desde que
+ * Foto do produto para a prova: a da variação escolhida (variantId ou image_id), desde que
  * seja mesmo uma foto deste produto; senão, a principal. Nunca aceita URL de
  * fora, então ninguém usa o provador com imagens que não são da loja.
  */
-function productImage(product, imageId) {
-  const id = Number(imageId);
+function productImage(product, imageId, variantId) {
+  // a variação (cor) escolhida aponta para uma das fotos (image_id, vindo da API)
+  const id = Number(imageId) || Number(product?.variantImages?.[String(variantId)]) || 0;
   if (product && id) {
     const hit = (product.images || []).find((i) => i.id === id);
     if (hit) return hit.src;

@@ -72,7 +72,7 @@ router.get('/:storeId/session', (req, res) => {
   const parentOrigin = allowedOrigin(req.store, req.query.origin);
   if (!parentOrigin && req.query.origin) require('../lib/sync').refreshDomainsThrottled(req.store.id).catch(() => {});
   // foto da variação escolhida na página (cor); só vale se for uma foto deste produto
-  const image = svc.productImage(product, req.query.imageId);
+  const image = svc.productImage(product, req.query.imageId, req.query.variantId);
   if (avail.enabled) tryon.prepare(req.store.id, product, image);
   const t = req.store.settings.tryon;
   res.set('Cache-Control', 'no-store').json({
@@ -116,10 +116,11 @@ router.post('/:storeId/jobs', requireToken, (req, res) => {
   }
   try {
     const job = tryon.createJob(req.store, {
-      shopperId: req.shopper, photoId: req.body.photoId, productId: req.body.productId, imageId: req.body.imageId, ip: req.ip,
+      shopperId: req.shopper, photoId: req.body.photoId, productId: req.body.productId,
+      imageId: req.body.imageId, variantId: req.body.variantId, ip: req.ip,
     });
     if (config.tryon.debug) {
-      console.log(`[debug ${req.store.id}] servidor prova produto=${req.body.productId} imageId=${req.body.imageId ?? '-'} foto=${job.product_image || '(principal)'}${job.reused ? ' (reaproveitada)' : ''}`);
+      console.log(`[debug ${req.store.id}] servidor prova produto=${req.body.productId} variante=${req.body.variantId ?? '-'} imageId=${req.body.imageId ?? '-'} foto=${job.product_image || '(principal)'}${job.reused ? ' (reaproveitada)' : ''}`);
     }
     if (job.reused) return res.status(200).json({ job: tryon.publicJob(job), reused: true });
     const v = typeof req.body.visitId === 'string' && /^[a-z0-9]{6,40}$/i.test(req.body.visitId) ? req.body.visitId : undefined;

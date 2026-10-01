@@ -18,6 +18,7 @@
   var MAXH = Math.max(320, Number(params.get('maxh')) || 0);
   // foto da variação escolhida na página (cor); o servidor confere se é deste produto
   var IMAGE_ID = /^\d{1,15}$/.test(params.get('imageId') || '') ? params.get('imageId') : '';
+  var VARIANT_ID = /^\d{1,15}$/.test(params.get('variantId') || '') ? params.get('variantId') : '';
   document.documentElement.classList.toggle('drawer', DRAWER);
   document.documentElement.classList.toggle('modal', MODAL);
 
@@ -186,7 +187,7 @@
 
   // ---------- prova ----------
   function createJob() {
-    return req('POST', '/jobs', { photoId: S.photoId, productId: S.product.id, imageId: IMAGE_ID || undefined, shopperId: SHOPPER, token: S.token, visitId: VISIT })
+    return req('POST', '/jobs', { photoId: S.photoId, productId: S.product.id, imageId: IMAGE_ID || undefined, variantId: VARIANT_ID || undefined, shopperId: SHOPPER, token: S.token, visitId: VISIT })
       .then(function (r) { S.job = r.job; poll(); })
       .catch(function (e) {
         if (e.code === 'lead') { S.pendingAfterLead = { retry: true }; return showLead(); }
@@ -509,7 +510,7 @@
 
   function init() {
     var q = '?product=' + encodeURIComponent(PRODUCT) + '&origin=' + encodeURIComponent(params.get('origin') || '') + '&shopper=' + encodeURIComponent(SHOPPER) +
-      (IMAGE_ID ? '&imageId=' + IMAGE_ID : '');
+      (IMAGE_ID ? '&imageId=' + IMAGE_ID : '') + (VARIANT_ID ? '&variantId=' + VARIANT_ID : '');
     Array.prototype.forEach.call(document.querySelectorAll('.privacy-link'), function (a) {
       a.href = '/privacidade/?store=' + encodeURIComponent(STORE);
     });
@@ -521,7 +522,7 @@
       post({ type: 'ready' });
       dbg('abriu', {
         layout: LAYOUT, janela: [window.innerWidth, window.innerHeight], dpr: window.devicePixelRatio,
-        pai: S.parent, imageId: IMAGE_ID || null, foto: s.product.image, ua: navigator.userAgent,
+        pai: S.parent, imageId: IMAGE_ID || null, variantId: VARIANT_ID || null, foto: s.product.image, ua: navigator.userAgent,
       });
       applyKind();
       var img = s.product.image || params.get('image') || '';

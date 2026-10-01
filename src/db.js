@@ -173,6 +173,7 @@ const MIGRATIONS = [
   ['tryon_jobs', 'ip', 'TEXT'],         // hash do IP (com segredo): limite diário por IP em cada loja
   ['products', 'images', 'TEXT'],       // JSON [{id, src}]: todas as fotos (variações usam image_id)
   ['tryon_jobs', 'product_image', 'TEXT'],  // foto do produto usada (a da variação escolhida)
+  ['products', 'variant_images', 'TEXT'],   // JSON { idDaVariação: image_id } (o NubeSDK não traz o image_id)
 ];
 
 function migrate(conn) {

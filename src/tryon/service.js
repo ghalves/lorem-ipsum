@@ -419,7 +419,7 @@ function sameJob(storeId, shopperId, photo, product, image) {
   return rowToJob(row);
 }
 
-function createJob(store, { shopperId, photoId, productId, imageId, ip }) {
+function createJob(store, { shopperId, photoId, productId, imageId, variantId, ip }) {
   const shopper = validShopper(shopperId);
   if (!shopper) throw err('comprador inválido', 400);
   const product = svc.getProduct(store.id, productId);
@@ -431,7 +431,7 @@ function createJob(store, { shopperId, photoId, productId, imageId, ip }) {
   const photo = getPhoto(store.id, photoId, shopper);
   if (!photo) throw err('foto expirada: envie de novo', 410, 'photo_expired');
   // foto da variação escolhida na página (cor), conferida contra as fotos do produto
-  const image = svc.productImage(product, imageId);
+  const image = svc.productImage(product, imageId, variantId);
   const again = sameJob(store.id, shopper, photo, product, image);
   if (again) return { ...again, reused: true };
   if (needsLead(store, shopper)) throw err('informe seu WhatsApp para continuar provando', 402, 'lead');

@@ -200,8 +200,8 @@ async function upload(shopper, token, body = JPEG) {
   const r = await fetch(api('/photo'), { method: 'POST', headers: { 'content-type': 'image/jpeg', 'x-shopper': shopper, 'x-szp-token': token }, body });
   return { status: r.status, body: await r.json() };
 }
-async function createJob(shopper, token, photoId, productId = 1, imageId) {
-  const r = await fetch(api('/jobs'), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ shopperId: shopper, token, photoId, productId, imageId }) });
+async function createJob(shopper, token, photoId, productId = 1, imageId, variantId) {
+  const r = await fetch(api('/jobs'), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ shopperId: shopper, token, photoId, productId, imageId, variantId }) });
   return { status: r.status, body: await r.json() };
 }
 async function waitJob(shopper, id, ms = 5000) {
@@ -322,6 +322,11 @@ test('variação com foto própria: a prova usa a foto da cor escolhida, conferi
   assert.notEqual(other.body.reused, true, 'outra cor do mesmo produto é outra prova');
   const hist = await (await fetch(api(`/history?shopper=${shopper}`))).json();
   assert.match(hist.items[0].productImage, /1-amarelo\.jpg$/, 'o histórico mostra a peça provada');
+  // na loja real o app só sabe o id da variação: o servidor acha a foto pelo image_id da API
+  const porVariacao = await (await fetch(api(`/session?product=1&shopper=${shopper}&variantId=11&origin=https://www.lojaia.com.br`))).json();
+  assert.match(porVariacao.product.image, /1-amarelo\.jpg$/, 'variação amarela (11) aponta para a foto 102');
+  const v = await createJob(shopper, amarelo.token, photoId, 1, undefined, 11);
+  assert.equal(v.body.reused, true, 'mesma cor pelo id da variação: é a mesma prova');
 });
 
 test('Muse recusa a foto: a reserva (Nano Banana 2) entra na hora', async () => {

@@ -246,8 +246,10 @@ export function App(nube) {
 		const vh = screen.innerHeight || screen.height || 720;
 		const product = state.location.page?.data?.product;
 		const variant = selectedVariant();
-		const photo =
-			product?.images?.find((i) => i.id === variant?.image_id) || product?.images?.[0];
+		// na loja real as variações vêm sem image_id: o servidor acha a foto da
+		// cor pelo id da variação (dados da API)
+		const variantPhoto = product?.images?.find((i) => i.id === variant?.image_id);
+		const photo = variantPhoto || product?.images?.[0];
 		const q = new URLSearchParams({
 			store: String(current.storeId),
 			product: String(current.productId),
@@ -259,23 +261,26 @@ export function App(nube) {
 			maxh: String(Math.round(vh * 0.9)),
 			n: String(++openCount),
 		});
-		if (photo?.id) q.set("imageId", String(photo.id));
+		if (variantPhoto?.id) q.set("imageId", String(variantPhoto.id));
+		if (variant?.id) q.set("variantId", String(variant.id));
 		if (resume === "camera") q.set("resume", "camera");
 		openSlot = phone ? "modal_content" : "drawer_right";
+		const phoneWidth = Math.min(vw - 24, 560);
 		dbg("abrir", {
 			slot: openSlot, resume: resume || null, screen,
-			width: phone ? Math.min(vw - 24, 560) : "100%", height: Math.round(phone ? vh * 0.8 : vh),
-			variant: variant?.id ?? null, imageId: photo?.id ?? null,
+			width: phone ? phoneWidth : "100%", height: Math.round(phone ? vh * 0.8 : vh),
+			variant: variant?.id ?? null, imageId: variantPhoto?.id ?? null,
 		});
 		nube.render(
 			openSlot,
 			iframe({
 				src: `${API}/tryon/?${q.toString()}`,
-				// largura em px: "100%" dentro da janela do SDK no celular encolhia o provador
-				width: phone ? Math.min(vw - 24, 560) : "100%",
+				// celular: a janela do SDK ignora o atributo width e encolhia o provador
+				// para ~150 px; a largura vai no estilo, com mínimo, para a janela crescer
+				width: phone ? phoneWidth : "100%",
 				height: Math.round(phone ? vh * 0.8 : vh),
 				autoresize: phone,
-				style: { maxWidth: "100%" },
+				style: phone ? { width: `${phoneWidth}px`, minWidth: `${phoneWidth}px` } : { width: "100%" },
 				onMessage,
 			}),
 		);
@@ -391,21 +396,32 @@ export function App(nube) {
 		toast(PICK_OPTIONS);
 	});
 	// Câmera no celular sem recarregar a página: a loja pode ter fechado a janela.
-	// Ao voltar, se a foto não chegou ao provador (o aviso "picked" não veio),
-	// reabre o provador. O formato do aviso de visibilidade não é documentado.
+	// Só vale quando a câmera foi aberta antes de a página sair da frente e,
+	// ao voltar, a foto não chegou ao provador (o aviso "picked" não veio).
+	// (Antes, um temporizador antigo recriava o provador com a câmera aberta.)
+	let hiddenAt = 0;
+	let visibleTimer = null;
 	nube.on("page:visibility_change", (state) => {
 		const p = state.eventPayload || {};
 		dbg("visibilidade", p);
-		const visible =
-			p.visible === true || p.hidden === false || p.visibilityState === "visible" || p.state === "visible";
-		if (!visible || !current) return;
-		setTimeout(async () => {
+		clearTimeout(visibleTimer);
+		if (p.visibilityState === "hidden" || p.hidden === true) {
+			hiddenAt = Date.now();
+			return;
+		}
+		if (p.visibilityState !== "visible" && p.visible !== true) return;
+		const leftAt = hiddenAt;
+		visibleTimer = setTimeout(async () => {
 			const reopen = await readJSON(session, REOPEN_KEY, null);
-			if (!reopen || reopen.p !== current?.productId || Date.now() - reopen.t > REOPEN_MS) return;
+			if (!reopen || !current || reopen.p !== current.productId) return;
+			if (!(reopen.t <= leftAt) || Date.now() - reopen.t > REOPEN_MS) return;
+			const stillOpen = Boolean(openSlot && nube.getState().ui?.slots?.[openSlot]);
+			dbg("reabrir:checar-volta", { reopen, janelaAberta: stillOpen });
+			if (stillOpen) return; // a janela continua aberta: a câmera foi só cancelada
 			dbg("reabrir:voltou", reopen);
 			await writeJSON(session, REOPEN_KEY, null);
 			openTryon("camera");
-		}, 2000);
+		}, 2500);
 	});
 	// compra concluída: o pedido já leva os provados, então a lista recomeça
 	nube.on("checkout:success", () => {

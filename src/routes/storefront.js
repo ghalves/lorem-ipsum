@@ -74,8 +74,9 @@ router.get('/:storeId/config', loadStore, (req, res) => {
   const product = svc.getProduct(req.store.id, productId);
   if (!product) return res.json(out);
   out.product = { id: product.id, name: product.name, image: product.image };
+  require('../lib/sync').refreshProductIfStale(req.store.id, product);
   if (config.tryon.debug) {
-    console.log(`[debug ${req.store.id}] servidor config produto=${product.id} fotos guardadas=${(product.images || []).map((i) => i.id).join(',') || 'nenhuma (sincronize os produtos)'}`);
+    console.log(`[debug ${req.store.id}] servidor config produto=${product.id} fotos=${(product.images || []).map((i) => i.id).join(',') || 'nenhuma'} variações=${JSON.stringify(product.variantImages || {})}${product.needsImages ? ' (atualizando o produto)' : ''}`);
   }
   const avail = require('../tryon/service').availability(req.store, product);
   out.tryon = {
