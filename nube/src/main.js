@@ -4,7 +4,7 @@
  * Roda num web worker da Nuvemshop, sem acesso ao DOM:
  * - página de produto: botão "Provar virtualmente" (com a varinha) logo abaixo
  *   do "Comprar", depois das variações; o provador (a mesma tela /tryon/ de sempre) abre num iframe, em
- *   modal no celular e em gaveta lateral no computador, com a foto da variação
+ *   cartão na janela oficial (modal_content), com a foto da variação
  *   escolhida; o "Comprar" do provador põe essa variação no carrinho;
  * - checkout: grava no pedido (order extra) os produtos provados, cada um com
  *   o token assinado pelo servidor. Quando a Nuvemshop avisa que o pedido foi
@@ -140,11 +140,22 @@ export function App(nube) {
 	}
 	// Diagnóstico (TRYON_DEBUG=true no servidor): conta para o log o que
 	// acontece na loja real, onde não temos o console do navegador
-	let debugOn = false;
-	function dbg(event, data) {
-		if (!debugOn) return;
+	// O worker nasce a cada página: até a configuração chegar não se sabe se o
+	// debug está ligado, então o que acontecer antes fica numa fila curta.
+	let debugOn = null;
+	const debugQueue = [];
+	function sendDbg(event, data) {
 		const storeId = nube.getState().store?.id;
 		post(`/api/tryon/${storeId}/debug`, { from: "loja", event, data });
+	}
+	function dbg(event, data) {
+		if (debugOn) return sendDbg(event, data);
+		if (debugOn === null && debugQueue.length < 20) debugQueue.push([event, { ...data, antesDaConfig: true }]);
+	}
+	function setDebug(on) {
+		debugOn = Boolean(on);
+		const queued = debugQueue.splice(0);
+		if (debugOn) for (const [e, d] of queued) sendDbg(e, d);
 	}
 
 	function track(type) {
@@ -167,7 +178,10 @@ export function App(nube) {
 
 	// ---------- variação escolhida na página ----------
 	// A prova usa a foto da variação (cor) e o "Comprar" põe essa variação no
-	// carrinho. Até o cliente mexer, vale a primeira, como no tema.
+	// carrinho, só depois que o cliente escolhe. O tema avisa a variação marcada
+	// por padrão ao carregar a página, antes de o botão do provador aparecer
+	// (log da loja real: variação marcada sem o cliente tocar); esse aviso não é
+	// escolha do cliente.
 	let selectedVariantId = null;
 	let warnedPayload = false;
 
@@ -217,11 +231,7 @@ export function App(nube) {
 		else if (d.type === "picking" && current) {
 			writeJSON(session, REOPEN_KEY, { p: current.productId, t: Date.now() });
 		} else if (d.type === "picked") writeJSON(session, REOPEN_KEY, null);
-		else if (d.type === "fallback") {
-			// a janela não deu a tela inteira: cartão do tamanho que couber
-			cardMode = true;
-			openTryon(lastResume);
-		} else if (d.type === "tried") rememberTried(d.productId, d.token);
+		else if (d.type === "tried") rememberTried(d.productId, d.token);
 		else if (d.type === "buy") {
 			closeTryon();
 			addToCart();
@@ -252,17 +262,14 @@ export function App(nube) {
 		}));
 	}
 
-	// Tudo pela janela oficial (modal_content). Primeiro em tela inteira, com o
-	// iframe transparente e sem borda: o provador desenha o card que sobe de
-	// baixo (celular) ou a gaveta (computador). Se a janela não der a tela
-	// inteira, o provador pede ("fallback") e vira um cartão do tamanho que
-	// couber, nesta sessão.
+	// Janela oficial (modal_content). Medido na loja real (log "overlay:visivel"):
+	// a janela fica no centro e mostra no máximo 90% da largura e da altura da
+	// tela menos 14 px (celular 360x668 mostrou 310x638; computador 1440x707
+	// mostrou 1282x623); o que passar disso é cortado. O provador abre como um
+	// cartão que cabe nesse limite.
 	const MODAL = "modal_content";
-	let cardMode = false;
-	let lastResume;
 	function openTryon(resume) {
 		if (!current) return;
-		lastResume = resume;
 		// limpa o que tiver ficado de uma abertura anterior
 		if (openSlot) nube.clearSlot(openSlot);
 		const state = nube.getState();
@@ -270,6 +277,9 @@ export function App(nube) {
 		const screen = state.device.screen || {};
 		const vw = screen.innerWidth || screen.width || 390;
 		const vh = screen.innerHeight || screen.height || 720;
+		// limite da janela, com 2 px de folga
+		const capW = Math.floor(vw * 0.9) - 16;
+		const capH = Math.floor(vh * 0.9) - 16;
 		const product = state.location.page?.data?.product;
 		const variant = chosenVariant();
 		// na loja real as variações vêm sem image_id: o servidor acha a foto da
@@ -282,22 +292,23 @@ export function App(nube) {
 			visit: current.visit,
 			origin: originOf(state.location.url),
 			image: photo?.src || current.cfg.product?.image || "",
-			layout: cardMode ? (phone ? "modal" : "drawer") : "overlay",
+			layout: phone ? "modal" : "drawer",
 			device: phone ? "phone" : "desktop",
 			vw: String(vw),
 			vh: String(vh),
-			maxh: String(Math.round(vh * 0.9)),
+			maxh: String(capH),
 			n: String(++openCount),
 		});
 		if (variantPhoto?.id) q.set("imageId", String(variantPhoto.id));
 		if (variant?.id) q.set("variantId", String(variant.id));
 		if (resume === "camera") q.set("resume", "camera");
 		openSlot = MODAL;
-		// cartão: um pouco menos que a tela no celular; no computador, a largura da gaveta
-		const w = cardMode ? (phone ? Math.min(vw - 48, 560) : Math.min(440, vw - 32)) : vw;
-		const h = cardMode ? Math.round(vh * (phone ? 0.8 : 0.9)) : vh;
+		// celular: a largura toda que a janela mostra, e a altura acompanha a tela
+		// do provador (autoresize) até o limite; computador: 440 de largura
+		const w = phone ? Math.min(560, capW) : Math.min(440, capW);
+		const h = phone ? capH : Math.min(720, capH);
 		dbg("abrir", {
-			slot: openSlot, modo: cardMode ? "cartão" : "tela inteira", resume: resume || null, screen,
+			slot: openSlot, resume: resume || null, screen,
 			width: w, height: h, variant: variant?.id ?? null, imageId: variantPhoto?.id ?? null,
 		});
 		nube.render(
@@ -306,14 +317,11 @@ export function App(nube) {
 				src: `${API}/tryon/?${q.toString()}`,
 				width: w,
 				height: h,
-				autoresize: cardMode && phone,
-				// sem a borda padrão do iframe; em tela inteira, transparente (o card
-				// é desenhado dentro); no cartão, cantos arredondados
+				autoresize: phone,
+				// sem a borda padrão do iframe, cantos arredondados
 				style: {
-					width: `${w}px`, minWidth: `${w}px`, height: `${h}px`,
-					border: "0", display: "block",
-					background: cardMode ? "#fff" : "transparent",
-					borderRadius: cardMode ? "20px" : "0",
+					width: `${w}px`, minWidth: `${w}px`, height: `${h}px`, maxHeight: `${capH}px`,
+					border: "0", display: "block", background: "#fff", borderRadius: "20px",
 				},
 				onMessage,
 			}),
@@ -334,23 +342,37 @@ export function App(nube) {
 		nube.clearSlot(BUTTON_SLOT);
 		current = null;
 		selectedVariantId = null;
+		// falha de rede: tenta de novo (sem isso o botão só voltava recarregando)
 		let cfg;
-		try {
-			const r = await fetch(
-				`${API}/api/storefront/${storeId}/config?product=${encodeURIComponent(productId)}`,
-			);
-			if (!r.ok) throw new Error(`HTTP ${r.status}`);
-			cfg = await r.json();
-		} catch (err) {
-			console.warn("[provador] indisponível:", err.message);
+		let lastErr;
+		for (const wait of [0, 1000, 3000, 6000]) {
+			if (wait) await new Promise((r) => setTimeout(r, wait));
+			const page = nube.getState().location.page;
+			if (page?.type !== "product" || page.data.product.id !== productId) return;
+			try {
+				const r = await fetch(
+					`${API}/api/storefront/${storeId}/config?product=${encodeURIComponent(productId)}`,
+				);
+				if (r.status >= 400 && r.status < 500) throw Object.assign(new Error(`HTTP ${r.status}`), { final: true });
+				if (!r.ok) throw new Error(`HTTP ${r.status}`);
+				cfg = await r.json();
+				break;
+			} catch (err) {
+				lastErr = err;
+				if (err.final) break;
+			}
+		}
+		if (!cfg) {
+			console.warn("[provador] indisponível:", lastErr?.message);
 			return;
 		}
+		setDebug(cfg.debug);
+		if (lastErr) dbg("config:tentativas", { erro: String(lastErr.message) });
 		if (!cfg.enabled || !cfg.tryon?.enabled) return;
 		// a página mudou enquanto a configuração chegava
 		const now = nube.getState().location.page;
 		if (now?.type !== "product" || now.data.product.id !== productId) return;
 
-		debugOn = Boolean(cfg.debug);
 		current = { storeId, productId, cfg, visit: await visitId() };
 		const pp = state.location.page.data.product;
 		dbg("produto", {
@@ -418,10 +440,11 @@ export function App(nube) {
 		const id = variantIdFrom(state.eventPayload);
 		const pp = state.location.page?.data?.product;
 		dbg("variacao", {
-			payload: state.eventPayload ?? null, reconhecido: id,
+			payload: state.eventPayload ?? null, reconhecido: id, botaoVisivel: Boolean(current),
 			chavesProduto: pp ? Object.keys(pp) : null,
 		});
-		if (id) selectedVariantId = id;
+		if (id && !current) dbg("variacao:padrao-do-tema", { id });
+		else if (id) selectedVariantId = id;
 		else if (!warnedPayload) {
 			warnedPayload = true;
 			console.warn("[provador] variação sem id reconhecido:", JSON.stringify(state.eventPayload ?? null));

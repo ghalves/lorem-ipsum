@@ -13,13 +13,7 @@
   // "modal": janela do NubeSDK no celular; a loja não arrasta o card, então sem alça,
   // e a altura vai para o SDK (autoresize) até MAXH
   var LAYOUT = params.get('layout');
-  // "overlay": o iframe ocupa a janela da loja (modal_content) na tela inteira,
-  // transparente, e o próprio provador desenha o card (que sobe de baixo no
-  // celular, gaveta no computador), igual ao script antigo. Se a janela não
-  // der a tela inteira, pede o layout de cartão ("fallback").
-  var OVERLAY = LAYOUT === 'overlay';
-  var OV_DESK = OVERLAY && params.get('device') === 'desktop';
-  var DRAWER = LAYOUT === 'drawer' || OV_DESK;
+  var DRAWER = LAYOUT === 'drawer';
   var MODAL = LAYOUT === 'modal';
   var MAXH = Math.max(320, Number(params.get('maxh')) || 0);
   // foto da variação escolhida na página (cor); o servidor confere se é deste produto
@@ -27,9 +21,6 @@
   var VARIANT_ID = /^\d{1,15}$/.test(params.get('variantId') || '') ? params.get('variantId') : '';
   document.documentElement.classList.toggle('drawer', DRAWER);
   document.documentElement.classList.toggle('modal', MODAL);
-  document.documentElement.classList.toggle('overlay', OVERLAY);
-  document.documentElement.classList.toggle('ov-desk', OV_DESK);
-  document.documentElement.classList.toggle('ov-phone', OVERLAY && !OV_DESK);
 
   // ---------- estado ----------
   var S = {
@@ -79,50 +70,7 @@
   document.addEventListener('visibilitychange', function () { dbg('visibilidade', { estado: document.visibilityState }); });
   window.addEventListener('pagehide', function () { dbg('pagehide', null); });
 
-  // ---------- overlay: fundo, abrir/fechar animado, fechar fora ou no Esc ----------
-  var closing = false;
-  function closeTryon() {
-    if (!OVERLAY) return post({ type: 'close' });
-    if (closing) return;
-    closing = true;
-    document.documentElement.classList.remove('is-open');
-    setTimeout(function () { post({ type: 'close' }); }, 280);
-  }
-  if (OVERLAY) {
-    var backdrop = document.createElement('div');
-    backdrop.id = 'backdrop';
-    backdrop.addEventListener('click', closeTryon);
-    document.body.insertBefore(backdrop, document.body.firstChild);
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeTryon(); });
-    requestAnimationFrame(function () { requestAnimationFrame(function () {
-      document.documentElement.classList.add('is-open');
-    }); });
-    // a loja deu mesmo a tela inteira? (tamanho e parte visível do iframe)
-    var wantW = Number(params.get('vw')) || 0, wantH = Number(params.get('vh')) || 0;
-    var fellBack = false;
-    var fallback = function (why) {
-      if (fellBack) return;
-      fellBack = true;
-      dbg('overlay:fallback', { why: why, janela: [window.innerWidth, window.innerHeight], pedida: [wantW, wantH] });
-      post({ type: 'fallback', why: why });
-    };
-    // roda depois da sessão: só então o provador sabe a origem da loja (post)
-    window.checkOverlay = function () {
-      if (wantW && window.innerWidth < wantW * 0.9) return fallback('largura');
-      if (wantH && window.innerHeight < wantH * 0.8) return fallback('altura');
-      if ('IntersectionObserver' in window) {
-        var io = new IntersectionObserver(function (entries) {
-          io.disconnect();
-          var en = entries[0];
-          var r = en ? en.intersectionRatio : 1;
-          var box = function (b) { return b ? [Math.round(b.x), Math.round(b.y), Math.round(b.width), Math.round(b.height)] : null; };
-          dbg('overlay:visivel', { ratio: r, visivel: en && box(en.intersectionRect), iframe: en && box(en.boundingClientRect) });
-          if (r < 0.8) fallback('fora da tela');
-        }, { threshold: [0, 0.5, 0.8, 1] });
-        io.observe(document.documentElement);
-      }
-    };
-  }
+  function closeTryon() { post({ type: 'close' }); }
 
   // NubeSDK (iframe com autoresize): a loja ajusta a altura com { type: 'resize', height }
   function postResize(h) {
@@ -165,16 +113,13 @@
   var FULL = { saved: 1, result: 1, history: 1 };
   function reportHeight() {
     var screen = sheet.getAttribute('data-screen');
-    var maxCard = window.innerHeight - 24;
     if (FULL[screen]) {
-      if (OVERLAY && !OV_DESK) { sheet.style.height = maxCard + 'px'; return; }
       if (MODAL) postResize(MAXH);
       return post({ type: 'height', value: 'full' });
     }
     var el = document.querySelector('.screen[data-for="' + screen + '"]');
     // a linha da marca (quando aparece) também entra na altura do card
     var h = ($('grab').offsetHeight || 0) + $('head').offsetHeight + (el ? el.scrollHeight : 300) + ($('brandline').offsetHeight || 0) + 8;
-    if (OVERLAY && !OV_DESK) { sheet.style.height = Math.min(maxCard, Math.max(280, Math.ceil(h))) + 'px'; return; }
     if (MODAL) postResize(Math.min(MAXH, Math.max(320, Math.ceil(h))));
     post({ type: 'height', value: Math.ceil(h) });
   }
@@ -523,18 +468,11 @@
     function move(e) {
       if (!drag) return;
       drag.dy = Math.max(0, e.screenY - drag.y);
-      if (OVERLAY) { sheet.style.transition = 'none'; sheet.style.transform = 'translateY(' + drag.dy + 'px)'; return; }
       post({ type: 'drag', dy: drag.dy });
     }
     function up() {
       if (!drag) return;
       var v = drag.dy / Math.max(1, Date.now() - drag.t);
-      if (OVERLAY) {
-        sheet.style.transition = ''; sheet.style.transform = '';
-        if (drag.dy > 120 || v > 0.8) closeTryon();
-        drag = null;
-        return;
-      }
       post({ type: 'dragEnd', dy: drag.dy, v: v });
       drag = null;
     }
@@ -584,7 +522,16 @@
       S.product = s.product;
       if (s.brand && s.brand.url) { $('brandline').href = s.brand.url; $('brandline').hidden = false; }
       post({ type: 'ready' });
-      if (window.checkOverlay) window.checkOverlay();
+      // confere se a janela da loja mostra o cartão inteiro (diagnóstico)
+      if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (entries) {
+          io.disconnect();
+          var en = entries[0];
+          var box = function (b) { return b ? [Math.round(b.width), Math.round(b.height)] : null; };
+          dbg('janela:visivel', { ratio: en ? Math.round(en.intersectionRatio * 1000) / 1000 : null, visivel: en && box(en.intersectionRect), cartao: en && box(en.boundingClientRect) });
+        }, { threshold: [0, 0.5, 0.9, 1] });
+        io.observe(document.documentElement);
+      }
       dbg('abriu', {
         layout: LAYOUT, janela: [window.innerWidth, window.innerHeight], dpr: window.devicePixelRatio,
         pai: S.parent, imageId: IMAGE_ID || null, variantId: VARIANT_ID || null, foto: s.product.image, ua: navigator.userAgent,
