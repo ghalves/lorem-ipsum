@@ -256,9 +256,11 @@ export function App(nube) {
 		const variant = variants.length === 1 ? variants[0] : chosenVariant();
 		if (!variant) return toast(pickOptionsText());
 		addingToCart = true;
-		dbg("carrinho:enviar", { variant_id: variant.id });
+		// a documentação (Events > Cart > cart:add) pede variant_id, product_id e quantity
+		const productId = pageProduct()?.id;
+		dbg("carrinho:enviar", { variant_id: variant.id, product_id: productId });
 		nube.send("cart:add", () => ({
-			cart: { items: [{ variant_id: variant.id, quantity: 1 }] },
+			cart: { items: [{ variant_id: variant.id, product_id: productId, quantity: 1 }] },
 		}));
 	}
 
