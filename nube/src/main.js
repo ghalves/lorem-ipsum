@@ -32,6 +32,8 @@ const VISIT_KEY = "szp_visit";
 // câmera aberta no celular: se o sistema descartar a página, reabre o provador
 const REOPEN_KEY = "szp_reopen";
 const REOPEN_MS = 2 * 60 * 1000;
+const OVERLAY_KEY = "szp_overlay_off";
+const OVERLAY_SLOT = "edge_bottom_center";
 const WEEK = 7 * 864e5;
 const EXTRA_KEY = "miaou";
 const PICK_OPTIONS = "Escolha as opções e toque em Comprar";
@@ -191,6 +193,14 @@ export function App(nube) {
 
 	// ---------- provador ----------
 	let openCount = 0;
+	// Tela inteira (overlay): o provador desenha o fundo e o card como no script
+	// antigo. Se a loja não der a tela inteira, o provador avisa ("fallback") e
+	// volta a janela (celular) / gaveta (computador) do SDK nesta sessão.
+	let overlayBroken = false;
+	let lastResume;
+	readJSON(session, OVERLAY_KEY, false).then((v) => {
+		if (v === true) overlayBroken = true;
+	});
 
 	function closeTryon() {
 		if (!openSlot) return;
@@ -215,7 +225,12 @@ export function App(nube) {
 		else if (d.type === "picking" && current) {
 			writeJSON(session, REOPEN_KEY, { p: current.productId, t: Date.now() });
 		} else if (d.type === "picked") writeJSON(session, REOPEN_KEY, null);
-		else if (d.type === "tried") rememberTried(d.productId, d.token);
+		else if (d.type === "fallback") {
+			// a loja não deu a tela inteira: volta para a janela/gaveta do SDK
+			overlayBroken = true;
+			writeJSON(session, OVERLAY_KEY, true);
+			openTryon(lastResume);
+		} else if (d.type === "tried") rememberTried(d.productId, d.token);
 		else if (d.type === "buy") {
 			closeTryon();
 			addToCart();
@@ -236,6 +251,7 @@ export function App(nube) {
 
 	function openTryon(resume) {
 		if (!current) return;
+		lastResume = resume;
 		// a loja fecha a janela sozinha (clique fora) sem avisar o app: o botão
 		// sempre reabre, limpando o que tiver ficado
 		if (openSlot) nube.clearSlot(openSlot);
@@ -256,21 +272,41 @@ export function App(nube) {
 			visit: current.visit,
 			origin: originOf(state.location.url),
 			image: photo?.src || current.cfg.product?.image || "",
-			// celular: janela do SDK, com a altura ajustada pelo próprio provador
-			layout: phone ? "modal" : "drawer",
+			// tela inteira; sem ela, celular: janela do SDK com a altura ajustada pelo
+			// próprio provador, computador: gaveta
+			layout: overlayBroken ? (phone ? "modal" : "drawer") : "overlay",
+			device: phone ? "phone" : "desktop",
+			vw: String(vw),
+			vh: String(vh),
 			maxh: String(Math.round(vh * 0.9)),
 			n: String(++openCount),
 		});
 		if (variantPhoto?.id) q.set("imageId", String(variantPhoto.id));
 		if (variant?.id) q.set("variantId", String(variant.id));
 		if (resume === "camera") q.set("resume", "camera");
-		openSlot = phone ? "modal_content" : "drawer_right";
+		openSlot = overlayBroken ? (phone ? "modal_content" : "drawer_right") : OVERLAY_SLOT;
 		const phoneWidth = Math.min(vw - 24, 560);
 		dbg("abrir", {
-			slot: openSlot, resume: resume || null, screen,
+			slot: openSlot, modo: overlayBroken ? "janela" : "tela inteira", resume: resume || null, screen,
 			width: phone ? phoneWidth : "100%", height: Math.round(phone ? vh * 0.8 : vh),
 			variant: variant?.id ?? null, imageId: variantPhoto?.id ?? null,
 		});
+		if (!overlayBroken) {
+			nube.render(
+				openSlot,
+				iframe({
+					src: `${API}/tryon/?${q.toString()}`,
+					width: vw,
+					height: vh,
+					style: {
+						width: `${vw}px`, height: `${vh}px`, minWidth: `${vw}px`, minHeight: `${vh}px`,
+						border: "0", display: "block", background: "transparent",
+					},
+					onMessage,
+				}),
+			);
+			return;
+		}
 		nube.render(
 			openSlot,
 			iframe({

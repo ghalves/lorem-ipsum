@@ -1,4 +1,5 @@
 'use strict';
+const fs = require('node:fs');
 const path = require('node:path');
 const express = require('express');
 const config = require('./config');
@@ -68,7 +69,21 @@ function createApp({ schedulePurge = false } = {}) {
 
   const pub = path.join(__dirname, '..', 'public');
   // O provador roda em iframe dentro da loja: permitir ser emoldurado.
-  app.use('/tryon', express.static(path.join(pub, 'tryon'), { maxAge: config.devMode ? 0 : '1h' }));
+  // A página cita o CSS e o JS com a versão no endereço (?v=): uma atualização
+  // chega na hora, sem o navegador do comprador usar o script antigo do cache.
+  const tryonDir = path.join(pub, 'tryon');
+  let tryonHtml = null;
+  const renderTryonHtml = () => {
+    const v = (f) => require('node:crypto').createHash('sha1').update(fs.readFileSync(path.join(tryonDir, f))).digest('hex').slice(0, 10);
+    return fs.readFileSync(path.join(tryonDir, 'index.html'), 'utf8')
+      .replace('href="tryon.css"', `href="tryon.css?v=${v('tryon.css')}"`)
+      .replace('src="tryon.js"', `src="tryon.js?v=${v('tryon.js')}"`);
+  };
+  app.get(['/tryon/', '/tryon/index.html'], (req, res) => {
+    if (!tryonHtml || config.devMode) tryonHtml = renderTryonHtml();
+    res.set('Cache-Control', 'no-cache').type('html').send(tryonHtml);
+  });
+  app.use('/tryon', express.static(tryonDir, { maxAge: config.devMode ? 0 : '7d', index: false }));
   app.use('/admin', express.static(path.join(pub, 'admin'), { maxAge: 0 }));
   // Marca (logo usada no painel, no provador e no cartão da vitrine).
   app.use('/brand', express.static(path.join(pub, 'brand'), {
