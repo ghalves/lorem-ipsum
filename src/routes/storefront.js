@@ -66,6 +66,7 @@ router.get('/:storeId/config', loadStore, (req, res) => {
     tryon: { enabled: false },
     // vale 7 dias: a página de obrigado usa o mesmo token para ligar o pedido ao provador
     token: createEventToken(req.store.id, 7 * 24 * 3600),
+    debug: config.tryon.debug,
   };
   res.set('Cache-Control', 'no-store');
   const productId = Number(req.query.product);
@@ -73,6 +74,9 @@ router.get('/:storeId/config', loadStore, (req, res) => {
   const product = svc.getProduct(req.store.id, productId);
   if (!product) return res.json(out);
   out.product = { id: product.id, name: product.name, image: product.image };
+  if (config.tryon.debug) {
+    console.log(`[debug ${req.store.id}] servidor config produto=${product.id} fotos guardadas=${(product.images || []).map((i) => i.id).join(',') || 'nenhuma (sincronize os produtos)'}`);
+  }
   const avail = require('../tryon/service').availability(req.store, product);
   out.tryon = {
     enabled: avail.enabled, kind: avail.kind || null, button: settings.tryon.button || 'Provar virtualmente',

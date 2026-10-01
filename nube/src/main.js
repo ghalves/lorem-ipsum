@@ -22,17 +22,16 @@ import {
 } from "@tiendanube/nube-sdk-ui";
 
 const API = "__APP_URL__";
-// Depois das variações: nos temas da Nuvemshop o "before_..._add_to_cart" fica
-// acima das variações (o tema trata variações + Comprar como um bloco) e o SDK
-// não tem um lugar entre as variações e o Comprar. Logo abaixo do Comprar, o
-// cliente já escolheu a cor, e é com ela que a prova é feita.
-const BUTTON_SLOT = "after_product_detail_add_to_cart";
+// O SDK só oferece "antes" e "depois" do botão de compra. Nos temas da
+// Nuvemshop o "antes" fica acima das variações (variações + Comprar são um
+// bloco só): não há lugar entre as variações e o Comprar.
+const BUTTON_SLOT = "before_product_detail_add_to_cart";
 const TRIED_KEY = "szp_tried";
 const TOKEN_KEY = "szp_tok";
 const VISIT_KEY = "szp_visit";
 // câmera aberta no celular: se o sistema descartar a página, reabre o provador
 const REOPEN_KEY = "szp_reopen";
-const REOPEN_MS = 5 * 60 * 1000;
+const REOPEN_MS = 2 * 60 * 1000;
 const WEEK = 7 * 864e5;
 const EXTRA_KEY = "miaou";
 const PICK_OPTIONS = "Escolha as opções e toque em Comprar";
@@ -139,6 +138,15 @@ export function App(nube) {
 			keepalive: true,
 		}).catch(() => {});
 	}
+	// Diagnóstico (TRYON_DEBUG=true no servidor): conta para o log o que
+	// acontece na loja real, onde não temos o console do navegador
+	let debugOn = false;
+	function dbg(event, data) {
+		if (!debugOn) return;
+		const storeId = nube.getState().store?.id;
+		post(`/api/tryon/${storeId}/debug`, { from: "loja", event, data });
+	}
+
 	function track(type) {
 		if (!current?.cfg?.token) return;
 		post(`/api/tryon/${current.storeId}/events`, {
@@ -201,6 +209,7 @@ export function App(nube) {
 
 	function onMessage({ value }) {
 		const d = value;
+		if (d?.type !== "height" && d?.type !== "drag" && d?.type !== "resize") dbg("mensagem", d);
 		if (!d || d.source !== "mq") return;
 		if (d.type === "close") closeTryon();
 		else if (d.type === "picking" && current) {
@@ -219,6 +228,7 @@ export function App(nube) {
 		const variant = selectedVariant();
 		if (!variant) return toast(PICK_OPTIONS);
 		addingToCart = true;
+		dbg("carrinho:enviar", { variant_id: variant.id });
 		nube.send("cart:add", () => ({
 			cart: { items: [{ variant_id: variant.id, quantity: 1 }] },
 		}));
@@ -252,6 +262,11 @@ export function App(nube) {
 		if (photo?.id) q.set("imageId", String(photo.id));
 		if (resume === "camera") q.set("resume", "camera");
 		openSlot = phone ? "modal_content" : "drawer_right";
+		dbg("abrir", {
+			slot: openSlot, resume: resume || null, screen,
+			width: phone ? Math.min(vw - 24, 560) : "100%", height: Math.round(phone ? vh * 0.8 : vh),
+			variant: variant?.id ?? null, imageId: photo?.id ?? null,
+		});
 		nube.render(
 			openSlot,
 			iframe({
@@ -291,7 +306,14 @@ export function App(nube) {
 		const now = nube.getState().location.page;
 		if (now?.type !== "product" || now.data.product.id !== productId) return;
 
+		debugOn = Boolean(cfg.debug);
 		current = { storeId, productId, cfg, visit: await visitId() };
+		const pp = state.location.page.data.product;
+		dbg("produto", {
+			id: productId, device: state.device,
+			variants: (pp.variants || []).map((v) => ({ id: v.id, image_id: v.image_id })),
+			images: (pp.images || []).map((i) => i.id),
+		});
 		await writeJSON(local, TOKEN_KEY, { s: String(storeId), t: cfg.token });
 		nube.render(
 			BUTTON_SLOT,
@@ -307,6 +329,7 @@ export function App(nube) {
 		track("tryon_view");
 		// a página recarregou com a câmera aberta (celular): volta ao provador
 		const reopen = await readJSON(session, REOPEN_KEY, null);
+		dbg("reabrir:checar", { reopen, idadeMs: reopen ? Date.now() - reopen.t : null });
 		if (reopen && reopen.p === productId && Date.now() - reopen.t < REOPEN_MS) {
 			await writeJSON(session, REOPEN_KEY, null);
 			openTryon("camera");
@@ -344,21 +367,45 @@ export function App(nube) {
 	nube.on("checkout:ready", () => onCheckout());
 	nube.on("product:variant_selected", (state) => {
 		const id = variantIdFrom(state.eventPayload);
+		const pp = state.location.page?.data?.product;
+		dbg("variacao", {
+			payload: state.eventPayload ?? null, reconhecido: id,
+			chavesProduto: pp ? Object.keys(pp) : null,
+		});
 		if (id) selectedVariantId = id;
 		else if (!warnedPayload) {
 			warnedPayload = true;
 			console.warn("[provador] variação sem id reconhecido:", JSON.stringify(state.eventPayload ?? null));
 		}
 	});
-	nube.on("cart:add:success", () => {
+	nube.on("cart:add:success", (state) => {
+		dbg("carrinho:ok", state.eventPayload ?? null);
 		if (!addingToCart) return;
 		addingToCart = false;
 		nube.send("cart:open");
 	});
-	nube.on("cart:add:fail", () => {
+	nube.on("cart:add:fail", (state) => {
+		dbg("carrinho:falhou", state.eventPayload ?? null);
 		if (!addingToCart) return;
 		addingToCart = false;
 		toast(PICK_OPTIONS);
+	});
+	// Câmera no celular sem recarregar a página: a loja pode ter fechado a janela.
+	// Ao voltar, se a foto não chegou ao provador (o aviso "picked" não veio),
+	// reabre o provador. O formato do aviso de visibilidade não é documentado.
+	nube.on("page:visibility_change", (state) => {
+		const p = state.eventPayload || {};
+		dbg("visibilidade", p);
+		const visible =
+			p.visible === true || p.hidden === false || p.visibilityState === "visible" || p.state === "visible";
+		if (!visible || !current) return;
+		setTimeout(async () => {
+			const reopen = await readJSON(session, REOPEN_KEY, null);
+			if (!reopen || reopen.p !== current?.productId || Date.now() - reopen.t > REOPEN_MS) return;
+			dbg("reabrir:voltou", reopen);
+			await writeJSON(session, REOPEN_KEY, null);
+			openTryon("camera");
+		}, 2000);
 	});
 	// compra concluída: o pedido já leva os provados, então a lista recomeça
 	nube.on("checkout:success", () => {

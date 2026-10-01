@@ -58,7 +58,7 @@ function sendImage(res, file, type) {
 
 router.use((req, res, next) => {
   // o loader da vitrine manda eventos de outra origem (sendBeacon/fetch simples)
-  if (/\/events$/.test(req.path)) res.set('Access-Control-Allow-Origin', '*');
+  if (/\/(events|debug)$/.test(req.path)) res.set('Access-Control-Allow-Origin', '*');
   next();
 });
 router.use('/:storeId', loadStore);
@@ -89,6 +89,7 @@ router.get('/:storeId/session', (req, res) => {
     brand: tryon.brandFor(req.store),
     leadCapture: Boolean(t.leadCapture),
     freeBeforeLead: Math.max(0, Math.floor(Number(t.freeBeforeLead ?? 1))),
+    debug: config.tryon.debug,
   });
 });
 
@@ -117,6 +118,9 @@ router.post('/:storeId/jobs', requireToken, (req, res) => {
     const job = tryon.createJob(req.store, {
       shopperId: req.shopper, photoId: req.body.photoId, productId: req.body.productId, imageId: req.body.imageId, ip: req.ip,
     });
+    if (config.tryon.debug) {
+      console.log(`[debug ${req.store.id}] servidor prova produto=${req.body.productId} imageId=${req.body.imageId ?? '-'} foto=${job.product_image || '(principal)'}${job.reused ? ' (reaproveitada)' : ''}`);
+    }
     if (job.reused) return res.status(200).json({ job: tryon.publicJob(job), reused: true });
     const v = typeof req.body.visitId === 'string' && /^[a-z0-9]{6,40}$/i.test(req.body.visitId) ? req.body.visitId : undefined;
     svc.logEvent(req.store.id, { type: 'tryon_open', productId: job.product_id, meta: { v, job: job.id } });
@@ -168,6 +172,20 @@ router.get('/:storeId/history', (req, res) => {
 });
 
 // Eventos simples da vitrine/provador (sem dado pessoal).
+// Diagnóstico (TRYON_DEBUG=true): o app da vitrine e o provador contam o que
+// acontece na loja real; vai só para o log do servidor
+router.post('/:storeId/debug', (req, res) => {
+  if (!config.tryon.debug) return res.status(204).end();
+  if (limited(`d:${req.ip}`, 300, 3600000)) return res.status(429).end();
+  const b = req.body && typeof req.body === 'object' ? req.body : {};
+  const from = b.from === 'tryon' ? 'provador' : 'loja';
+  const what = String(b.event || '?').slice(0, 40);
+  let data = '';
+  try { data = JSON.stringify(b.data ?? null).slice(0, 1500); } catch { /* ignora */ }
+  console.log(`[debug ${req.store.id}] ${from} ${what} ${data}`);
+  res.status(204).end();
+});
+
 router.post('/:storeId/events', (req, res) => {
   const b = req.body || {};
   if (!verifyEventToken(b.token, req.store.id)) return res.status(401).json({ error: 'token inválido' });

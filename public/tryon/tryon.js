@@ -58,8 +58,20 @@
     msg.source = 'mq';
     if (window.parent !== window && S.parent) window.parent.postMessage(msg, S.parent);
   }
+  // diagnóstico (TRYON_DEBUG=true): conta para o log do servidor o que acontece na loja
+  function dbg(event, data) {
+    if (!S.session || !S.session.debug) return;
+    try {
+      fetch(API + '/debug', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, keepalive: true,
+        body: JSON.stringify({ from: 'tryon', event: event, data: data }) }).catch(function () {});
+    } catch (e) { /* noop */ }
+  }
+  document.addEventListener('visibilitychange', function () { dbg('visibilidade', { estado: document.visibilityState }); });
+  window.addEventListener('pagehide', function () { dbg('pagehide', null); });
+
   // NubeSDK (iframe com autoresize): a loja ajusta a altura com { type: 'resize', height }
   function postResize(h) {
+    dbg('altura', { pedida: h, janela: [window.innerWidth, window.innerHeight] });
     if (window.parent !== window && S.parent) window.parent.postMessage({ type: 'resize', height: h }, S.parent);
   }
 
@@ -360,8 +372,11 @@
   ['filePick', 'fileCamera', 'fileSwap', 'fileRetry'].forEach(function (id) {
     // no celular a câmera/galeria tira o navegador da frente e o sistema pode
     // descartar a página da loja: a loja anota, e se recarregar reabre o provador
-    $(id).addEventListener('click', function () { post({ type: 'picking' }); });
-    $(id).addEventListener('change', function (e) { post({ type: 'picked' }); onFile(e.target); });
+    $(id).addEventListener('click', function () { dbg('foto:abrir', { campo: id }); post({ type: 'picking' }); });
+    $(id).addEventListener('change', function (e) {
+      dbg('foto:recebida', { campo: id, arquivos: e.target.files ? e.target.files.length : 0 });
+      post({ type: 'picked' }); onFile(e.target);
+    });
   });
   $('btnTry').addEventListener('click', tryAgainWithSaved);
   $('btnRetry').addEventListener('click', tryAgainWithSaved);
@@ -504,6 +519,10 @@
       S.product = s.product;
       if (s.brand && s.brand.url) { $('brandline').href = s.brand.url; $('brandline').hidden = false; }
       post({ type: 'ready' });
+      dbg('abriu', {
+        layout: LAYOUT, janela: [window.innerWidth, window.innerHeight], dpr: window.devicePixelRatio,
+        pai: S.parent, imageId: IMAGE_ID || null, foto: s.product.image, ua: navigator.userAgent,
+      });
       applyKind();
       var img = s.product.image || params.get('image') || '';
       $('startThumbImg').src = img;

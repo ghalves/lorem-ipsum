@@ -65,6 +65,8 @@ const config = {
     glassesCrop: env.TRYON_GLASSES_CROP !== 'false',
     analysisWaitMs: Number(env.TRYON_ANALYSIS_WAIT_MS || 5000),
     concurrency: Number(env.TRYON_CONCURRENCY || 6),
+    // diagnóstico: a vitrine e o provador mandam o que acontece na loja para o log
+    debug: env.TRYON_DEBUG === 'true',
     // proteção da cota do lojista: provas por IP por dia em cada loja
     ipDailyLimit: Number(env.TRYON_IP_DAILY_LIMIT || 20),
     photoTtlHours: Number(env.TRYON_PHOTO_TTL_HOURS || 24),
