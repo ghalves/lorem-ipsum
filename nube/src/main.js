@@ -32,8 +32,6 @@ const VISIT_KEY = "szp_visit";
 // câmera aberta no celular: se o sistema descartar a página, reabre o provador
 const REOPEN_KEY = "szp_reopen";
 const REOPEN_MS = 2 * 60 * 1000;
-const OVERLAY_KEY = "szp_overlay_off";
-const OVERLAY_SLOT = "edge_bottom_center";
 const WEEK = 7 * 864e5;
 const EXTRA_KEY = "miaou";
 const PICK_OPTIONS = "Escolha as opções e toque em Comprar";
@@ -177,12 +175,8 @@ export function App(nube) {
 		const page = nube.getState().location.page;
 		return page?.type === "product" ? page.data.product : null;
 	}
-	function selectedVariant() {
-		const variants = pageProduct()?.variants || [];
-		return variants.find((v) => v.id === selectedVariantId) || variants[0] || null;
-	}
-	// Foto da prova: a principal, até o cliente mexer nas opções. O tema marca
-	// uma variação por padrão (ex.: P / Amarelo), mas isso não é escolha dele.
+	// Foto da prova e "Comprar": só a variação que o cliente escolheu. O tema
+	// marca uma por padrão (ex.: P / Amarelo), mas isso não é escolha dele.
 	function chosenVariant() {
 		const variants = pageProduct()?.variants || [];
 		return variants.find((v) => v.id === selectedVariantId) || null;
@@ -199,14 +193,6 @@ export function App(nube) {
 
 	// ---------- provador ----------
 	let openCount = 0;
-	// Tela inteira (overlay): o provador desenha o fundo e o card como no script
-	// antigo. Se a loja não der a tela inteira, o provador avisa ("fallback") e
-	// volta a janela (celular) / gaveta (computador) do SDK nesta sessão.
-	let overlayBroken = false;
-	let lastResume;
-	readJSON(session, OVERLAY_KEY, false).then((v) => {
-		if (v === true) overlayBroken = true;
-	});
 
 	function closeTryon() {
 		if (!openSlot) return;
@@ -231,23 +217,30 @@ export function App(nube) {
 		else if (d.type === "picking" && current) {
 			writeJSON(session, REOPEN_KEY, { p: current.productId, t: Date.now() });
 		} else if (d.type === "picked") writeJSON(session, REOPEN_KEY, null);
-		else if (d.type === "fallback") {
-			// a loja não deu a tela inteira: volta para a janela/gaveta do SDK
-			overlayBroken = true;
-			writeJSON(session, OVERLAY_KEY, true);
-			openTryon(lastResume);
-		} else if (d.type === "tried") rememberTried(d.productId, d.token);
+		else if (d.type === "tried") rememberTried(d.productId, d.token);
 		else if (d.type === "buy") {
 			closeTryon();
 			addToCart();
 		}
 	}
 
-	// "Comprar" do provador: a variação selecionada na página vai para o carrinho
+	// "Comprar" do provador: vai para o carrinho a variação que o cliente escolheu
+	// (a mesma da prova). Sem escolha, não compra a opção que o tema marcou por
+	// padrão (outra cor da provada): fecha e pede para escolher as opções.
 	let addingToCart = false;
+	function pickOptionsText() {
+		const names = (pageProduct()?.attributes || [])
+			.map((a) => (typeof a === "string" ? a : a?.pt || a?.es || a?.en || ""))
+			.filter(Boolean)
+			.map((n) => n.toLowerCase());
+		if (!names.length) return PICK_OPTIONS;
+		const list = names.length > 1 ? `${names.slice(0, -1).join(", ")} e ${names.at(-1)}` : names[0];
+		return `Escolha ${list} e toque em Comprar`;
+	}
 	function addToCart() {
-		const variant = selectedVariant();
-		if (!variant) return toast(PICK_OPTIONS);
+		const variants = pageProduct()?.variants || [];
+		const variant = variants.length === 1 ? variants[0] : chosenVariant();
+		if (!variant) return toast(pickOptionsText());
 		addingToCart = true;
 		dbg("carrinho:enviar", { variant_id: variant.id });
 		nube.send("cart:add", () => ({
@@ -257,7 +250,6 @@ export function App(nube) {
 
 	function openTryon(resume) {
 		if (!current) return;
-		lastResume = resume;
 		// a loja fecha a janela sozinha (clique fora) sem avisar o app: o botão
 		// sempre reabre, limpando o que tiver ficado
 		if (openSlot) nube.clearSlot(openSlot);
@@ -278,45 +270,23 @@ export function App(nube) {
 			visit: current.visit,
 			origin: originOf(state.location.url),
 			image: photo?.src || current.cfg.product?.image || "",
-			// tela inteira; sem ela, celular: janela do SDK com a altura ajustada pelo
-			// próprio provador, computador: gaveta
-			layout: overlayBroken ? (phone ? "modal" : "drawer") : "overlay",
-			device: phone ? "phone" : "desktop",
-			vw: String(vw),
-			vh: String(vh),
+			// celular: janela do SDK, com a altura ajustada pelo próprio provador;
+			// computador: gaveta lateral do SDK
+			layout: phone ? "modal" : "drawer",
 			maxh: String(Math.round(vh * 0.9)),
 			n: String(++openCount),
 		});
 		if (variantPhoto?.id) q.set("imageId", String(variantPhoto.id));
 		if (variant?.id) q.set("variantId", String(variant.id));
 		if (resume === "camera") q.set("resume", "camera");
-		openSlot = overlayBroken ? (phone ? "modal_content" : "drawer_right") : OVERLAY_SLOT;
+		openSlot = phone ? "modal_content" : "drawer_right";
 		// a janela do SDK tem margem interna: um pouco menos que a tela, sem cortar
 		const phoneWidth = Math.min(vw - 48, 560);
 		dbg("abrir", {
-			slot: openSlot, modo: overlayBroken ? "janela" : "tela inteira", resume: resume || null, screen,
+			slot: openSlot, resume: resume || null, screen,
 			width: phone ? phoneWidth : "100%", height: Math.round(phone ? vh * 0.8 : vh),
 			variant: variant?.id ?? null, imageId: variantPhoto?.id ?? null,
 		});
-		if (!overlayBroken) {
-			nube.render(
-				openSlot,
-				iframe({
-					src: `${API}/tryon/?${q.toString()}`,
-					width: vw,
-					height: vh,
-					// o espaço da loja (edge_bottom_center) deixava parte do iframe fora da
-					// tela: fixo no canto de cima da tela, cobrindo tudo
-					style: {
-						position: "fixed", top: "0px", left: "0px", zIndex: 2147483000,
-						width: `${vw}px`, height: `${vh}px`, minWidth: `${vw}px`, minHeight: `${vh}px`,
-						border: "0", display: "block", background: "transparent",
-					},
-					onMessage,
-				}),
-			);
-			return;
-		}
 		nube.render(
 			openSlot,
 			iframe({
@@ -439,7 +409,7 @@ export function App(nube) {
 		dbg("carrinho:falhou", state.eventPayload ?? null);
 		if (!addingToCart) return;
 		addingToCart = false;
-		toast(PICK_OPTIONS);
+		toast(pickOptionsText());
 	});
 	// Câmera no celular sem recarregar a página: a loja pode ter fechado a janela.
 	// Só vale quando a câmera foi aberta antes de a página sair da frente e,
