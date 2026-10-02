@@ -7,7 +7,8 @@
 - Use uma loja de demonstração do Portal de Parceiros com **pelo menos 3 produtos com foto**: uma blusa ou vestido, uma calça e um par de óculos.
 - O Miaou deve estar **desinstalado** nessa loja no começo da gravação.
 - Deixe pronta uma foto de corpo inteiro (para roupas) e uma selfie (para óculos).
-- Assim que instalar o app na cena 1, ative o plano da loja de teste no servidor (`sudo miaou plano <id da loja> crescer`). Corte essa parte da gravação. Sem plano, o botão não aparece na loja.
+- Assim que instalar o app na cena 1, libere a loja de teste no servidor (`sudo miaou plano <id da loja> crescer`). Corte essa parte da gravação. Sem isso, o botão não aparece na loja.
+- **Não abra a aba Planos** durante a gravação.
 - Abra o servidor sem `TRYON_DEBUG` ligado e com a chave do OpenRouter (provas reais, não simuladas).
 
 ---
@@ -32,13 +33,11 @@
 
 ## Cena 3 · Painel e configuração — ~1 min 30 s
 
-**Narração:** "Não há nenhuma configuração técnica: o botão entra sozinho na loja, sem código e sem mexer no layout. O lojista só escolhe o plano."
+**Narração:** "Não há nenhuma configuração técnica: o botão entra sozinho na loja, sem código e sem mexer no layout. Depois de liberada a loja pela Miaou, o provador já funciona."
 
-1. **Planos:** mostre os planos (Essencial R$ 97, Crescer R$ 197, Escalar R$ 497, Volume), o plano ativo com o uso do mês e o botão **Falar com a Miaou**.
-   **Narração:** "Para assinar, o lojista escolhe o plano e clica em Falar com a Miaou. Enviamos um link de pagamento do Asaas e, com o pagamento confirmado, ativamos o plano em até 24 horas. Nesta loja de demonstração o plano já está ativo."
-2. **Produtos:** os produtos importados, com o tipo reconhecido (roupa ou óculos) e a opção de mudar ou desligar por produto.
-3. **Preferências:** liga/desliga o provador, texto do botão, pedido de WhatsApp, limite por comprador, status "Instalado" do script na loja e e-mail de suporte.
-4. **Leads:** a lista (vazia ou com dados) e a exportação CSV.
+1. **Produtos:** os produtos importados, com o tipo reconhecido (roupa ou óculos) e a opção de mudar ou desligar por produto.
+2. **Preferências:** liga/desliga o provador, texto do botão, pedido de WhatsApp, limite por comprador, status "Instalado" do script na loja e e-mail de suporte.
+3. **Leads:** a lista (vazia ou com dados) e a exportação CSV.
 
 ## Cena 4 · Uso na loja pelo comprador (computador) — ~2 min
 
@@ -85,7 +84,6 @@
 - [ ] Instalação pelo link `tiendanube.com/apps/[APP_ID]/authorize`, não pelo painel de parceiros (tela de permissões aparece)
 - [ ] Conta criada automaticamente (lojista sem conta)
 - [ ] Login pelo admin (lojista com conta) e sessão expirada
-- [ ] Planos e assinatura visíveis no painel
 - [ ] Funcionalidade principal na loja: computador e celular, roupa e óculos
 - [ ] Compra e venda atribuída
 - [ ] Produto alterado no admin chega ao Miaou (webhook)

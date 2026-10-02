@@ -41,39 +41,23 @@ O app **não altera** produtos, pedidos, clientes nem preços.
 
 ### Configuração técnica pelo lojista
 
-Nenhuma. O botão entra sozinho na página de produto em qualquer layout, sem código. O lojista só escolhe o plano e, se quiser, ajusta o texto do botão e as preferências no painel.
+Nenhuma. O botão entra sozinho na página de produto em qualquer layout, sem código. Depois que a Miaou libera a loja, o lojista só ajusta, se quiser, o texto do botão e as preferências no painel.
 
-## 2. Planos e assinatura
+## 2. Contratação e liberação da loja
 
-| Plano | Preço mensal | Provas por mês |
-| --- | --- | --- |
-| Essencial | R$ 97 | 150 |
-| Crescer | R$ 197 | 400 |
-| Escalar | R$ 497 | 1.200 (pode remover a marca Miaou do provador) |
-| Volume | de R$ 997 a R$ 2.997 | de 2.500 a 10.000 |
+O Miaou é pago. No portal, o app está como **Grátis, com vendas no aplicativo**: a contratação é feita direto com a Miaou, fora da Nuvemshop, sem usar a API de cobrança da plataforma.
 
-- Não há teste grátis nem cobrança por prova extra. A cota renova no dia 1º de cada mês.
-- O painel avisa quando 80% da cota é usada. Quando a cota acaba, o botão sai da loja até a renovação, sem cobrança adicional.
-- Sem plano ativo, o app fica instalado mas o botão não aparece na loja; o painel mostra "Escolha um plano para o provador aparecer na loja".
-- Erros de geração não contam na cota. Uma mesma foto no mesmo produto devolve a prova já feita, sem gastar cota.
-- Proteções da cota: até 10 provas por comprador por dia (ajustável pelo lojista) e 20 por IP por dia.
-
-**Como a assinatura é contratada (cobrança própria, fora da Nuvemshop).** No portal, o app está como **Grátis, com vendas no aplicativo**.
-
-1. O lojista instala o Miaou (sem custo) e escolhe o plano na aba **Planos** do painel.
-2. Clica em **Falar com a Miaou**, que abre um e-mail para `suporte@miaou.com.br` já com o ID da loja.
-3. A Miaou envia um **link de pagamento do Asaas** com o valor do plano.
-4. O lojista paga pelo link.
-5. Com o pagamento confirmado, a Miaou ativa o plano da loja em até 24 horas. O uso do mês passa a aparecer na aba Planos e o botão aparece na loja.
-
-A cobrança acontece toda fora da Nuvemshop e não usa a API de cobrança da plataforma. Para trocar ou cancelar o plano, o lojista escreve para `suporte@miaou.com.br`.
+1. O lojista instala o Miaou pela Loja de Aplicativos.
+2. No painel, clica em **Falar com a Miaou**, que abre um e-mail para `suporte@miaou.com.br` já com o ID da loja.
+3. A Miaou combina a contratação com o lojista e libera o provador na loja em até 24 horas.
+4. Até a liberação, o app fica instalado, mas o botão não aparece na loja.
 
 ## 3. Acesso para a equipe de homologação
 
-Como o botão só aparece com um plano ativo, oferecemos duas formas de validar o app sem passar pela contratação:
+Como o botão só aparece com a loja liberada, oferecemos duas formas de validar o app sem passar pela contratação:
 
-1. **Loja de demonstração já configurada** com o Miaou instalado e o plano **Crescer** ativo:
+1. **Loja de demonstração já configurada** com o Miaou instalado e já liberado:
    - URL da loja: `[PREENCHER]`
    - Acesso ao admin: `[PREENCHER usuário/senha ou convidar a equipe como usuário]`
    - Produtos para testar: `[PREENCHER: 1 roupa, 1 calça, 1 óculos]`
-2. **Loja de teste de vocês:** depois de instalar o Miaou, enviem o ID da loja para `suporte@miaou.com.br` (ou respondam este e-mail) e ativamos o plano **Crescer** sem custo em até 24 horas.
+2. **Loja de teste de vocês:** depois de instalar o Miaou, enviem o ID da loja para `suporte@miaou.com.br` (ou respondam este e-mail) e liberamos o provador sem custo em até 24 horas.

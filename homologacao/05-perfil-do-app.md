@@ -19,12 +19,12 @@ O restante (nome, e-mail, site, URL de redirecionamento, política de privacidad
 | Campo | Limite do portal | O que colar |
 | --- | --- | --- |
 | Descrição curta | 140 caracteres | `loja-de-aplicativos/descricao-curta.txt` (125) |
-| Descrição longa | 2.000 caracteres | `loja-de-aplicativos/descricao-longa.txt` (~1.970, segue as 8 seções do modelo oficial da Nuvemshop, sem os preços) |
+| Descrição longa | 2.000 caracteres | `loja-de-aplicativos/descricao-longa.txt` (~1.720, segue o modelo oficial da Nuvemshop, sem planos e preços) |
 | Ícone | exatamente 200 × 200 px, até 400 KB | `loja-de-aplicativos/icone-200x200.png` |
 | Vídeo do aplicativo | YouTube, até 3 min | Opcional. É um vídeo curto de divulgação, diferente do vídeo da homologação |
-| Perguntas frequentes | até 10 | `loja-de-aplicativos/faq-portal-10-perguntas.md` |
+| Perguntas frequentes | até 10 | `loja-de-aplicativos/faq-portal-9-perguntas.md` |
 | Imagens do aplicativo | 3 a 5, exatamente 1920 × 1080 px, até 5 MB | Em produção (precisam de provas reais) |
 
 ## Forma de cobrança
 
-**Grátis** + **Possui vendas no aplicativo** (já configurado). O pagamento dos planos é feito fora da Nuvemshop, por link do Asaas.
+**Grátis** + **Possui vendas no aplicativo** (já configurado). A contratação é feita direto com a Miaou, fora da Nuvemshop.

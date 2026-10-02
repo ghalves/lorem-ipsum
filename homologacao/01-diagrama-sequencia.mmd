@@ -35,20 +35,17 @@ sequenceDiagram
     M->>API: POST /apps/authorize/token
     API-->>M: access_token
     M->>API: GET /store (atualiza os domínios da loja, no máximo a cada 30 s)
-    M-->>L: Painel /admin (Visão geral, Produtos, Leads, Planos, Preferências)
+    M-->>L: Painel /admin (Visão geral, Produtos, Leads, Preferências)
     Note over L,M: Sessão vencida ou aberta fora do admin: "Sessão expirada. Abra o app novamente pelo painel da sua loja"
     L->>M: Painel: sincronizar produtos / reinstalar script
     M->>API: GET /products [read_products] · POST /scripts [write_scripts]
     end
 
     rect rgb(255, 246, 230)
-    Note over L,M: 3. ASSINATURA (cobrança própria via Asaas · plano mensal · sem teste grátis)
-    L->>M: Painel > Planos: escolhe o plano e clica em "Falar com a Miaou" (e-mail com o ID da loja)
-    M-->>L: Equipe Miaou envia o link de pagamento Asaas do plano escolhido
-    L->>M: Paga pelo link (fora da Nuvemshop · nenhuma chamada à API Nuvemshop)
-    M->>M: Pagamento confirmado: a equipe ativa o plano da loja (até 24 h)
-    M-->>L: Plano ativo e uso do mês. Sem plano, o botão não aparece na loja
-    Note over L,M: Cota no fim: o botão sai da loja até o dia 1º. Aviso no painel aos 80%
+    Note over L,M: 3. LIBERAÇÃO DA LOJA (contratação direto com a Miaou, fora da Nuvemshop)
+    L->>M: Painel: clica em "Falar com a Miaou" (e-mail com o ID da loja)
+    M->>M: Equipe Miaou libera o provador na loja (até 24 h) · nenhuma chamada à API Nuvemshop
+    M-->>L: Provador liberado. Antes disso, o botão não aparece na loja
     end
 
     rect rgb(248, 238, 252)
