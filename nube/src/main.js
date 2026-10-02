@@ -361,6 +361,14 @@ export function App(nube) {
 		setDebug(cfg.debug);
 		if (lastErr) dbg("config:tentativas", { erro: String(lastErr.message) });
 		if (!cfg.enabled || !cfg.tryon?.enabled) return;
+		// todas as variações esgotadas (stock 0 com controle de estoque): sem botão,
+		// se o lojista deixou marcado. Sem controle de estoque = estoque infinito.
+		const pv = state.location.page.data.product.variants || [];
+		const soldOut = pv.length > 0 && pv.every((v) => v.stock_management !== false && v.stock != null && Number(v.stock) <= 0);
+		if (soldOut && cfg.tryon.hideOutOfStock !== false) {
+			dbg("sem-estoque", { produto: productId, variacoes: pv.length });
+			return;
+		}
 		// a página mudou enquanto a configuração chegava
 		const now = nube.getState().location.page;
 		if (now?.type !== "product" || now.data.product.id !== productId) return;

@@ -535,6 +535,13 @@ test('painel: preferências do provador e tipo de prova por produto', async () =
   const cfg = await (await fetch(`${base}/api/storefront/${STORE_ID}/config?product=1`)).json();
   assert.equal(cfg.tryon.enabled, false);
   await admin('PUT', '/products/1/tryon', { kind: null });
+  // sem estoque: esconder vem marcado; o lojista pode desmarcar
+  const on = await (await fetch(`${base}/api/storefront/${STORE_ID}/config?product=1`)).json();
+  assert.equal(on.tryon.hideOutOfStock, true);
+  assert.equal((await admin('PUT', '/settings', { tryon: { hideOutOfStock: 'sim' } })).status, 400);
+  await admin('PUT', '/settings', { tryon: { hideOutOfStock: false } });
+  assert.equal((await (await fetch(`${base}/api/storefront/${STORE_ID}/config?product=1`)).json()).tryon.hideOutOfStock, false);
+  await admin('PUT', '/settings', { tryon: { hideOutOfStock: true } });
 });
 
 test('limite por comprador: 10 por dia por padrão, ajustável; erro e repetição não contam', async () => {

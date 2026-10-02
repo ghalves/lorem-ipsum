@@ -17,6 +17,7 @@ const DEFAULT_SETTINGS = {
     dailyPerShopper: 10, // provas por comprador em 24 h (protege a cota do mês)
     button: 'Provar virtualmente',
     buttonAnimation: true, // varinha do botão balança como na espera da prova
+    hideOutOfStock: true,  // sem botão quando todas as variações estão sem estoque
     showBrand: true,       // marca Miaou no provador (só planos Escalar e Volume podem desligar)
   },
 };

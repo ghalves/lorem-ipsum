@@ -82,6 +82,7 @@ router.get('/:storeId/config', loadStore, (req, res) => {
   out.tryon = {
     enabled: avail.enabled, kind: avail.kind || null, button: settings.tryon.button || 'Provar virtualmente',
     animate: settings.tryon.buttonAnimation !== false,
+    hideOutOfStock: settings.tryon.hideOutOfStock !== false,
   };
   res.json(out);
 });
