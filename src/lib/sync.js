@@ -112,6 +112,9 @@ async function importOrder(storeId, orderId) {
       saved += require('../tryon/service').recordSale(store.id, orderId, productId);
     }
   }
+  if (require('../config').tryon.debug) {
+    console.log(`[debug ${store.id}] servidor pedido=${orderId} pago: extra=${JSON.stringify(order?.extra ?? null).slice(0, 300)} provados=${[...fromExtra].join(',') || 'nenhum'} produtos=${(order?.products || []).map((p) => p.product_id).join(',')} vendas=${saved}`);
+  }
   return saved;
 }
 

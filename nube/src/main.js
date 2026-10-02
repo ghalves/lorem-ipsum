@@ -404,9 +404,24 @@ export function App(nube) {
 		const tried = await readTried();
 		const tok = await readJSON(local, TOKEN_KEY, null);
 		const storeId = String(nube.getState().store.id);
-		if (!tried.length || !tok || String(tok.s) !== storeId) return;
+		// no checkout não há página de produto: só busca a configuração para saber
+		// se o diagnóstico está ligado
+		if (debugOn === null) {
+			try {
+				const r = await fetch(`${API}/api/storefront/${storeId}/config`);
+				if (r.ok) setDebug((await r.json()).debug);
+			} catch {
+				setDebug(false);
+			}
+		}
+		const step = nube.getState().location.page?.data?.step ?? null;
+		if (!tried.length || !tok || String(tok.s) !== storeId) {
+			dbg("checkout", { step, provados: tried.length, token: Boolean(tok), enviado: false });
+			return;
+		}
 		const value = JSON.stringify({ v: 1, p: tried.map((r) => [r.p, r.k]) });
 		nube.send("order:add:extra", () => ({ order: { extra: { [EXTRA_KEY]: value } } }));
+		dbg("checkout", { step, provados: tried.map((r) => r.p), enviado: true });
 	}
 
 	function handle(state) {
@@ -425,7 +440,6 @@ export function App(nube) {
 	nube.on("page:loaded", handle);
 	nube.on("location:updated", handle);
 	nube.on("checkout:ready", () => onCheckout());
-	// a janela fechou (clique fora, Esc ou pelo app): a loja avisa
 	// a gaveta fechou (pela loja ou pelo app): a loja avisa
 	nube.on("custom:drawer:close", (state) => {
 		dbg("gaveta:fechou", state.eventPayload ?? null);

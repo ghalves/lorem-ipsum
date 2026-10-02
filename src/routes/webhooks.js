@@ -42,6 +42,7 @@ router.post('/nuvemshop', (req, res) => {
         svc.markProductDeleted(storeId, id);
         break;
       case 'order/paid':
+        if (config.tryon.debug) console.log(`[debug ${storeId}] servidor aviso order/paid pedido=${id}`);
         svc.logEvent(storeId, { type: 'order_paid', meta: { order_id: id } });
         await sync.importOrder(storeId, id);
         break;
