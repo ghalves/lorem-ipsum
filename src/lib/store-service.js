@@ -15,8 +15,9 @@ const DEFAULT_SETTINGS = {
     leadCapture: true,   // pede o WhatsApp antes da 2ª prova
     freeBeforeLead: 1,   // quantas provas o comprador faz antes de pedir o WhatsApp
     dailyPerShopper: 10, // provas por comprador em 24 h (protege a cota do mês)
-    button: 'Provar virtualmente',
-    buttonAnimation: true, // varinha do botão balança como na espera da prova
+    button: 'Provar em mim',
+    buttonIcon: true,      // ícone de brilhos (Hugeicons AiSparkles) antes do texto
+    buttonAnimation: false, // brilhos do ícone piscam
     hideOutOfStock: true,  // sem botão quando todas as variações estão sem estoque
     showBrand: true,       // marca Miaou no provador (só planos Escalar e Volume podem desligar)
   },

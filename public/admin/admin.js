@@ -258,7 +258,7 @@
   function quotaBanner(q) {
     var usedPct = q.plan.quota ? Math.min(1, q.used / q.plan.quota) : 0;
     var title, text, cls = 'banner';
-    if (q.plan.key === 'none') { title = 'Escolha um plano para o provador aparecer na loja'; text = 'Sem plano, o botão "Provar virtualmente" fica escondido.'; }
+    if (q.plan.key === 'none') { title = 'Escolha um plano para o provador aparecer na loja'; text = 'Sem plano, o botão do provador fica escondido.'; }
     else if (q.exhausted) { title = 'As provas do mês acabaram'; text = 'O botão saiu da loja até ' + renewText() + '. Suba de plano para voltar agora.'; cls += ' bad'; }
     else if (q.alert) { title = 'Você já usou ' + pct(usedPct) + ' das provas do mês'; text = 'Quando acabar, o botão sai da loja até ' + renewText() + '.'; cls += ' warn'; }
     else return null;
@@ -371,7 +371,7 @@
   // ---------- preferências ----------
   function renderPrefs() {
     var t = state.me.settings.tryon || {};
-    var f = { enabled: t.enabled !== false, leadCapture: !!t.leadCapture, freeBeforeLead: t.freeBeforeLead == null ? 1 : t.freeBeforeLead, dailyPerShopper: t.dailyPerShopper || 10, buttonAnimation: t.buttonAnimation !== false, hideOutOfStock: t.hideOutOfStock !== false, showBrand: t.showBrand !== false, button: t.button || 'Provar virtualmente' };
+    var f = { enabled: t.enabled !== false, leadCapture: !!t.leadCapture, freeBeforeLead: t.freeBeforeLead == null ? 1 : t.freeBeforeLead, dailyPerShopper: t.dailyPerShopper || 10, buttonIcon: t.buttonIcon !== false, buttonAnimation: t.buttonAnimation === true, hideOutOfStock: t.hideOutOfStock !== false, showBrand: t.showBrand !== false, button: t.button || 'Provar em mim' };
     function sw(key, label, hint, locked) {
       var input = h('input', { type: 'checkbox', checked: f[key], disabled: !!locked, onchange: function (e) { f[key] = e.target.checked; } });
       return h('div', { class: 'pref' }, h('div', null, h('b', { text: label }), hint ? h('span', { class: 'muted', text: hint }) : null),
@@ -388,7 +388,8 @@
       pageHead('Preferências'),
       h('div', { class: 'card' }, h('div', { class: 'card-head' }, h('h2', { text: 'Na loja' })),
         sw('enabled', 'Provador na loja', 'Mostra o botão nas páginas de produto com foto.'),
-        sw('buttonAnimation', 'Varinha animada no botão', 'A varinha do botão balança e brilha, como na espera da prova. Chama atenção sem atrapalhar.'),
+        sw('buttonIcon', 'Ícone no botão', 'Mostra os brilhos antes do texto. Desligado, o botão fica só com o texto.'),
+        sw('buttonAnimation', 'Ícone animado', 'Os brilhos do ícone piscam de leve para chamar atenção.'),
         sw('hideOutOfStock', 'Esconder em produtos sem estoque', 'O botão não aparece quando todas as opções do produto estão esgotadas. Assim nenhuma prova da cota vai para um produto que não dá para comprar.'),
         state.me.brandRemovable
           ? sw('showBrand', 'Marca Miaou no provador', 'Mostra "Provador virtual por Miaou" no rodapé do provador e do link compartilhado.')
@@ -403,7 +404,7 @@
       installCard(),
       supportCard(),
       h('div', { class: 'row', style: 'justify-content:flex-end' }, h('button', { class: 'btn primary', text: 'Salvar', onclick: function () {
-        api('PUT', '/settings', { tryon: { enabled: f.enabled, leadCapture: f.leadCapture, freeBeforeLead: f.freeBeforeLead, dailyPerShopper: f.dailyPerShopper, buttonAnimation: f.buttonAnimation, hideOutOfStock: f.hideOutOfStock, showBrand: f.showBrand, button: f.button.trim() } })
+        api('PUT', '/settings', { tryon: { enabled: f.enabled, leadCapture: f.leadCapture, freeBeforeLead: f.freeBeforeLead, dailyPerShopper: f.dailyPerShopper, buttonIcon: f.buttonIcon, buttonAnimation: f.buttonAnimation, hideOutOfStock: f.hideOutOfStock, showBrand: f.showBrand, button: f.button.trim() } })
           .then(function () { toast('Preferências salvas'); return loadMe(); }).then(function () { go('prefs'); }).catch(fail);
       } })),
     ]);

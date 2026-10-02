@@ -146,7 +146,7 @@ test('vitrine: botão só com plano e em produto com foto', async () => {
   svc.updateSettings(STORE_ID, { tryon: { plan: 'essencial' } });
   const cfg = await storeCfg(1);
   assert.equal(cfg.tryon.enabled, true);
-  assert.equal(cfg.tryon.button, 'Provar virtualmente');
+  assert.equal(cfg.tryon.button, 'Provar em mim');
   assert.equal(cfg.sizeGuide, undefined, 'nada do guia de medidas');
   assert.equal((await storeCfg(2)).tryon.enabled, false, 'produto sem foto');
   assert.ok(getDb());

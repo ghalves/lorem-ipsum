@@ -67,7 +67,7 @@ router.put('/settings', (req, res) => {
     const t = clean.tryon;
     if (!isObj(t)) return bad(res, ['"tryon" inválido']);
     const out = {};
-    for (const k of ['enabled', 'leadCapture', 'buttonAnimation', 'showBrand', 'hideOutOfStock']) {
+    for (const k of ['enabled', 'leadCapture', 'buttonIcon', 'buttonAnimation', 'showBrand', 'hideOutOfStock']) {
       if (k in t) {
         if (typeof t[k] !== 'boolean') return bad(res, [`"tryon.${k}" deve ser verdadeiro ou falso`]);
         out[k] = t[k];

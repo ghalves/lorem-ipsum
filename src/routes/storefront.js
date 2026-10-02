@@ -80,8 +80,9 @@ router.get('/:storeId/config', loadStore, (req, res) => {
   }
   const avail = require('../tryon/service').availability(req.store, product);
   out.tryon = {
-    enabled: avail.enabled, kind: avail.kind || null, button: settings.tryon.button || 'Provar virtualmente',
-    animate: settings.tryon.buttonAnimation !== false,
+    enabled: avail.enabled, kind: avail.kind || null, button: settings.tryon.button || 'Provar em mim',
+    icon: settings.tryon.buttonIcon !== false,
+    animate: settings.tryon.buttonAnimation === true,
     hideOutOfStock: settings.tryon.hideOutOfStock !== false,
   };
   res.json(out);

@@ -2,7 +2,7 @@
  * Miaou na vitrine, via NubeSDK (substitui o loader.js da Script API).
  *
  * Roda num web worker da Nuvemshop, sem acesso ao DOM:
- * - página de produto: botão "Provar virtualmente" (com a varinha) logo abaixo
+ * - página de produto: botão "Provar em mim" (com os brilhos) logo abaixo
  *   do "Comprar", depois das variações; o provador (a mesma tela /tryon/ de sempre) abre num iframe, em
  *   gaveta oficial da loja (drawer_right), com a foto da variação
  *   escolhida; o "Comprar" do provador põe essa variação no carrinho;
@@ -36,41 +36,30 @@ const WEEK = 7 * 864e5;
 const EXTRA_KEY = "miaou";
 const PICK_OPTIONS = "Escolha as opções e toque em Comprar";
 
-// Varinha do botão: a mesma da espera da prova (Hugeicons Free AiBeautify,
-// Stroke Rounded, MIT · Copyright (c) 2025 Hugeicons). Gira de leve e as
-// estrelinhas piscam; o lojista desliga a animação em Preferências.
-const WAND =
-	"M14 12.6483L16.3708 10.2775C16.6636 9.98469 16.81 9.83827 16.8883 9.68032C17.0372 9.3798 17.0372 9.02696 16.8883 8.72644C16.81 8.56849 16.6636 8.42207 16.3708 8.12923C16.0779 7.83638 15.9315 7.68996 15.7736 7.61169C15.473 7.46277 15.1202 7.46277 14.8197 7.61169C14.6617 7.68996 14.5153 7.83638 14.2225 8.12923L11.8517 10.5M14 12.6483L5.77754 20.8708C5.4847 21.1636 5.33827 21.31 5.18032 21.3883C4.8798 21.5372 4.52696 21.5372 4.22644 21.3883C4.06849 21.31 3.92207 21.1636 3.62923 20.8708C3.33639 20.5779 3.18996 20.4315 3.11169 20.2736C2.96277 19.973 2.96277 19.6202 3.11169 19.3197C3.18996 19.1617 3.33639 19.0153 3.62923 18.7225L11.8517 10.5M14 12.6483L11.8517 10.5";
-const SPARKS = [
-	"M19.5 2.5L19.3895 2.79873C19.2445 3.19044 19.172 3.38629 19.0292 3.52917C18.8863 3.67204 18.6904 3.74452 18.2987 3.88946L18 4L18.2987 4.11054C18.6904 4.25548 18.8863 4.32796 19.0292 4.47083C19.172 4.61371 19.2445 4.80956 19.3895 5.20127L19.5 5.5L19.6105 5.20127C19.7555 4.80956 19.828 4.61371 19.9708 4.47083C20.1137 4.32796 20.3096 4.25548 20.7013 4.11054L21 4L20.7013 3.88946C20.3096 3.74452 20.1137 3.67204 19.9708 3.52917C19.828 3.38629 19.7555 3.19044 19.6105 2.79873L19.5 2.5Z",
-	"M19.5 12.5L19.3895 12.7987C19.2445 13.1904 19.172 13.3863 19.0292 13.5292C18.8863 13.672 18.6904 13.7445 18.2987 13.8895L18 14L18.2987 14.1105C18.6904 14.2555 18.8863 14.328 19.0292 14.4708C19.172 14.6137 19.2445 14.8096 19.3895 15.2013L19.5 15.5L19.6105 15.2013C19.7555 14.8096 19.828 14.6137 19.9708 14.4708C20.1137 14.328 20.3096 14.2555 20.7013 14.1105L21 14L20.7013 13.8895C20.3096 13.7445 20.1137 13.672 19.9708 13.5292C19.828 13.3863 19.7555 13.1904 19.6105 12.7987L19.5 12.5Z",
-	"M10.5 2.5L10.3895 2.79873C10.2445 3.19044 10.172 3.38629 10.0292 3.52917C9.88629 3.67204 9.69044 3.74452 9.29873 3.88946L9 4L9.29873 4.11054C9.69044 4.25548 9.88629 4.32796 10.0292 4.47083C10.172 4.61371 10.2445 4.80956 10.3895 5.20127L10.5 5.5L10.6105 5.20127C10.7555 4.80956 10.828 4.61371 10.9708 4.47083C11.1137 4.32796 11.3096 4.25548 11.7013 4.11054L12 4L11.7013 3.88946C11.3096 3.74452 11.1137 3.67204 10.9708 3.52917C10.828 3.38629 10.7555 3.19044 10.6105 2.79873L10.5 2.5Z",
+// Ícone do botão: Hugeicons Free AiSparkles (Stroke Rounded, MIT · Copyright
+// (c) 2025 Hugeicons, @hugeicons/core-free-icons 4.3.5). Com a animação ligada
+// em Preferências, os três brilhos piscam um depois do outro.
+const SPARKLES = [
+	"M11.9826 10.879L13.5745 11.4096C14.1418 11.5987 14.1418 12.4013 13.5745 12.5904L11.9826 13.121C10.8676 13.4927 9.99268 14.3676 9.62102 15.4826L9.0904 17.0745C8.90127 17.6418 8.09873 17.6418 7.9096 17.0745L7.37898 15.4826C7.00732 14.3676 6.13239 13.4927 5.0174 13.121L3.42553 12.5904C2.85815 12.4013 2.85816 11.5987 3.42553 11.4096L5.0174 10.879C6.13239 10.5073 7.00732 9.63239 7.37898 8.5174L7.9096 6.92553C8.09873 6.35815 8.90127 6.35816 9.0904 6.92553L9.62102 8.5174C9.99268 9.63239 10.8676 10.5073 11.9826 10.879Z",
+	"M18.083 4.99045L18.8066 5.23164C19.0645 5.3176 19.0645 5.6824 18.8066 5.76836L18.083 6.00955C17.5762 6.17849 17.1785 6.57619 17.0096 7.083L16.7684 7.80658C16.6824 8.06448 16.3176 8.06447 16.2316 7.80658L15.9904 7.083C15.8215 6.57619 15.4238 6.17849 14.917 6.00955L14.1934 5.76836C13.9355 5.6824 13.9355 5.3176 14.1934 5.23164L14.917 4.99045C15.4238 4.82151 15.8215 4.42381 15.9904 3.917L16.2316 3.19342C16.3176 2.93552 16.6824 2.93553 16.7684 3.19342L17.0096 3.917C17.1785 4.42381 17.5762 4.82151 18.083 4.99045Z",
+	"M18.083 17.9904L18.8066 18.2316C19.0645 18.3176 19.0645 18.6824 18.8066 18.7684L18.083 19.0096C17.5762 19.1785 17.1785 19.5762 17.0096 20.083L16.7684 20.8066C16.6824 21.0645 16.3176 21.0645 16.2316 20.8066L15.9904 20.083C15.8215 19.5762 15.4238 19.1785 14.917 19.0096L14.1934 18.7684C13.9355 18.6824 13.9355 18.3176 14.1934 18.2316L14.917 17.9904C15.4238 17.8215 15.8215 17.4238 15.9904 16.917L16.2316 16.1934C16.3176 15.9355 16.6824 15.9355 16.7684 16.1934L17.0096 16.917C17.1785 17.4238 17.5762 17.8215 18.083 17.9904Z",
 ];
-const WAVE = keyframes`0%,100%{transform:rotate(-10deg)}50%{transform:rotate(12deg)}`;
-const TWINKLE = keyframes`0%,100%{opacity:.15}40%{opacity:1}`;
-const WavingSvg = styled(svgRoot)`
-	animation: ${WAVE} 1.6s ease-in-out infinite;
-	transform-origin: 20% 85%;
-`;
-const TWINKLES = [0, 0.6, 1.2].map(
+const TWINKLE = keyframes`0%,100%{opacity:.25}40%{opacity:1}`;
+const TWINKLES = [0, 0.5, 1].map(
 	(delay) => styled(svgPath)`
 		animation: ${TWINKLE} 1.8s ease-in-out ${delay}s infinite;
 	`,
 );
 
-function wandIcon(animate) {
-	const Root = animate ? WavingSvg : svgRoot;
-	const line = { stroke: "currentColor", strokeWidth: 1.5, strokeLinejoin: "round" };
-	return Root({
+function sparklesIcon(animate) {
+	const line = { stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round" };
+	return svgRoot({
 		width: 22,
 		height: 22,
 		viewBox: "0 0 24 24",
 		fill: "none",
 		style: { flexShrink: 0 },
-		children: [
-			svgPath({ d: WAND, ...line, strokeLinecap: "round" }),
-			...SPARKS.map((d, i) => (animate ? TWINKLES[i] : svgPath)({ d, ...line })),
-		],
+		children: SPARKLES.map((d, i) => (animate ? TWINKLES[i] : svgPath)({ d, ...line })),
 	});
 }
 
@@ -387,10 +376,12 @@ export function App(nube) {
 		nube.render(
 			BUTTON_SLOT,
 			button({
-				children: [wandIcon(cfg.tryon.animate !== false), cfg.tryon.button || "Provar virtualmente"],
+				children: cfg.tryon.icon === false
+					? [cfg.tryon.button || "Provar em mim"]
+					: [sparklesIcon(cfg.tryon.animate === true), cfg.tryon.button || "Provar em mim"],
 				variant: "secondary",
 				width: "100%",
-				ariaLabel: "Provar virtualmente",
+				ariaLabel: cfg.tryon.button || "Provar em mim",
 				style: { display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" },
 				onClick: () => openTryon(),
 			}),
