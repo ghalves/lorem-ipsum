@@ -23,10 +23,9 @@ Vantagens de instalar o Miaou
 - Fotos apagadas em 24 horas, de acordo com a LGPD.
 
 Planos e preços
-- Essencial: R$ 97/mês, 150 provas.
-- Crescer: R$ 197/mês, 400 provas.
-- Escalar: R$ 497/mês, 1.200 provas e opção de remover a marca Miaou.
-- Volume: de 2.500 a 10.000 provas, a partir de R$ 997/mês.
+- Planos mensais de acordo com a quantidade de provas por mês, para lojas de todos os tamanhos.
+- Sem taxa de instalação e sem cobrança extra: quando as provas do mês acabam, o botão sai da loja até o dia 1º.
+- Veja os planos na aba Planos depois de instalar.
 
 Como integrar o Miaou com a Nuvemshop?
 - Clique em "Instalar aplicativo".

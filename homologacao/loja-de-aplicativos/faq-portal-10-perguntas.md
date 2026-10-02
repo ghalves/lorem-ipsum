@@ -14,8 +14,8 @@ Não. O botão entra sozinho, logo abaixo do "Comprar", em qualquer layout, no c
 **4. Para quais produtos funciona?**
 Roupas (blusas, vestidos, calças, saias, camisetas e moda masculina) e óculos. O Miaou reconhece o tipo de cada produto, e você pode mudar ou desligar o provador por produto na aba Produtos.
 
-**5. Quanto custa?**
-Essencial R$ 97/mês (150 provas), Crescer R$ 197/mês (400), Escalar R$ 497/mês (1.200) e Volume a partir de R$ 997/mês (2.500 a 10.000 provas). Não há teste grátis.
+**5. Como desinstalo o Miaou?**
+No admin da Nuvemshop, em Meus aplicativos, clique em Desinstalar. O botão sai da loja na hora. Se instalar de novo, seu histórico e suas preferências voltam.
 
 **6. O que acontece quando as provas do mês acabam?**
 Avisamos no painel aos 80%. Quando acabam, o botão sai da loja até o dia 1º, sem cobrança extra. Provas com erro não contam.
