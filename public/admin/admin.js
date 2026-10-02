@@ -282,7 +282,8 @@
     var box = h('div');
     // hoje e ontem: série por hora; demais períodos: por dia
     function lbl(row) { return row.hour != null ? String(row.hour).padStart(2, '0') + 'h' : row.day.slice(8, 10) + '/' + row.day.slice(5, 7); }
-    function rate(a, b) { return b ? pct(a / b) : null; }
+    // acima de 100% a etapa anterior não registrou tudo (ex.: aberturas contadas só a partir da versão nova): sem porcentagem
+    function rate(a, b) { return b && a <= b ? pct(a / b) : null; }
     function load() {
       api('GET', '/tryon?period=' + days.value).then(function (r) {
         var q = r.quota, s = r.stats, d = s.daily || [], pv = s.previous;
