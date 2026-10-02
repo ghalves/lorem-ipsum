@@ -169,12 +169,12 @@
   window.addEventListener('resize', function () { requestAnimationFrame(reportHeight); });
 
   var toastTimer;
-  function toast(msg) {
+  function toast(msg, ms) {
     var t = $('toast');
     t.textContent = msg;
     t.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2600);
+    toastTimer = setTimeout(function () { t.classList.remove('show'); }, ms || 2600);
   }
 
   function fmtPrice(p) {
@@ -623,11 +623,9 @@
           // o celular fechou a página da loja enquanto a câmera ou a galeria estava aberta
           var resume = params.get('resume');
           if (resume === 'camera' || resume === 'gallery') {
-            var note = $('reloadNote');
-            note.textContent = resume === 'camera'
+            toast(resume === 'camera'
               ? 'Seu celular fechou a página ao abrir a câmera. Tire a foto com a câmera do celular e depois toque em Escolher foto.'
-              : 'Seu celular fechou a página ao abrir suas fotos. Feche outros apps abertos e tente de novo.';
-            note.hidden = false;
+              : 'Seu celular fechou a página ao abrir suas fotos. Feche outros apps abertos e tente de novo.', 9000);
             if (resume === 'camera') req('POST', '/events', { type: 'camera_reload', token: S.token, visitId: VISIT }).catch(function () {});
           }
         });
