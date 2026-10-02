@@ -1,0 +1,33 @@
+# Perguntas frequentes para o Portal de Parceiros (máximo 10)
+
+Portal > Miaou > Brasil > Perguntas frequentes > **+ Adicionar**. Cadastre uma por vez, nesta ordem.
+
+**1. O que é o Miaou?**
+Um provador virtual com inteligência artificial. Na página do produto, o cliente clica em "Provar virtualmente", envia uma foto e, em cerca de 20 segundos, vê a roupa ou os óculos nele mesmo. Ele pode comprar direto pelo provador.
+
+**2. Como instalo o Miaou?**
+Clique em "Instalar aplicativo" e aceite as permissões. O painel do Miaou abre sozinho, sem criar conta ou senha. Escolha seu plano na aba Planos e pronto: o botão aparece nas páginas de produto.
+
+**3. Preciso mexer no código ou no tema da loja?**
+Não. O botão entra sozinho, logo abaixo do "Comprar", em qualquer layout, no celular e no computador.
+
+**4. Para quais produtos funciona?**
+Roupas (blusas, vestidos, calças, saias, camisetas e moda masculina) e óculos. O Miaou reconhece o tipo de cada produto, e você pode mudar ou desligar o provador por produto na aba Produtos.
+
+**5. Quanto custa?**
+Essencial R$ 97/mês (150 provas), Crescer R$ 197/mês (400), Escalar R$ 497/mês (1.200) e Volume a partir de R$ 997/mês (2.500 a 10.000 provas). Não há teste grátis.
+
+**6. O que acontece quando as provas do mês acabam?**
+Avisamos no painel aos 80%. Quando acabam, o botão sai da loja até o dia 1º, sem cobrança extra. Provas com erro não contam.
+
+**7. Como sei se o provador está vendendo?**
+O painel mostra provas, pessoas que provaram, vendas e receita com o provador. A venda conta quando um produto provado é comprado e o pedido é pago.
+
+**8. O que acontece com a foto do cliente?**
+Ela é usada só para gerar a prova e é apagada em 24 horas. As provas somem em 7 dias e o cliente pode apagar tudo na hora. Não pedimos nome nem e-mail. Seguimos a LGPD.
+
+**9. Instalei e o botão não apareceu. O que faço?**
+Confira se há um plano ativo em Planos, se o provador está ligado em Preferências e se o produto tem foto. Se usa domínio próprio novo, abra o painel do Miaou uma vez. Se continuar, fale com a gente.
+
+**10. Como falo com o suporte?**
+Pelo e-mail suporte@miaou.com.br ou pelo botão "Falar com a Miaou" no painel. WhatsApp [PREENCHER], de [PREENCHER dias e horário].

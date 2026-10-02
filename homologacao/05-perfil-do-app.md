@@ -1,70 +1,33 @@
-# Miaou · Textos para o perfil do app (Portal de Parceiros)
+# Miaou · Perfil do app no Portal de Parceiros
 
-Copie para **Portal de Parceiros > Miaou > Perfil / Publicação**, país **Brasil**. Confira o limite de caracteres de cada campo no próprio portal: há versões curtas abaixo.
+Os arquivos para copiar estão na pasta `loja-de-aplicativos/`.
 
-## Nome do app
-**Miaou: Provador Virtual**
+## Correções no que já está cadastrado
 
-## Descrição curta
-- Até ~80 caracteres: **Seu cliente prova a roupa ou os óculos com uma foto e compra com segurança.** (75)
-- Versão menor: **Provador virtual com IA na página do produto.** (45)
+| Onde | Hoje | Trocar por | Por quê |
+| --- | --- | --- | --- |
+| Dados básicos > **Categoria** | Inventário | **Marketing** (subcategoria: a mais próxima de conversão ou experiência de compra) | O Miaou não mexe em estoque. Na categoria errada, a busca da loja de apps não o mostra e a homologação estranha |
+| LGPD > **store redact** | `https://miaou.com.br/webhooks/lgpd/store-redact` | `https://app.miaou.com.br/webhooks/lgpd/store-redact` | Os webhooks rodam no servidor do app (`app.`), não no site |
+| LGPD > **customers redact** | `https://miaou.com.br/webhooks/lgpd/customers-redact` | `https://app.miaou.com.br/webhooks/lgpd/customers-redact` | Idem |
+| LGPD > **customers data request** | `https://miaou.com.br/webhooks/lgpd/customers-data-request` | `https://app.miaou.com.br/webhooks/lgpd/customers-data-request` | Idem |
+| **Permissões** | (conferir) | Marcadas só **Products** (leitura), **Orders** (leitura) e **Scripts** (escrita) | O diagrama e o documento 03 citam só essas. Permissão sobrando costuma ser questionada |
 
-## Descrição longa
+O restante (nome, e-mail, site, URL de redirecionamento, política de privacidade, handle) está certo.
 
-**Deixe seu cliente provar antes de comprar.**
+## Brasil > Informações
 
-Com o Miaou, sua loja ganha um botão **Provar virtualmente** em cada página de produto. O comprador envia uma foto e, em cerca de 20 segundos, vê a peça ou os óculos no próprio corpo, com o rosto e o fundo da foto dele. Quem prova compra com mais confiança.
+| Campo | Limite do portal | O que colar |
+| --- | --- | --- |
+| Descrição curta | 140 caracteres | `loja-de-aplicativos/descricao-curta.txt` (125) |
+| Descrição longa | 2.000 caracteres | `loja-de-aplicativos/descricao-longa.txt` (~1.930, segue as 8 seções do modelo oficial da Nuvemshop) |
+| Ícone | exatamente 200 × 200 px, até 400 KB | `loja-de-aplicativos/icone-200x200.png` |
+| Vídeo do aplicativo | YouTube, até 3 min | Opcional. É um vídeo curto de divulgação, diferente do vídeo da homologação |
+| Perguntas frequentes | até 10 | `loja-de-aplicativos/faq-portal-10-perguntas.md` |
+| Imagens do aplicativo | 3 a 5, exatamente 1920 × 1080 px, até 5 MB | Em produção (precisam de provas reais) |
 
-**O que o Miaou faz pela sua loja**
-- Provador virtual com inteligência artificial para roupas (blusas, vestidos, calças, saias, camisetas, moda masculina) e óculos.
-- Botão inserido automaticamente abaixo do "Comprar", em qualquer layout, no computador e no celular. Sem código.
-- Compra direto pelo provador, com a cor e o tamanho escolhidos.
-- Compartilhamento da prova por WhatsApp e redes sociais, com link para o produto.
-- Captura de leads: peça o WhatsApp do comprador a partir da 2ª prova (opcional).
-- Painel com provas, pessoas que provaram, vendas e receita com o provador, funil do botão à compra e produtos mais provados.
-- Proteção da sua cota: limite de provas por comprador e por conexão.
-- Privacidade: fotos apagadas em 24 horas e botão "Apagar agora" para o comprador. Atende os webhooks de LGPD da Nuvemshop.
+## Forma de cobrança
 
-**Como começar**
-1. Instale o Miaou: a conta é criada automaticamente, sem cadastro.
-2. Escolha um plano na aba Planos.
-3. Pronto: o botão aparece nas páginas de produto.
+Depende da sua decisão (veja o `LEIA-ME`):
 
-**Planos**
-- **Essencial:** R$ 97/mês, 150 provas.
-- **Crescer:** R$ 197/mês, 400 provas.
-- **Escalar:** R$ 497/mês, 1.200 provas e opção de remover a marca Miaou.
-- **Volume:** de R$ 997 (2.500 provas) a R$ 2.997 (10.000 provas).
-
-Sem teste grátis e sem cobrança extra: quando as provas do mês acabam, o botão sai da loja até o dia 1º.
-
-## Categoria sugerida
-Marketing (alternativa: Conversão / Experiência de compra, se houver no portal).
-
-## Palavras-chave
-provador virtual, provador, inteligência artificial, IA, try on, moda, roupas, óculos, conversão, devoluções, leads, WhatsApp
-
-## Modelo de cobrança
-Mensal. Preencha conforme o modelo escolhido no portal (veja o `LEIA-ME`).
-
-## Links
-| Campo | Valor |
-| --- | --- |
-| Site | https://miaou.com.br |
-| Política de privacidade | https://app.miaou.com.br/privacidade/ |
-| E-mail de suporte | suporte@miaou.com.br |
-| URL de redirecionamento | https://app.miaou.com.br/auth/callback |
-| Termos de uso | `[PREENCHER: o app ainda não tem página de termos]` |
-| WhatsApp de suporte | `[PREENCHER]` |
-
-## Imagens do app (3 a 5, PNG ou JPG, nas dimensões pedidas no portal)
-Sugestão de sequência, com **provas reais** (não use as ilustrações da loja demo):
-
-1. **Antes e depois:** foto do comprador ao lado da prova com a peça. Título: "Seu cliente prova antes de comprar".
-2. **Botão na página do produto** (celular), destacando "Provar virtualmente" abaixo do "Comprar". Título: "Funciona em qualquer layout, sem código".
-3. **Provador aberto** com o resultado e o botão "Comprar". Título: "Do provador direto para a sacola".
-4. **Painel Visão geral** com números de uma loja real (provas, vendas e receita com o provador). Título: "Veja quanto o provador vende".
-5. **Óculos:** selfie e prova com os óculos. Título: "Também para óculos".
-
-## Ícone
-Use `public/brand/miaou-mark.png` ou `public/brand/favicon-192.png` como base, exportado no tamanho pedido no portal (fundo sólido, sem texto pequeno).
+- **Cobrança própria:** marque **Grátis** + **Possui vendas no aplicativo**.
+- **Cobrança pela Nuvemshop:** **Pagamento mensal recorrente**. Exige integrar a API de cobrança no app antes.

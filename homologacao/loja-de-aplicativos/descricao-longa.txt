@@ -1,0 +1,40 @@
+Comprar roupa online sempre teve uma dúvida: será que fica bem em mim? O Miaou resolve isso. Com o provador virtual, seu cliente envia uma foto e vê a peça ou os óculos nele mesmo, sem sair da página do produto. Quem prova compra com mais segurança.
+
+O que é o Miaou?
+O Miaou é um provador virtual com inteligência artificial para lojas Nuvemshop de moda e óculos. Você instala, escolhe um plano e o botão "Provar virtualmente" aparece nas páginas de produto, sem mexer no tema.
+
+Como funciona o Miaou?
+- O cliente clica em "Provar virtualmente", logo abaixo do "Comprar".
+- Envia uma foto (ou tira na hora pelo celular).
+- Em cerca de 20 segundos vê a peça no próprio corpo, com o rosto e o fundo da foto dele.
+- Compra direto pelo provador, com a cor e o tamanho escolhidos.
+
+Quais são as funcionalidades do Miaou?
+- Provador para roupas e óculos, no celular e no computador.
+- Botão automático em qualquer layout, sem código.
+- Compartilhamento da prova por WhatsApp e redes sociais.
+- Captura do WhatsApp de quem provou (opcional).
+- Painel com provas, vendas e receita com o provador e produtos mais provados.
+
+Vantagens de instalar o Miaou
+- Mais confiança na hora da compra.
+- Leads de quem já se interessou pela peça.
+- Divulgação espontânea quando o cliente compartilha a prova.
+- Fotos apagadas em 24 horas, de acordo com a LGPD.
+
+Planos e preços
+- Essencial: R$ 97/mês, 150 provas.
+- Crescer: R$ 197/mês, 400 provas.
+- Escalar: R$ 497/mês, 1.200 provas e opção de remover a marca Miaou.
+- Volume: de 2.500 a 10.000 provas, a partir de R$ 997/mês.
+
+Como integrar o Miaou com a Nuvemshop?
+- Clique em "Instalar aplicativo".
+- Aceite as permissões.
+- O painel do Miaou abre sozinho, sem criar conta ou senha.
+- Escolha seu plano.
+- Pronto! O botão já aparece nos seus produtos.
+
+Suporte ao lojista
+- E-mail suporte@miaou.com.br, resposta em até [PREENCHER] horas.
+- WhatsApp [PREENCHER], de [PREENCHER dias e horário].
