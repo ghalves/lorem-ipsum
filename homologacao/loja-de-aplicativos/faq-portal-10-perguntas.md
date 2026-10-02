@@ -3,7 +3,7 @@
 Portal > Miaou > Brasil > Perguntas frequentes > **+ Adicionar**. Cadastre uma por vez, nesta ordem.
 
 **1. O que é o Miaou?**
-Um provador virtual com inteligência artificial. Na página do produto, o cliente clica em "Provar virtualmente", envia uma foto e, em cerca de 20 segundos, vê a roupa ou os óculos nele mesmo. Ele pode comprar direto pelo provador.
+Um provador virtual com inteligência artificial. Na página do produto, o cliente clica em "Provar em mim", envia uma foto e, em cerca de 20 segundos, vê a roupa ou os óculos nele mesmo. Ele pode comprar direto pelo provador.
 
 **2. Como instalo o Miaou?**
 Clique em "Instalar aplicativo" e aceite as permissões. O painel do Miaou abre sozinho, sem criar conta ou senha. Escolha seu plano na aba Planos e pronto: o botão aparece nas páginas de produto.
@@ -30,4 +30,4 @@ Ela é usada só para gerar a prova e é apagada em 24 horas. As provas somem em
 Confira se há um plano ativo em Planos, se o provador está ligado em Preferências e se o produto tem foto. Se usa domínio próprio novo, abra o painel do Miaou uma vez. Se continuar, fale com a gente.
 
 **10. Como falo com o suporte?**
-Pelo e-mail suporte@miaou.com.br ou pelo botão "Falar com a Miaou" no painel. WhatsApp [PREENCHER], de [PREENCHER dias e horário].
+Pelo e-mail suporte@miaou.com.br ou pelo botão "Falar com a Miaou" no painel. Telefone (21) 97550-3749, de segunda a sexta, das 9h às 18h. Respondemos em até 24 horas.

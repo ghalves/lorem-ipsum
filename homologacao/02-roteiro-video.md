@@ -42,7 +42,7 @@
 ## Cena 4 · Uso na loja pelo comprador (computador) — ~2 min
 
 1. Abra a loja numa aba e entre na página de uma blusa.
-2. Mostre o botão **Provar virtualmente** abaixo do **Comprar**.
+2. Mostre o botão **Provar em mim** abaixo do **Comprar**.
 3. Clique: o provador abre como gaveta lateral. Envie a foto de corpo inteiro.
 4. Mostre a barra de progresso e o resultado (~20 s).
 5. Clique em **Comprar** no provador: o produto vai para a sacola com a variação escolhida.
@@ -59,7 +59,7 @@
 ## Cena 5 · Uso no celular — ~1 min
 
 1. Abra a página dos **óculos** no celular.
-2. Toque em **Provar virtualmente**: o provador abre em janela (modal).
+2. Toque em **Provar em mim**: o provador abre em janela (modal).
 3. Toque em **Tirar selfie** e mostre o resultado.
 4. Mostre o **Compartilhar** (link com prévia) e o **Apagar agora**.
 

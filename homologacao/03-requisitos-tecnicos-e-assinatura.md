@@ -20,7 +20,7 @@
 | --- | --- | --- |
 | `read_products` | Ler nome, fotos, variações e categorias dos produtos para gerar a prova e saber se a peça é roupa ou óculos | `GET /products`, `GET /products/{id}`, webhooks `product/*` |
 | `read_orders` | Confirmar que um produto provado foi comprado e pago, para mostrar ao lojista as vendas com o provador | `GET /orders/{id}`, webhook `order/paid` |
-| `write_scripts` | Ativar o botão "Provar virtualmente" na loja e o script do checkout | `POST /scripts`, `GET /scripts` |
+| `write_scripts` | Ativar o botão "Provar em mim" na loja e o script do checkout | `POST /scripts`, `GET /scripts` |
 
 O app **não altera** produtos, pedidos, clientes nem preços.
 

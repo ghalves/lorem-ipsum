@@ -1,10 +1,10 @@
 Comprar roupa online sempre teve uma dúvida: será que fica bem em mim? O Miaou resolve isso. Com o provador virtual, seu cliente envia uma foto e vê a peça ou os óculos nele mesmo, sem sair da página do produto. Quem prova compra com mais segurança.
 
 O que é o Miaou?
-O Miaou é um provador virtual com inteligência artificial para lojas Nuvemshop de moda e óculos. Você instala, escolhe um plano e o botão "Provar virtualmente" aparece nas páginas de produto, sem mexer no tema.
+O Miaou é um provador virtual com inteligência artificial para lojas Nuvemshop de moda e óculos. Você instala, escolhe um plano e o botão "Provar em mim" aparece nas páginas de produto, sem mexer no tema.
 
 Como funciona o Miaou?
-- O cliente clica em "Provar virtualmente", logo abaixo do "Comprar".
+- O cliente clica em "Provar em mim", logo abaixo do "Comprar".
 - Envia uma foto (ou tira na hora pelo celular).
 - Em cerca de 20 segundos vê a peça no próprio corpo, com o rosto e o fundo da foto dele.
 - Compra direto pelo provador, com a cor e o tamanho escolhidos.
@@ -36,5 +36,5 @@ Como integrar o Miaou com a Nuvemshop?
 - Pronto! O botão já aparece nos seus produtos.
 
 Suporte ao lojista
-- E-mail suporte@miaou.com.br, resposta em até [PREENCHER] horas.
-- WhatsApp [PREENCHER], de [PREENCHER dias e horário].
+- E-mail suporte@miaou.com.br, resposta em até 24 horas.
+- Telefone (21) 97550-3749, de segunda a sexta, das 9h às 18h.

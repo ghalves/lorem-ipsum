@@ -14,7 +14,7 @@ Obrigado pelo retorno. Seguem os artefatos de homologação e os arquivos de pub
 
 **Arquivos para publicação**
 
-4. **Template Nuvemshop de FAQs** preenchido, com o Guia Tutorial de Instalação passo a passo (anexo `04-faq.pdf`).
+4. **Template Nuvemshop de FAQs** preenchido, com o Guia Tutorial de Instalação passo a passo (anexo `04-faq-template-nuvemshop.docx`, no modelo oficial "Marketing e demais categorias").
 5. **Perfil do aplicativo** preenchido no Painel de Parceiros (nome, descrições, imagens, ícone, planos e links).
 
 Ficamos à disposição para qualquer ajuste ou dúvida.

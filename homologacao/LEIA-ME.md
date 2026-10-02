@@ -9,7 +9,7 @@ Pacote para responder ao e-mail de homologação. Tudo que não dependia de voc�
 | `01-diagrama-sequencia.pdf` (+ `.png`, `.svg`, fonte `.mmd`) | Diagrama de sequência com os escopos | Pronto |
 | Vídeo (você grava) seguindo `02-roteiro-video.pdf` | Vídeo de demonstração: instalação, login, reinstalação... | **Você grava** |
 | `03-requisitos-tecnicos-e-assinatura.pdf` | Requisitos técnicos e etapas de assinatura (app com planos pagos) | Pronto, falta a seção 3 |
-| `04-faq.pdf` | Template Nuvemshop de FAQs + Guia Tutorial de Instalação | Pronto, falta o horário de suporte |
+| `04-faq-template-nuvemshop.docx` | Template Nuvemshop de FAQs + Guia Tutorial de Instalação | Pronto (modelo oficial, com prints do painel) |
 | `05-perfil-do-app.pdf` | Campos do perfil no Painel de Parceiros | Textos prontos para copiar |
 | `email-resposta.md` | Resposta ao e-mail | Pronto, faltam os links |
 
