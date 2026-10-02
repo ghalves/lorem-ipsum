@@ -57,7 +57,10 @@ O Miaou é pago. No portal, o app está como **Grátis, com vendas no aplicativo
 Como o botão só aparece com a loja liberada, oferecemos duas formas de validar o app sem passar pela contratação:
 
 1. **Loja de demonstração já configurada** com o Miaou instalado e já liberado:
-   - URL da loja: `[PREENCHER]`
-   - Acesso ao admin: `[PREENCHER usuário/senha ou convidar a equipe como usuário]`
-   - Produtos para testar: `[PREENCHER: 1 roupa, 1 calça, 1 óculos]`
+   - URL da loja: https://lojademo317.lojavirtualnuvem.com.br/
+   - Acesso ao admin: e-mail e senha enviados no e-mail de resposta
+   - Produtos para testar:
+     - [CALÇA BLAIR UVA](https://lojademo317.lojavirtualnuvem.com.br/produtos/calca-blair-uva-jl5do/) (roupa, parte de baixo)
+     - [Polo Tricot](https://lojademo317.lojavirtualnuvem.com.br/produtos/polo-tricot-1pogy/) (roupa, parte de cima)
+     - [Óculos de Grau Michael Kors MK4103U - Preto](https://lojademo317.lojavirtualnuvem.com.br/produtos/oculos-de-grau-michael-kors-mk4103u-preto-1iteq/) (óculos)
 2. **Loja de teste de vocês:** depois de instalar o Miaou, enviem o ID da loja para `suporte@miaou.com.br` (ou respondam este e-mail) e liberamos o provador sem custo em até 24 horas.

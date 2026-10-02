@@ -16,7 +16,7 @@ Pacote para responder ao e-mail de homologação. Tudo que não dependia de voc�
 ## O que só você pode fazer
 
 1. **Gravar o vídeo** seguindo `02-roteiro-video` (6 a 9 min) e subir como YouTube não listado ou Google Drive com link aberto.
-2. **Preencher os `[PREENCHER]`**: App ID, loja de demonstração e acesso, link do vídeo, seu nome.
+2. **Colar o link do vídeo** no e-mail (único `[PREENCHER]` que sobrou).
 3. **Deixar uma loja de demonstração pronta** com o Miaou instalado, 3 produtos com foto (roupa, calça, óculos) e liberada: `sudo miaou plano <id da loja> crescer`.
 4. **Colar o FAQ no template oficial** da Nuvemshop (se eles mandaram um arquivo) e no Portal de Parceiros > app > FAQ.
 5. **Completar o perfil** no Painel de Parceiros com os textos de `05-perfil-do-app` e criar **3 a 5 imagens** com provas reais, nas dimensões pedidas no portal.
