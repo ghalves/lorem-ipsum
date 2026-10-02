@@ -268,9 +268,9 @@ export function App(nube) {
 
 	// Gaveta oficial da loja: drawer_right (Slots > Storefront Slots: painel
 	// colado à direita, altura toda; páginas home, product, category, search,
-	// cart). Fecha com custom:drawer:close (Events > UI & Custom). A largura e o
-	// comportamento no celular não estão na documentação: o provador registra
-	// no log o que a loja mostrou (janela:visivel).
+	// cart). Fecha ao clicar fora, e avisa com custom:drawer:close (Events >
+	// UI & Custom). O provador registra no log o que a loja mostrou
+	// (janela:visivel).
 	const DRAWER = "drawer_right";
 	function openTryon(resume) {
 		if (!current) return;
@@ -304,8 +304,11 @@ export function App(nube) {
 		if (variant?.id) q.set("variantId", String(variant.id));
 		if (resume === "camera") q.set("resume", "camera");
 		openSlot = DRAWER;
-		// computador: a largura do provador; celular: a tela toda
-		const w = phone ? vw : Math.min(440, vw);
+		// A gaveta acompanha a largura do conteúdo, até 95% da tela (medido na
+		// loja: 440 de 440 no computador; 342 de 360 no celular). No celular fica
+		// uma faixa de 56 px para tocar fora e fechar (folga das gavetas laterais
+		// do Material Design).
+		const w = Math.min(440, phone ? vw - 56 : vw);
 		dbg("abrir", { slot: openSlot, resume: resume || null, screen, width: w, height: vh, variant: variant?.id ?? null });
 		nube.render(
 			openSlot,
