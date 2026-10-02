@@ -34,6 +34,7 @@ sequenceDiagram
     AD->>M: GET /auth/callback?code=... (novo code)
     M->>API: POST /apps/authorize/token
     API-->>M: access_token
+    M->>API: GET /store (atualiza os domínios da loja, no máximo a cada 30 s)
     M-->>L: Painel /admin (Visão geral, Produtos, Leads, Planos, Preferências)
     Note over L,M: Sessão vencida ou aberta fora do admin: "Sessão expirada. Abra o app novamente pelo painel da sua loja"
     L->>M: Painel: sincronizar produtos / reinstalar script
@@ -66,8 +67,9 @@ sequenceDiagram
     M->>API: GET /orders/{id} [read_orders]
     API-->>M: Itens do pedido
     M->>M: Conta a venda com o provador (só produtos provados que estão no pedido pago)
-    API->>M: Webhooks product/created, updated, deleted
-    M->>API: GET /products/{id} [read_products]
+    L->>AD: Cria, edita ou exclui um produto no admin
+    API->>M: Webhook product/created, product/updated ou product/deleted
+    M->>API: GET /products/{id} [read_products] (só o produto avisado, sem consultas periódicas)
     end
 
     rect rgb(255, 236, 236)
@@ -84,7 +86,7 @@ sequenceDiagram
     end
 
     rect rgb(238, 238, 238)
-    Note over AD,M: 6. LGPD (webhooks obrigatórios)
+    Note over AD,M: 6. LGPD (webhooks obrigatórios, disparados pela Nuvemshop)
     API->>M: POST /webhooks/lgpd/store-redact
     M->>M: Apaga todos os dados da loja
     API->>M: POST /webhooks/lgpd/customers-redact

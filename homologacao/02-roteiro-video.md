@@ -14,8 +14,8 @@
 
 ## Cena 1 · Instalação pela Loja de Aplicativos Nuvemshop (lojista sem conta no Miaou) — ~1 min
 
-1. Mostre o admin da loja, vá em **Loja de aplicativos** e abra o Miaou (ou use o link de instalação do Portal de Parceiros).
-2. Clique em **Instalar aplicativo**.
+1. Com o admin da loja aberto, digite na barra de endereço `https://www.tiendanube.com/apps/[APP_ID]/authorize` (link oficial que a Nuvemshop pede para simular a instalação pela loja de apps). **Não instale pelo painel de parceiros.**
+2. Se pedir, entre com a conta da loja.
 3. Mostre a tela de permissões (ler produtos, ler pedidos, criar scripts) e clique em **Aceitar e começar a usar**.
 4. O navegador abre o painel do Miaou já na **Visão geral**, com o nome da loja.
 
@@ -32,6 +32,8 @@
 
 ## Cena 3 · Painel e configuração — ~1 min 30 s
 
+**Narração:** "Não há nenhuma configuração técnica: o botão entra sozinho na loja, sem código e sem mexer no layout. O lojista só escolhe o plano."
+
 1. **Planos:** mostre os planos (Essencial R$ 97, Crescer R$ 197, Escalar R$ 497, Volume) e o plano ativo com o uso do mês.
 2. **Produtos:** os produtos importados, com o tipo reconhecido (roupa ou óculos) e a opção de mudar ou desligar por produto.
 3. **Preferências:** liga/desliga o provador, texto do botão, pedido de WhatsApp, limite por comprador, status "Instalado" do script na loja e e-mail de suporte.
@@ -46,6 +48,13 @@
 5. Clique em **Comprar** no provador: o produto vai para a sacola com a variação escolhida.
 6. Finalize um pedido de teste e marque como **pago** no admin.
 7. De volta ao painel, em **Visão geral**, mostre a venda contabilizada em "Vendas com o provador" (pode levar alguns minutos).
+
+## Cena 4b · Produto alterado no admin (webhook) — ~40 s
+
+1. No admin da Nuvemshop, mude o nome de um produto (ou crie um produto novo com foto).
+2. No painel do Miaou, abra **Produtos**: a alteração aparece sozinha em alguns segundos.
+
+**Narração:** "O Miaou não consulta a API periodicamente: a Nuvemshop avisa por webhook e o app busca só o produto alterado. O mesmo vale para pedidos pagos."
 
 ## Cena 5 · Uso no celular — ~1 min
 
@@ -66,17 +75,19 @@
 2. O painel abre com o **histórico e as preferências preservados**.
 3. Recarregue a página do produto: o botão voltou.
 
-**Narração final:** "Ao reinstalar, o Miaou pega um novo token, cadastra de novo webhooks e scripts e reimporta o catálogo. Os dados da loja só são apagados quando a Nuvemshop envia o webhook de LGPD store/redact."
+**Narração final:** "Ao reinstalar, o Miaou pega um novo token, cadastra de novo webhooks e scripts e reimporta o catálogo. Os dados da loja só são apagados quando a Nuvemshop envia o webhook de LGPD store/redact. Os três webhooks de LGPD do diagrama são disparados pela própria Nuvemshop e por isso não aparecem no vídeo."
 
 ---
 
 ### Checklist rápido do vídeo
 
-- [ ] Instalação pela Nuvemshop (tela de permissões aparece)
+- [ ] Instalação pelo link `tiendanube.com/apps/[APP_ID]/authorize`, não pelo painel de parceiros (tela de permissões aparece)
 - [ ] Conta criada automaticamente (lojista sem conta)
 - [ ] Login pelo admin (lojista com conta) e sessão expirada
 - [ ] Planos e assinatura visíveis no painel
 - [ ] Funcionalidade principal na loja: computador e celular, roupa e óculos
 - [ ] Compra e venda atribuída
+- [ ] Produto alterado no admin chega ao Miaou (webhook)
+- [ ] Dito em voz alta: nenhuma configuração técnica é necessária
 - [ ] Desinstalação: botão some e painel fecha
 - [ ] Reinstalação: tudo volta

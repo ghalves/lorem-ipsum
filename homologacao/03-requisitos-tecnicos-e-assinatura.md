@@ -30,6 +30,19 @@ O app **não altera** produtos, pedidos, clientes nem preços.
 - **Desinstalação:** ao receber `app/uninstalled`, o Miaou apaga o token, invalida as sessões do painel na hora e o botão deixa de aparecer na loja.
 - **Reinstalação:** um novo token é salvo, webhooks, scripts e produtos são configurados de novo e o histórico e as preferências da loja são preservados. Os dados só são apagados com o webhook `store/redact`.
 
+### Uso eficiente da API
+
+- **Sem consultas periódicas.** Mudanças em produtos e pedidos chegam por webhook, e o app busca só o item avisado (`GET /products/{id}`, `GET /orders/{id}`).
+- **Catálogo completo só na instalação** (`GET /products`, 200 por página). Depois disso, só quando o lojista clica em "Sincronizar produtos" no painel.
+- **Dados da loja** (`GET /store`, para saber os domínios): na instalação, quando o lojista abre o painel (no máximo a cada 30 s) e quando o provador abre num domínio ainda não conhecido (no máximo a cada 10 min).
+- **Nenhuma escrita em produtos, estoque, preços, pedidos ou clientes.** As únicas escritas acontecem na instalação: o cadastro dos webhooks que ainda não existem e a associação dos scripts.
+- **Limite de requisições:** a resposta 429 é respeitada com espera e até 4 novas tentativas.
+- Os webhooks respondem 200 na hora e processam em segundo plano.
+
+### Configuração técnica pelo lojista
+
+Nenhuma. O botão entra sozinho na página de produto em qualquer layout, sem código. O lojista só escolhe o plano e, se quiser, ajusta o texto do botão e as preferências no painel.
+
 ## 2. Planos e assinatura
 
 | Plano | Preço mensal | Provas por mês |
