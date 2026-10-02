@@ -266,14 +266,17 @@ export function App(nube) {
 		}));
 	}
 
-	// VERSÃO DE MEDIÇÃO (loja demo): slot corner_bottom_right (Slots > Fixed
+	// VERSÃO DE MEDIÇÃO (loja demo): slot corner_bottom_left (Slots > Fixed
 	// slots: position fixed, sem tamanho máximo listado) com o iframe do tamanho
 	// da tela e fundo transparente. O provador desenha o fundo escuro e o card
 	// (sobe de baixo no celular, gaveta flutuante no computador) e registra no
 	// log o que a loja mostrou (janela:visivel). Aguarda a Nuvemshop confirmar
 	// que o uso é aceito; a versão oficial usa drawer_right.
 	const DRAWER = "drawer_right";
-	const CORNER = "corner_bottom_right";
+	// medido na loja: o canto limita a largura a 45% da tela e, preso à direita,
+	// o resto do iframe ia para fora da tela; preso à esquerda, o iframe se
+	// estende para a direita a partir da borda da tela
+	const CORNER = "corner_bottom_left";
 	function openTryon(resume) {
 		if (!current) return;
 		// limpa o que tiver ficado de uma abertura anterior
