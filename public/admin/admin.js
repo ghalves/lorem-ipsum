@@ -388,7 +388,7 @@
       pageHead('Preferências'),
       h('div', { class: 'card' }, h('div', { class: 'card-head' }, h('h2', { text: 'Na loja' })),
         sw('enabled', 'Provador na loja', 'Mostra o botão nas páginas de produto com foto.'),
-        sw('buttonIcon', 'Ícone no botão', 'Mostra os brilhos antes do texto. Desligado, o botão fica só com o texto.'),
+        sw('buttonIcon', 'Ícone no botão', 'Mostra o ícone antes do texto. Desligado, o botão fica só com o texto.'),
         sw('buttonAnimation', 'Ícone animado', 'Os brilhos do ícone piscam de leve para chamar atenção.'),
         sw('hideOutOfStock', 'Esconder em produtos sem estoque', 'O botão não aparece quando todas as opções do produto estão esgotadas. Assim nenhuma prova da cota vai para um produto que não dá para comprar.'),
         state.me.brandRemovable

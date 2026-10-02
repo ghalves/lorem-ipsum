@@ -592,6 +592,14 @@
         }, { threshold: [0, 0.5, 0.9, 1] });
         io.observe(document.documentElement);
       }
+      // câmera dentro da página (sem abrir o app de câmera do celular): só funciona
+      // se a loja liberar a câmera para o iframe; medido aqui antes de usar
+      var fp = document.featurePolicy || document.permissionsPolicy;
+      dbg('camera:permissao', {
+        politica: fp && fp.allowsFeature ? fp.allowsFeature('camera') : 'sem api',
+        mediaDevices: !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
+        sandbox: window.frameElement ? 'mesma origem' : 'outra origem',
+      });
       dbg('abriu', {
         layout: LAYOUT, janela: [window.innerWidth, window.innerHeight], dpr: window.devicePixelRatio,
         pai: S.parent, imageId: IMAGE_ID || null, variantId: VARIANT_ID || null, foto: s.product.image, ua: navigator.userAgent,
