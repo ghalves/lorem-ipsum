@@ -439,13 +439,19 @@ export function App(nube) {
 		const tried = await readTried();
 		const tok = await readJSON(local, TOKEN_KEY, null);
 		const storeId = String(state.store.id);
+		// o pedido da página de sucesso não traz id (loja real): registra as outras
+		// fontes possíveis para ligar esta página ao pedido pago
 		dbg("pedido:concluido", {
-			origem, orderId: raw ?? null, chavesPedido: Object.keys(order), chavesPayload: Object.keys(payload),
-			extra: order.extra ?? null, provados: tried.length,
+			origem, orderId: raw ?? null, chavesPedido: Object.keys(order), payload,
+			url: state.location?.url ?? null, queries: state.location?.queries ?? null,
+			carrinho: state.cart ? { id: state.cart.id ?? null, chaves: Object.keys(state.cart) } : null,
+			sessao: state.session?.id ?? null, provados: tried.length,
 		});
 		if (!Number.isSafeInteger(orderId) || orderId <= 0 || sentOrders.has(orderId)) return;
 		if (!tried.length || !tok || String(tok.s) !== storeId) return;
 		sentOrders.add(orderId);
+		// os provados já foram ligados a este pedido: a lista recomeça
+		writeJSON(local, TRIED_KEY, []);
 		post(`/api/storefront/${storeId}/conversion`, {
 			token: tok.t,
 			orderId,
@@ -530,9 +536,7 @@ export function App(nube) {
 			openTryon("camera");
 		}, 2500);
 	});
-	// compra concluída: o pedido já leva os provados, então a lista recomeça
-	nube.on("checkout:success", () => {
-		writeJSON(local, TRIED_KEY, []);
-	});
+	// compra concluída: liga os provados ao pedido (veja onOrderDone)
+	nube.on("checkout:success", (state) => onOrderDone(state, "checkout:success"));
 	handle(nube.getState());
 }

@@ -113,6 +113,9 @@ async function importOrder(storeId, orderId) {
     }
   }
   if (require('../config').tryon.debug) {
+    // campos de identificação do pedido (sem dados do cliente), para ligar à página de sucesso
+    const ids = Object.fromEntries(Object.entries(order || {}).filter(([k, v]) => /(^id$|number|token|cart|checkout|landing|created_at)/i.test(k) && (v == null || typeof v !== 'object')));
+    console.log(`[debug ${store.id}] servidor pedido=${orderId} campos=${JSON.stringify(ids)} chaves=${Object.keys(order || {}).join(',')}`);
     console.log(`[debug ${store.id}] servidor pedido=${orderId} pago: extra=${JSON.stringify(order?.extra ?? null).slice(0, 300)} provados=${[...fromExtra].join(',') || 'nenhum'} produtos=${(order?.products || []).map((p) => p.product_id).join(',')} vendas=${saved}`);
   }
   return saved;
