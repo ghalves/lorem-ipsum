@@ -211,7 +211,8 @@ export function App(nube) {
 		if (!d || d.source !== "mq") return;
 		if (d.type === "close") closeTryon();
 		else if (d.type === "picking" && current) {
-			writeJSON(session, REOPEN_KEY, { p: current.productId, t: Date.now() });
+			// câmera ou galeria: o aviso depois de recarregar muda conforme o caso
+			writeJSON(session, REOPEN_KEY, { p: current.productId, t: Date.now(), c: d.campo === "fileCamera" ? "camera" : "gallery" });
 		} else if (d.type === "picked") writeJSON(session, REOPEN_KEY, null);
 		else if (d.type === "tried") rememberTried(d.productId, d.token);
 		else if (d.type === "buy") {
@@ -287,9 +288,9 @@ export function App(nube) {
 		});
 		if (variantPhoto?.id) q.set("imageId", String(variantPhoto.id));
 		if (variant?.id) q.set("variantId", String(variant.id));
-		if (resume === "camera") q.set("resume", "camera");
+		if (resume === "camera" || resume === "gallery") q.set("resume", resume);
 		openSlot = CORNER;
-		if (resume !== "camera") track("tryon_open");
+		if (!resume) track("tryon_open");
 		dbg("abrir", { slot: openSlot, resume: resume || null, screen, width: vw, height: vh, variant: variant?.id ?? null });
 		nube.render(
 			openSlot,
@@ -383,7 +384,7 @@ export function App(nube) {
 		dbg("reabrir:checar", { reopen, idadeMs: reopen ? Date.now() - reopen.t : null });
 		if (reopen && reopen.p === productId && Date.now() - reopen.t < REOPEN_MS) {
 			await writeJSON(session, REOPEN_KEY, null);
-			openTryon("camera");
+			openTryon(reopen.c || "camera");
 			return;
 		}
 		// veio do link compartilhado ("Provar em mim"): abre o provador direto
@@ -528,7 +529,7 @@ export function App(nube) {
 			if (stillOpen) return; // a janela continua aberta: a câmera foi só cancelada
 			dbg("reabrir:voltou", reopen);
 			await writeJSON(session, REOPEN_KEY, null);
-			openTryon("camera");
+			openTryon(reopen.c || "camera");
 		}, 2500);
 	});
 	// compra concluída: liga os provados ao pedido (veja onOrderDone)

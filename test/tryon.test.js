@@ -695,6 +695,13 @@ test('funil: abrir, provar (nova ou reaproveitada) e comprar contam visitas', as
   const after = (await admin('GET', '/tryon?period=today')).body.stats;
   assert.equal(after.opened - before.opened, 2, 'duas visitas abriram o provador');
   assert.equal(after.triedVisits - before.triedVisits, 2, 'a prova reaproveitada também conta como provou');
+  // câmera do celular: aberturas e recarregamentos da página, por visita
+  await ev('camera_open', 'visitafunil1');
+  await ev('camera_open', 'visitafunil2');
+  await ev('camera_reload', 'visitafunil2');
+  const cam = (await admin('GET', '/tryon?period=today')).body.stats;
+  assert.equal(cam.cameraOpens - after.cameraOpens, 2);
+  assert.equal(cam.cameraReloads - after.cameraReloads, 1);
 });
 
 test('normalização do WhatsApp', () => {

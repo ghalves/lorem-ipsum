@@ -191,7 +191,7 @@ router.post('/:storeId/debug', (req, res) => {
 router.post('/:storeId/events', (req, res) => {
   const b = req.body || {};
   if (!verifyEventToken(b.token, req.store.id)) return res.status(401).json({ error: 'token inválido' });
-  if (!['tryon_view', 'tryon_open', 'tryon_buy'].includes(b.type)) return res.status(400).json({ error: 'evento inválido' });
+  if (!['tryon_view', 'tryon_open', 'tryon_buy', 'camera_open', 'camera_reload'].includes(b.type)) return res.status(400).json({ error: 'evento inválido' });
   const v = typeof b.visitId === 'string' && /^[a-z0-9]{6,40}$/i.test(b.visitId) ? b.visitId : undefined;
   svc.logEvent(req.store.id, { type: b.type, productId: Number(b.productId) || null, meta: v ? { v } : null });
   res.json({ ok: true });

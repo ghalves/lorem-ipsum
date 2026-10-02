@@ -189,3 +189,5 @@ html.drawer h1 { font-size: 26px; }
 
 .toast { position: absolute; left: 50%; bottom: 18px; transform: translate(-50%, 20px); background: var(--ink); color: #fff; font-size: 14px; padding: 10px 16px; border-radius: var(--r-pill); opacity: 0; pointer-events: none; transition: 200ms var(--ease); width: max-content; max-width: calc(100% - 32px); text-align: center; }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
+/* aviso depois de o celular fechar a página (câmera ou galeria) */
+.reload-note { margin: 4px 0 12px; padding: 12px 14px; border-radius: 14px; background: var(--soft-2); color: var(--ink); font-size: 14px; line-height: 1.45; text-align: left; }

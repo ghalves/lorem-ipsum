@@ -818,6 +818,7 @@ function stats(storeId, period = 30) {
   return {
     period: w.key, days: w.days, hourly: w.hourly,
     views, opened, triedVisits,
+    cameraOpens: ev('camera_open'), cameraReloads: ev('camera_reload'),
     tryons: j.done || 0, people: j.people || 0, errors: j.errors || 0,
     openRate: views ? Math.min(1, opened / views) : null,
     realistic: rated ? (j.up || 0) / rated : null, rated,

@@ -418,7 +418,12 @@
   ['filePick', 'fileCamera', 'fileSwap', 'fileRetry'].forEach(function (id) {
     // no celular a câmera/galeria tira o navegador da frente e o sistema pode
     // descartar a página da loja: a loja anota, e se recarregar reabre o provador
-    $(id).addEventListener('click', function () { dbg('foto:abrir', { campo: id }); post({ type: 'picking' }); });
+    $(id).addEventListener('click', function () {
+      dbg('foto:abrir', { campo: id });
+      post({ type: 'picking', campo: id });
+      // mede quantas vezes a câmera do celular derruba a página (painel)
+      if (id === 'fileCamera') req('POST', '/events', { type: 'camera_open', token: S.token, visitId: VISIT }).catch(function () {});
+    });
     $(id).addEventListener('change', function (e) {
       dbg('foto:recebida', { campo: id, arquivos: e.target.files ? e.target.files.length : 0 });
       post({ type: 'picked' }); onFile(e.target);
@@ -615,8 +620,16 @@
       return req('GET', '/history').then(function (h) { S.historyItems = h.items || []; }).catch(function () {})
         .then(enterStart)
         .then(function () {
-          // a página da loja recarregou enquanto a câmera estava aberta
-          if (params.get('resume') === 'camera') toast('A página recarregou. Tente de novo ou escolha da galeria');
+          // o celular fechou a página da loja enquanto a câmera ou a galeria estava aberta
+          var resume = params.get('resume');
+          if (resume === 'camera' || resume === 'gallery') {
+            var note = $('reloadNote');
+            note.textContent = resume === 'camera'
+              ? 'Seu celular fechou a página ao abrir a câmera. Tire a foto com a câmera do celular e depois toque em Escolher foto.'
+              : 'Seu celular fechou a página ao abrir suas fotos. Feche outros apps abertos e tente de novo.';
+            note.hidden = false;
+            if (resume === 'camera') req('POST', '/events', { type: 'camera_reload', token: S.token, visitId: VISIT }).catch(function () {});
+          }
         });
     }).catch(function () {
       $('offText').textContent = 'Não foi possível abrir o provador agora.';
