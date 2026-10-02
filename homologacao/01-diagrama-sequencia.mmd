@@ -1,0 +1,94 @@
+sequenceDiagram
+    autonumber
+    actor L as Lojista
+    participant AD as Admin / Loja de Apps<br/>Nuvemshop
+    participant M as Miaou (backend)<br/>app.miaou.com.br
+    participant API as API Nuvemshop<br/>api.tiendanube.com
+    participant V as Vitrine e Checkout<br/>(script NubeSDK)
+    actor C as Comprador
+    participant IA as Gerador de imagem<br/>(OpenRouter)
+
+    rect rgb(232, 242, 255)
+    Note over L,API: 1. INSTALAÇÃO pela Loja de Aplicativos (sem cadastro à parte: a conta Miaou é a própria loja)
+    L->>AD: Clica em "Instalar" no Miaou
+    AD->>L: Mostra as permissões: read_products, read_orders, write_scripts
+    L->>AD: "Aceitar e começar a usar"
+    AD->>M: GET /auth/callback?code=...
+    M->>API: POST /apps/authorize/token (client_id, client_secret, code)
+    API-->>M: access_token, user_id (store_id), scope
+    M->>API: GET /store (nome e domínios da loja)
+    API-->>M: name, original_domain, domains
+    M->>M: Cria a loja (ou reativa se for reinstalação)
+    par Configuração em segundo plano
+        M->>API: GET /webhooks e POST /webhooks<br/>product/created, product/updated, product/deleted [read_products]<br/>order/paid [read_orders], app/uninstalled
+        M->>API: POST /scripts (script Store e script Checkout) [write_scripts]
+        M->>API: GET /products?page=N&per_page=200 [read_products]
+        API-->>M: Catálogo (nome, fotos, variações, categorias)
+    end
+    M-->>L: Redireciona ao painel Miaou /admin (sessão assinada, 12 h)
+    end
+
+    rect rgb(240, 248, 236)
+    Note over L,API: 2. LOGIN: o lojista volta ao app pelo admin (Meus aplicativos > Miaou)
+    L->>AD: Abre o Miaou no admin
+    AD->>M: GET /auth/callback?code=... (novo code)
+    M->>API: POST /apps/authorize/token
+    API-->>M: access_token
+    M-->>L: Painel /admin (Visão geral, Produtos, Leads, Planos, Preferências)
+    Note over L,M: Sessão vencida ou aberta fora do admin: "Sessão expirada. Abra o app novamente pelo painel da sua loja"
+    L->>M: Painel: sincronizar produtos / reinstalar script
+    M->>API: GET /products [read_products] · POST /scripts [write_scripts]
+    end
+
+    rect rgb(255, 246, 230)
+    Note over L,M: 3. ASSINATURA (plano mensal · sem teste grátis)
+    L->>M: Painel > Planos: escolhe Essencial, Crescer, Escalar ou Volume ("Falar com a Miaou")
+    M->>M: Equipe Miaou ativa o plano da loja e a cota de provas do mês
+    M-->>L: Plano ativo e uso do mês. Sem plano, o botão não aparece na loja
+    Note over L,M: Cota no fim: o botão sai da loja até o dia 1º. Aviso no painel aos 80%
+    end
+
+    rect rgb(248, 238, 252)
+    Note over V,IA: 4. USO NA LOJA (comprador)
+    C->>V: Abre a página de um produto
+    V->>M: GET /api/storefront/{store}/config?product={id}
+    M-->>V: Botão ligado? tipo de peça, texto, token assinado
+    V-->>C: Botão "Provar virtualmente" abaixo do "Comprar"
+    C->>V: Clica e envia uma foto
+    V->>M: POST /api/tryon/{store}/photo · POST /api/tryon/{store}/jobs
+    M->>IA: Foto + imagem do produto + descrição da peça
+    IA-->>M: Imagem gerada
+    M-->>V: Prova pronta (assinada), em cerca de 20 s
+    C->>V: "Comprar" no provador: adiciona a variação à sacola
+    C->>V: Finaliza a compra (script Checkout)
+    V->>M: POST /api/storefront/{store}/conversion (pedido + produtos provados)
+    API->>M: Webhook order/paid
+    M->>API: GET /orders/{id} [read_orders]
+    API-->>M: Itens do pedido
+    M->>M: Conta a venda com o provador (só produtos provados que estão no pedido pago)
+    API->>M: Webhooks product/created, updated, deleted
+    M->>API: GET /products/{id} [read_products]
+    end
+
+    rect rgb(255, 236, 236)
+    Note over L,API: 5. DESINSTALAÇÃO e REINSTALAÇÃO
+    L->>AD: Desinstala o Miaou
+    AD->>API: Revoga o access_token
+    API->>M: Webhook app/uninstalled
+    M->>M: Apaga o token, fecha o painel e some o botão da loja
+    L->>AD: Instala de novo
+    AD->>M: GET /auth/callback?code=...
+    M->>API: POST /apps/authorize/token (novo token)
+    M->>API: Webhooks, scripts e produtos de novo (mesmo passo 1)
+    M-->>L: Painel com o histórico e as preferências preservados
+    end
+
+    rect rgb(238, 238, 238)
+    Note over AD,M: 6. LGPD (webhooks obrigatórios)
+    API->>M: POST /webhooks/lgpd/store-redact
+    M->>M: Apaga todos os dados da loja
+    API->>M: POST /webhooks/lgpd/customers-redact
+    M->>M: Apaga o WhatsApp do cliente da lista de leads
+    API->>M: POST /webhooks/lgpd/customers-data-request
+    M-->>API: Dados guardados do cliente (WhatsApp, se houver)
+    end
