@@ -416,6 +416,7 @@ export function App(nube) {
 			}
 		}
 		const step = nube.getState().location.page?.data?.step ?? null;
+		if (step === "success" && nube.getState().order) onOrderDone(nube.getState(), "success");
 		if (!tried.length || !tok || String(tok.s) !== storeId) {
 			dbg("checkout", { step, provados: tried.length, token: Boolean(tok), enviado: false });
 			return;
@@ -423,6 +424,34 @@ export function App(nube) {
 		const value = JSON.stringify({ v: 1, p: tried.map((r) => [r.p, r.k]) });
 		nube.send("order:add:extra", () => ({ order: { extra: { [EXTRA_KEY]: value } } }));
 		dbg("checkout", { step, provados: tried.map((r) => r.p), enviado: true });
+	}
+
+	// Página de sucesso: o pedido concluído chega no order:update (Events > Order,
+	// o exemplo oficial lê order.id). O order.extra só fica visível nesta página,
+	// não no pedido da API, então o número do pedido e os provados vão para o
+	// servidor, que conta a venda quando a Nuvemshop avisar o pagamento.
+	const sentOrders = new Set();
+	async function onOrderDone(state, origem) {
+		const order = state.order || {};
+		const payload = state.eventPayload || {};
+		const raw = order.id ?? payload.id ?? payload.order?.id ?? payload.order_id;
+		const orderId = Number(raw);
+		const tried = await readTried();
+		const tok = await readJSON(local, TOKEN_KEY, null);
+		const storeId = String(state.store.id);
+		dbg("pedido:concluido", {
+			origem, orderId: raw ?? null, chavesPedido: Object.keys(order), chavesPayload: Object.keys(payload),
+			extra: order.extra ?? null, provados: tried.length,
+		});
+		if (!Number.isSafeInteger(orderId) || orderId <= 0 || sentOrders.has(orderId)) return;
+		if (!tried.length || !tok || String(tok.s) !== storeId) return;
+		sentOrders.add(orderId);
+		post(`/api/storefront/${storeId}/conversion`, {
+			token: tok.t,
+			orderId,
+			tried: tried.map((r) => ({ productId: Number(r.p), token: r.k })),
+		});
+		dbg("pedido:enviado", { orderId, provados: tried.map((r) => r.p) });
 	}
 
 	function handle(state) {
@@ -441,6 +470,7 @@ export function App(nube) {
 	nube.on("page:loaded", handle);
 	nube.on("location:updated", handle);
 	nube.on("checkout:ready", () => onCheckout());
+	nube.on("order:update", (state) => onOrderDone(state, "order:update"));
 	// a gaveta fechou (pela loja ou pelo app): a loja avisa
 	nube.on("custom:drawer:close", (state) => {
 		dbg("gaveta:fechou", state.eventPayload ?? null);

@@ -105,6 +105,7 @@ router.post('/:storeId/conversion', loadStore, (req, res) => {
   const tried = require('../lib/sync').verifiedTried(req.store.id, list);
   if (!tried.length) return res.json({ ok: true, saved: 0 });
   const saved = svc.saveOrderClaims(req.store.id, orderId, tried);
+  if (config.tryon.debug) console.log(`[debug ${req.store.id}] servidor pedido=${orderId} provados recebidos=${tried.map((t) => t.productId).join(',')} novos=${saved}`);
   // o pagamento já tinha sido confirmado antes desta página abrir: importa agora,
   // só quando o aviso trouxe produto novo (repetir o mesmo aviso não gasta a cota da API)
   if (saved > 0 && svc.orderWasPaid(req.store.id, orderId)) {
