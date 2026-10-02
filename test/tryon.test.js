@@ -49,7 +49,8 @@ function mockNuvemshop(selfUrl) {
   app.get(`/2025-03/${STORE_ID}/products/:id`, auth, (req, res) => res.json(product(Number(req.params.id))));
   // pedido 4242: só o vestido (produto 1), tamanho M
   app.get(`/2025-03/${STORE_ID}/orders/:id`, auth, (req, res) => res.json({ id: Number(req.params.id), created_at: new Date().toISOString(),
-    products: req.params.id === '4242' ? [{ product_id: 1, variant_values: ['M'] }] : [] }));
+    // o vestido em duas linhas (dois tamanhos) e uma peça que não foi provada
+    products: req.params.id === '4242' ? [{ product_id: 1, variant_values: ['M'], price: '199.90', quantity: 2 }, { product_id: 1, variant_values: ['G'], price: '199.90', quantity: 1 }, { product_id: 3, price: '50.00', quantity: 1 }] : [] }));
   app.get('/img/:id.jpg', (req, res) => { imgCalls.push(req.params.id); res.type('image/jpeg').send(JPEG); });
   return app;
 }
@@ -496,6 +497,7 @@ test('venda: produto provado no pedido pago conta, com qualquer tamanho; provado
   await wait(150);
   const st = await admin('GET', '/tryon');
   assert.equal(st.body.stats.sales, 1);
+  assert.equal(st.body.stats.revenue, 599.7, 'receita: só o produto provado (3 x 199,90), não o pedido inteiro');
   const { getDb } = require('../src/db');
   assert.deepEqual(getDb().prepare('SELECT product_id FROM tryon_sales WHERE order_id = 4242').all().map((r) => r.product_id), [1], 'só o produto que estava no pedido');
 });

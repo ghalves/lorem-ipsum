@@ -153,6 +153,7 @@ cat > /usr/local/bin/miaou <<EOF
 cd "$APP_DIR"
 case "\${1:-}" in
   plano)     shift; exec sudo -u "$APP_USER" "$NODE_BIN" --no-warnings scripts/set-plan.js "\$@" ;;
+  qualidade) shift; exec sudo -u "$APP_USER" "$NODE_BIN" --no-warnings scripts/quality.js "\$@" ;;
   logs)      exec journalctl -u "$SERVICE" -f -n 100 ;;
   status)    exec systemctl status "$SERVICE" --no-pager ;;
   reiniciar) exec systemctl restart "$SERVICE" ;;
@@ -160,6 +161,7 @@ case "\${1:-}" in
   *)
     echo "Uso: sudo miaou <comando>"
     echo "  plano <id da loja> [plano]   mostra ou troca o plano (essencial, crescer, escalar, volume-2500..., none)"
+    echo "  qualidade [id da loja] [dias] realismo das provas (joinha do comprador)"
     echo "  logs                         acompanha o log"
     echo "  status | reiniciar           estado do serviço / reinicia"
     echo "  backup                       copia o banco para $BACKUP_DIR (14 dias)"

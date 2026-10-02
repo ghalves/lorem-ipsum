@@ -105,7 +105,10 @@
       io.disconnect();
       var en = entries[0];
       var box = function (b) { return b ? [Math.round(b.x), Math.round(b.y), Math.round(b.width), Math.round(b.height)] : null; };
-      dbg('janela:visivel', { slot: params.get('slot') || 'overlay', ratio: en ? Math.round(en.intersectionRatio * 1000) / 1000 : null,
+      var ratio = en ? Math.round(en.intersectionRatio * 1000) / 1000 : 1;
+      // sempre (sem depender do debug): se a loja passar a cortar o provador, o servidor avisa
+      if (ratio < 0.99) req('POST', '/events', { type: 'overlay_cut', token: S.token, visitId: VISIT, ratio: ratio, slot: params.get('slot') || 'overlay' }).catch(function () {});
+      dbg('janela:visivel', { slot: params.get('slot') || 'overlay', ratio: ratio,
         visivel: en && box(en.intersectionRect), iframe: en && box(en.boundingClientRect),
         janela: [window.innerWidth, window.innerHeight], pedida: [Number(params.get('vw')) || 0, Number(params.get('vh')) || 0] });
     }, { threshold: [0, 0.5, 0.9, 0.99, 1] });

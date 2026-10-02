@@ -288,7 +288,9 @@
       api('GET', '/tryon?period=' + days.value).then(function (r) {
         var q = r.quota, s = r.stats, d = s.daily || [], pv = s.previous;
         var col = function (k) { return d.map(function (x) { return x[k] || 0; }); };
-        var cmp = function (now, key) { return pv ? { delta: prevText(now, pv[key]), up: upFlag(now, pv[key]) } : { delta: periodText() }; };
+        var cmp = function (now, key, fmt) { return pv ? { delta: prevText(now, pv[key], fmt), up: upFlag(now, pv[key]) } : { delta: periodText() }; };
+        // receita comparada ao plano: só em janelas de 30 dias ou mais (o plano é mensal)
+        var planMult = q.plan.price && s.revenue && s.days >= 30 ? s.revenue / (q.plan.price * s.days / 30) : null;
         box.innerHTML = '';
         add(box, [
           quotaBanner(q),
@@ -299,8 +301,8 @@
               note: s.people ? String(Math.round(s.tryons / s.people * 10) / 10).replace('.', ',') + ' provas por pessoa' : null, series: col('people'), color: 'var(--data-2)' }, cmp(s.people, 'people')),
             Object.assign({ label: 'Vendas com o provador', help: 'Pedidos pagos com um produto que o comprador provou antes, em qualquer tamanho.', value: nf(s.sales),
               note: s.people ? pct(s.sales / s.people) + ' de quem provou comprou' : null, series: col('sales'), color: 'var(--data-1)' }, cmp(s.sales, 'sales')),
-            { label: 'Ficou realista', help: 'Das provas avaliadas pelos compradores (joinha), quantas eles acharam realistas.', value: pct(s.realistic),
-              delta: s.rated ? pl(s.rated, 'avaliação', 'avaliações') : 'sem avaliações ainda' },
+            Object.assign({ label: 'Receita com o provador', help: 'Soma dos produtos provados nos pedidos pagos (preço x quantidade). Outros itens do pedido não entram.', value: brl(s.revenue),
+              note: planMult ? String(Math.round(planMult * 10) / 10).replace('.', ',') + '× o valor do plano' : null, series: col('revenue'), color: 'var(--data-1)' }, cmp(s.revenue, 'revenue', brl)),
           ]),
           h('div', { class: 'card' }, h('div', { class: 'card-head' }, h('h2', { text: 'Quem provou e quem comprou' })),
             s.tryons ? lineChart(d, [
@@ -549,9 +551,9 @@
     }).catch(fail);
   }
 
-  function prevText(now, before) {
+  function prevText(now, before, fmt) {
     if (before == null) return 'últimos 30 dias';
-    return 'Anteriormente ' + nf(before);
+    return 'Anteriormente ' + (fmt || nf)(before);
   }
   function upFlag(now, before) {
     if (before == null || now === before) return null;

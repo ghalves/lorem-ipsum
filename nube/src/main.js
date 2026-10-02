@@ -3,12 +3,12 @@
  *
  * Roda num web worker da Nuvemshop, sem acesso ao DOM:
  * - página de produto: botão "Provar em mim" (com os brilhos) logo abaixo
- *   do "Comprar", depois das variações; o provador (a mesma tela /tryon/ de sempre) abre num iframe, em
- *   gaveta oficial da loja (drawer_right), com a foto da variação
- *   escolhida; o "Comprar" do provador põe essa variação no carrinho;
- * - checkout: grava no pedido (order extra) os produtos provados, cada um com
- *   o token assinado pelo servidor. Quando a Nuvemshop avisa que o pedido foi
- *   pago, o servidor lê esse campo e conta a venda.
+ *   do "Comprar", depois das variações; o provador (a mesma tela /tryon/ de sempre) abre num iframe
+ *   em tela cheia (sobe de baixo no celular, gaveta à direita no computador), com a
+ *   foto da variação escolhida; o "Comprar" do provador põe essa variação no carrinho;
+ * - página de sucesso do checkout: manda ao servidor o número do pedido e os
+ *   produtos provados, cada um com o token assinado pelo servidor. Quando a
+ *   Nuvemshop avisa que o pedido foi pago, o servidor conta a venda.
  *
  * __APP_URL__ é trocado pelo endereço do servidor em scripts/build-loader.js.
  */
@@ -31,7 +31,6 @@ const VISIT_KEY = "szp_visit";
 const REOPEN_KEY = "szp_reopen";
 const REOPEN_MS = 2 * 60 * 1000;
 const WEEK = 7 * 864e5;
-const EXTRA_KEY = "miaou";
 const PICK_OPTIONS = "Escolha as opções e toque em Comprar";
 
 // Ícone do botão: Hugeicons Free AiSparkles (Stroke Rounded, MIT · Copyright
@@ -247,16 +246,14 @@ export function App(nube) {
 		}));
 	}
 
-	// VERSÃO DE MEDIÇÃO (loja demo): slot corner_bottom_left (Slots > Fixed
-	// slots: position fixed, sem tamanho máximo listado) com o iframe do tamanho
-	// da tela e fundo transparente. O provador desenha o fundo escuro e o card
-	// (sobe de baixo no celular, gaveta flutuante no computador) e registra no
-	// log o que a loja mostrou (janela:visivel). Aguarda a Nuvemshop confirmar
-	// que o uso é aceito; a versão oficial usa drawer_right.
+	// Slot corner_bottom_left (Slots > Fixed slots: position fixed) com o iframe
+	// do tamanho da tela e fundo transparente: o provador desenha o fundo escuro
+	// e o card (sobe de baixo no celular, gaveta flutuante no computador).
+	// Medido na loja: o canto reserva 45% da largura e não corta o que passa
+	// disso; preso à direita o resto saía da tela, preso à esquerda o iframe
+	// cobre a tela toda. Se a loja passar a cortar, o provador avisa o servidor
+	// (overlay_cut). Sem uso oficial da gaveta (drawer_right) por enquanto.
 	const DRAWER = "drawer_right";
-	// medido na loja: o canto limita a largura a 45% da tela e, preso à direita,
-	// o resto do iframe ia para fora da tela; preso à esquerda, o iframe se
-	// estende para a direita a partir da borda da tela
 	const CORNER = "corner_bottom_left";
 	function openTryon(resume) {
 		if (!current) return;
@@ -409,12 +406,10 @@ export function App(nube) {
 		const step = nube.getState().location.page?.data?.step ?? null;
 		if (step === "success" && nube.getState().order) onOrderDone(nube.getState(), "success");
 		if (!tried.length || !tok || String(tok.s) !== storeId) {
-			dbg("checkout", { step, provados: tried.length, token: Boolean(tok), enviado: false });
+			dbg("checkout", { step, provados: tried.length, token: Boolean(tok) });
 			return;
 		}
-		const value = JSON.stringify({ v: 1, p: tried.map((r) => [r.p, r.k]) });
-		nube.send("order:add:extra", () => ({ order: { extra: { [EXTRA_KEY]: value } } }));
-		dbg("checkout", { step, provados: tried.map((r) => r.p), enviado: true });
+		dbg("checkout", { step, provados: tried.map((r) => r.p) });
 	}
 
 	// Página de sucesso: o pedido concluído chega no order:update (Events > Order,

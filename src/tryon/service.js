@@ -723,9 +723,10 @@ function purge() {
  * "Comprar" no provador ou escolheu o tamanho depois, na página do produto.
  * Chamado por importOrder, que já tem o pedido da Nuvemshop.
  */
-function recordSale(storeId, orderId, productId) {
-  return getDb().prepare('INSERT INTO tryon_sales (store_id, order_id, product_id) VALUES (?, ?, ?) ON CONFLICT DO NOTHING')
-    .run(Number(storeId), Number(orderId), Number(productId)).changes;
+function recordSale(storeId, orderId, productId, value = null) {
+  const v = Number.isFinite(Number(value)) && value != null ? Math.round(Number(value) * 100) / 100 : null;
+  return getDb().prepare('INSERT INTO tryon_sales (store_id, order_id, product_id, value) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING')
+    .run(Number(storeId), Number(orderId), Number(productId), v).changes;
 }
 
 // ---------- relatório ----------
@@ -773,27 +774,31 @@ function stats(storeId, period = 30) {
   const shares = db.prepare(`SELECT COUNT(*) AS n, COALESCE(SUM(views), 0) AS views, COALESCE(SUM(clicks), 0) AS clicks
     FROM tryon_shares WHERE store_id = ? AND created_at >= ? AND created_at < ?`).get(sid, since, until);
   const sales = db.prepare('SELECT COUNT(DISTINCT order_id) AS n FROM tryon_sales WHERE store_id = ? AND created_at >= ? AND created_at < ?').get(sid, since, until).n;
+  // receita: só o valor dos produtos provados nos pedidos pagos (não o pedido inteiro)
+  const revenue = db.prepare('SELECT COALESCE(SUM(value), 0) AS v FROM tryon_sales WHERE store_id = ? AND created_at >= ? AND created_at < ?').get(sid, since, until).v;
 
   // série: por hora (hoje/ontem) ou por dia, com zeros onde não houve uso
   const bucket = w.hourly ? "strftime('%H', created_at, '-3 hours')" : "date(created_at, '-3 hours')";
   const byKey = new Map(db.prepare(`SELECT ${bucket} AS k, SUM(status = 'done') AS tryons,
       COUNT(DISTINCT CASE WHEN status = 'done' THEN shopper_id END) AS people
     FROM tryon_jobs WHERE store_id = ? AND created_at >= ? AND created_at < ? GROUP BY k`).all(sid, since, until).map((r) => [r.k, r]));
-  const salesByKey = new Map(db.prepare(`SELECT ${bucket} AS k, COUNT(DISTINCT order_id) AS n
-    FROM tryon_sales WHERE store_id = ? AND created_at >= ? AND created_at < ? GROUP BY k`).all(sid, since, until).map((r) => [r.k, r.n]));
+  const salesRows = db.prepare(`SELECT ${bucket} AS k, COUNT(DISTINCT order_id) AS n, COALESCE(SUM(value), 0) AS v
+    FROM tryon_sales WHERE store_id = ? AND created_at >= ? AND created_at < ? GROUP BY k`).all(sid, since, until);
+  const salesByKey = new Map(salesRows.map((r) => [r.k, r.n]));
+  const revenueByKey = new Map(salesRows.map((r) => [r.k, r.v]));
   const daily = [];
   if (w.hourly) {
     const lastHour = w.key === 'today' ? new Date(w.end - 3 * 3600000).getUTCHours() : 23;
     for (let hr = 0; hr <= lastHour; hr++) {
       const k = String(hr).padStart(2, '0');
       const r = byKey.get(k);
-      daily.push({ hour: hr, tryons: r?.tryons || 0, people: r?.people || 0, sales: salesByKey.get(k) || 0 });
+      daily.push({ hour: hr, tryons: r?.tryons || 0, people: r?.people || 0, sales: salesByKey.get(k) || 0, revenue: revenueByKey.get(k) || 0 });
     }
   } else {
     for (let i = w.days - 1; i >= 0; i--) {
       const day = new Date(w.end - 3 * 3600000 - i * 864e5).toISOString().slice(0, 10);
       const r = byKey.get(day);
-      daily.push({ day, tryons: r?.tryons || 0, people: r?.people || 0, sales: salesByKey.get(day) || 0 });
+      daily.push({ day, tryons: r?.tryons || 0, people: r?.people || 0, sales: salesByKey.get(day) || 0, revenue: revenueByKey.get(day) || 0 });
     }
   }
 
@@ -803,6 +808,7 @@ function stats(storeId, period = 30) {
   const pj = db.prepare(`SELECT SUM(status = 'done') AS done, COUNT(DISTINCT CASE WHEN status = 'done' THEN shopper_id END) AS people
     FROM tryon_jobs WHERE store_id = ? AND created_at >= ? AND created_at < ?`).get(sid, pSince, pUntil);
   const prevSales = db.prepare('SELECT COUNT(DISTINCT order_id) AS n FROM tryon_sales WHERE store_id = ? AND created_at >= ? AND created_at < ?').get(sid, pSince, pUntil).n;
+  const prevRevenue = db.prepare('SELECT COALESCE(SUM(value), 0) AS v FROM tryon_sales WHERE store_id = ? AND created_at >= ? AND created_at < ?').get(sid, pSince, pUntil).v;
   const hadBefore = db.prepare('SELECT 1 FROM tryon_jobs WHERE store_id = ? AND created_at < ? LIMIT 1').get(sid, since);
   const top = db.prepare(`SELECT j.product_id AS id, p.name, COUNT(*) AS tryons,
       (SELECT COUNT(DISTINCT order_id) FROM tryon_sales s WHERE s.store_id = j.store_id AND s.product_id = j.product_id AND s.created_at >= ? AND s.created_at < ?) AS sales
@@ -826,7 +832,8 @@ function stats(storeId, period = 30) {
     hedgedRate: j.done ? (j.hedged || 0) / j.done : null,
     costUsd: Math.round((j.cost || 0) * 1000) / 1000,
     buys: ev('tryon_buy'), leads, sales,
-    previous: hadBefore ? { tryons: pj.done || 0, people: pj.people || 0, sales: prevSales } : null,
+    revenue: Math.round(revenue * 100) / 100,
+    previous: hadBefore ? { tryons: pj.done || 0, people: pj.people || 0, sales: prevSales, revenue: prevRevenue } : null,
     shares: shares.n, shareViews: shares.views, shareClicks: shares.clicks,
     daily, top,
   };

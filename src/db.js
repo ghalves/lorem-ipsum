@@ -174,6 +174,7 @@ const MIGRATIONS = [
   ['products', 'images', 'TEXT'],       // JSON [{id, src}]: todas as fotos (variações usam image_id)
   ['tryon_jobs', 'product_image', 'TEXT'],  // foto do produto usada (a da variação escolhida)
   ['products', 'variant_images', 'TEXT'],   // JSON { idDaVariação: image_id } (o NubeSDK não traz o image_id)
+  ['tryon_sales', 'value', 'REAL'],         // valor (R$) do produto provado no pedido pago: preço x quantidade
 ];
 
 function migrate(conn) {

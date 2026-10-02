@@ -109,14 +109,14 @@ async function importOrder(storeId, orderId) {
     const productId = Number(item.product_id);
     const c = svc.claimFor(store.id, orderId, productId);
     if (c && c.size === '__tryon' && (fromExtra.has(productId) || claimMatchesOrder(c, order))) {
-      saved += require('../tryon/service').recordSale(store.id, orderId, productId);
+      // valor do produto provado neste pedido (todas as linhas dele: tamanhos e cores)
+      const value = (order.products || []).filter((p) => Number(p.product_id) === productId)
+        .reduce((sum, p) => sum + (Number(p.price) || 0) * (Number(p.quantity) || 1), 0);
+      saved += require('../tryon/service').recordSale(store.id, orderId, productId, value);
     }
   }
   if (require('../config').tryon.debug) {
-    // campos de identificação do pedido (sem dados do cliente), para ligar à página de sucesso
-    const ids = Object.fromEntries(Object.entries(order || {}).filter(([k, v]) => /(^id$|number|token|cart|checkout|landing|created_at)/i.test(k) && (v == null || typeof v !== 'object')));
-    console.log(`[debug ${store.id}] servidor pedido=${orderId} campos=${JSON.stringify(ids)} chaves=${Object.keys(order || {}).join(',')}`);
-    console.log(`[debug ${store.id}] servidor pedido=${orderId} pago: extra=${JSON.stringify(order?.extra ?? null).slice(0, 300)} provados=${[...fromExtra].join(',') || 'nenhum'} produtos=${(order?.products || []).map((p) => p.product_id).join(',')} vendas=${saved}`);
+    console.log(`[debug ${store.id}] servidor pedido=${orderId} pago: produtos=${(order?.products || []).map((p) => p.product_id).join(',')} vendas=${saved}`);
   }
   return saved;
 }
