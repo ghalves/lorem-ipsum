@@ -42,7 +42,7 @@
 ## Cena 4 · Uso na loja pelo comprador (computador) — ~2 min
 
 1. Abra a loja numa aba e entre na página da **Polo Tricot**.
-2. Mostre o botão **Provar em mim** abaixo do **Comprar**.
+2. Mostre o botão **Provar em mim** na página, perto do **Comprar**.
 3. Clique: o provador abre como gaveta lateral. Envie a foto de corpo inteiro.
 4. Mostre a barra de progresso e o resultado (~20 s).
 5. Clique em **Comprar** no provador: o produto vai para a sacola com a variação escolhida.

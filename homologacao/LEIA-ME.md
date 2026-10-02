@@ -8,10 +8,10 @@ Pacote para responder ao e-mail de homologação. Tudo que não dependia de voc�
 | --- | --- | --- |
 | `01-diagrama-sequencia.pdf` (+ `.png`, `.svg`, fonte `.mmd`) | Diagrama de sequência com os escopos | Pronto |
 | Vídeo (você grava) seguindo `02-roteiro-video.pdf` | Vídeo de demonstração: instalação, login, reinstalação... | **Você grava** |
-| `03-requisitos-tecnicos-e-assinatura.pdf` | Requisitos técnicos e etapas de assinatura | Pronto, falta a seção 3 |
+| `03-requisitos-tecnicos-e-assinatura.pdf` | Requisitos técnicos e etapas de assinatura | Pronto |
 | `04-faq-template-nuvemshop.docx` | Template Nuvemshop de FAQs + Guia Tutorial de Instalação | Pronto (modelo oficial, com prints do painel) |
 | `05-perfil-do-app.pdf` | Campos do perfil no Painel de Parceiros | Textos prontos para copiar |
-| `email-resposta.md` | Resposta ao e-mail | Pronto, faltam os links |
+| `email-resposta.md` | Resposta ao e-mail | Pronto, falta o link do vídeo |
 
 ## O que só você pode fazer
 
@@ -19,7 +19,7 @@ Pacote para responder ao e-mail de homologação. Tudo que não dependia de voc�
 2. **Colar o link do vídeo** no e-mail (único `[PREENCHER]` que sobrou).
 3. **Deixar uma loja de demonstração pronta** com o Miaou instalado, 3 produtos com foto (roupa, calça, óculos) e liberada: `sudo miaou plano <id da loja> crescer`.
 4. **Colar o FAQ no template oficial** da Nuvemshop (se eles mandaram um arquivo) e no Portal de Parceiros > app > FAQ.
-5. **Completar o perfil** no Painel de Parceiros com os textos de `05-perfil-do-app` e criar **3 a 5 imagens** com provas reais, nas dimensões pedidas no portal.
+5. **Completar o perfil** no Painel de Parceiros com os textos de `05-perfil-do-app`, o ícone e as 4 imagens de `loja-de-aplicativos/imagens-1920x1080/`.
 6. **Conferir no portal** se os escopos marcados são exatamente `read_products`, `read_orders` e `write_scripts` (o diagrama cita só esses) e se os 3 webhooks de LGPD estão cadastrados.
 
 ## Pontos de atenção (podem travar a aprovação)

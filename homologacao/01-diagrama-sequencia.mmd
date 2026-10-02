@@ -53,7 +53,7 @@ sequenceDiagram
     C->>V: Abre a página de um produto
     V->>M: GET /api/storefront/{store}/config?product={id}
     M-->>V: Botão ligado? tipo de peça, texto, token assinado
-    V-->>C: Botão "Provar em mim" abaixo do "Comprar"
+    V-->>C: Botão "Provar em mim" na página do produto
     C->>V: Clica e envia uma foto
     V->>M: POST /api/tryon/{store}/photo · POST /api/tryon/{store}/jobs
     M->>IA: Foto + imagem do produto + descrição da peça

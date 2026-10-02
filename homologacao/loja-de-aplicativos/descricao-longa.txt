@@ -4,7 +4,7 @@ O que é o Miaou?
 O Miaou é um provador virtual com inteligência artificial para lojas Nuvemshop de moda e óculos. Você instala e o botão "Provar em mim" aparece nas páginas de produto, sem mexer no tema.
 
 Como funciona o Miaou?
-- O cliente clica em "Provar em mim", logo abaixo do "Comprar".
+- O cliente clica em "Provar em mim", na página do produto, perto do "Comprar".
 - Envia uma foto (ou tira na hora pelo celular).
 - Em cerca de 20 segundos vê a peça no próprio corpo, com o rosto e o fundo da foto dele.
 - Compra direto pelo provador, com a cor e o tamanho escolhidos.

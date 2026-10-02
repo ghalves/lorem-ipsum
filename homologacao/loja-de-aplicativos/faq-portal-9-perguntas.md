@@ -9,7 +9,7 @@ Um provador virtual com inteligência artificial. Na página do produto, o clien
 Clique em "Instalar aplicativo" e aceite as permissões. O painel do Miaou abre sozinho, sem criar conta ou senha. Depois, fale com a Miaou pelo botão "Falar com a Miaou" no painel para liberar o provador na sua loja.
 
 **3. Preciso mexer no código ou no tema da loja?**
-Não. O botão entra sozinho, logo abaixo do "Comprar", em qualquer layout, no celular e no computador.
+Não. O botão entra sozinho na página do produto, perto do "Comprar", em qualquer layout, no celular e no computador.
 
 **4. Para quais produtos funciona?**
 Roupas (blusas, vestidos, calças, saias, camisetas e moda masculina) e óculos. O Miaou reconhece o tipo de cada produto, e você pode mudar ou desligar o provador por produto na aba Produtos.
