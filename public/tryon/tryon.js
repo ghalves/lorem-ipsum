@@ -624,8 +624,8 @@
           var resume = params.get('resume');
           if (resume === 'camera' || resume === 'gallery') {
             toast(resume === 'camera'
-              ? 'Seu celular fechou a página ao abrir a câmera. Tire a foto com a câmera do celular e depois toque em Escolher foto.'
-              : 'Seu celular fechou a página ao abrir suas fotos. Feche outros apps abertos e tente de novo.', 9000);
+              ? 'Seu celular ficou sem memória. Tire a foto pela câmera e envie em Escolher foto.'
+              : 'Seu celular ficou sem memória. Feche outros apps e tente de novo.', 9000);
             if (resume === 'camera') req('POST', '/events', { type: 'camera_reload', token: S.token, visitId: VISIT }).catch(function () {});
           }
         });
