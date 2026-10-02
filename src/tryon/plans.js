@@ -12,7 +12,7 @@
 const PLANS = [
   {
     key: 'essencial', name: 'Essencial', price: 97, quota: 150, tagline: 'Para quem está começando com o provador.',
-    features: ['Provador em todas as páginas de produto', 'Roupas e óculos', 'Compra direto pelo provador', 'Rastreamento de conversões', 'Captura de leads', 'Suporte por e-mail'],
+    features: ['Provador em todas as páginas de produto', 'Qualquer tipo de peça', 'Compra direto pelo provador', 'Rastreamento de conversões', 'Captura de leads', 'Suporte por e-mail'],
   },
   {
     key: 'crescer', name: 'Crescer', price: 197, quota: 400, tagline: 'Para quem já vende e quer vender mais.', featured: true,
