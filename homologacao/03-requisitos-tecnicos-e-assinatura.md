@@ -58,7 +58,15 @@ Nenhuma. O botão entra sozinho na página de produto em qualquer layout, sem c�
 - Erros de geração não contam na cota. Uma mesma foto no mesmo produto devolve a prova já feita, sem gastar cota.
 - Proteções da cota: até 10 provas por comprador por dia (ajustável pelo lojista) e 20 por IP por dia.
 
-**Como a assinatura é contratada hoje:** o lojista escolhe o plano na aba **Planos** do painel e fala com a Miaou pelo botão "Falar com a Miaou" (`suporte@miaou.com.br`). A equipe Miaou ativa o plano da loja.
+**Como a assinatura é contratada (cobrança própria, fora da Nuvemshop).** No portal, o app está como **Grátis, com vendas no aplicativo**.
+
+1. O lojista instala o Miaou (sem custo) e escolhe o plano na aba **Planos** do painel.
+2. Clica em **Falar com a Miaou**, que abre um e-mail para `suporte@miaou.com.br` já com o ID da loja.
+3. A Miaou envia um **link de pagamento do Asaas** com o valor do plano.
+4. O lojista paga pelo link.
+5. Com o pagamento confirmado, a Miaou ativa o plano da loja em até 24 horas. O uso do mês passa a aparecer na aba Planos e o botão aparece na loja.
+
+A cobrança acontece toda fora da Nuvemshop e não usa a API de cobrança da plataforma. Para trocar ou cancelar o plano, o lojista escreve para `suporte@miaou.com.br`.
 
 ## 3. Acesso para a equipe de homologação
 

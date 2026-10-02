@@ -42,9 +42,11 @@ sequenceDiagram
     end
 
     rect rgb(255, 246, 230)
-    Note over L,M: 3. ASSINATURA (plano mensal · sem teste grátis)
-    L->>M: Painel > Planos: escolhe Essencial, Crescer, Escalar ou Volume ("Falar com a Miaou")
-    M->>M: Equipe Miaou ativa o plano da loja e a cota de provas do mês
+    Note over L,M: 3. ASSINATURA (cobrança própria via Asaas · plano mensal · sem teste grátis)
+    L->>M: Painel > Planos: escolhe o plano e clica em "Falar com a Miaou" (e-mail com o ID da loja)
+    M-->>L: Equipe Miaou envia o link de pagamento Asaas do plano escolhido
+    L->>M: Paga pelo link (fora da Nuvemshop · nenhuma chamada à API Nuvemshop)
+    M->>M: Pagamento confirmado: a equipe ativa o plano da loja (até 24 h)
     M-->>L: Plano ativo e uso do mês. Sem plano, o botão não aparece na loja
     Note over L,M: Cota no fim: o botão sai da loja até o dia 1º. Aviso no painel aos 80%
     end

@@ -34,7 +34,8 @@
 
 **Narração:** "Não há nenhuma configuração técnica: o botão entra sozinho na loja, sem código e sem mexer no layout. O lojista só escolhe o plano."
 
-1. **Planos:** mostre os planos (Essencial R$ 97, Crescer R$ 197, Escalar R$ 497, Volume) e o plano ativo com o uso do mês.
+1. **Planos:** mostre os planos (Essencial R$ 97, Crescer R$ 197, Escalar R$ 497, Volume), o plano ativo com o uso do mês e o botão **Falar com a Miaou**.
+   **Narração:** "Para assinar, o lojista escolhe o plano e clica em Falar com a Miaou. Enviamos um link de pagamento do Asaas e, com o pagamento confirmado, ativamos o plano em até 24 horas. Nesta loja de demonstração o plano já está ativo."
 2. **Produtos:** os produtos importados, com o tipo reconhecido (roupa ou óculos) e a opção de mudar ou desligar por produto.
 3. **Preferências:** liga/desliga o provador, texto do botão, pedido de WhatsApp, limite por comprador, status "Instalado" do script na loja e e-mail de suporte.
 4. **Leads:** a lista (vazia ou com dados) e a exportação CSV.

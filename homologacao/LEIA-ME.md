@@ -24,9 +24,7 @@ Pacote para responder ao e-mail de homologação. Tudo que não dependia de voc�
 
 ## Pontos de atenção (podem travar a aprovação)
 
-- **Cobrança.** Hoje o lojista não consegue contratar o plano sozinho: ele pede pelo "Falar com a Miaou" e o plano é ativado no servidor. A Nuvemshop pede que apps pagos expliquem a etapa de assinatura e deem acesso sem ela, e é isso que o documento 03 faz. Mas é provável que eles perguntem como o lojista paga. Decida antes de enviar:
-  - **Cobrança pela Nuvemshop** (modelo "Mensal" no portal): falta integrar a API de Billing no app. Isso já está no "Ainda não feito" do README.
-  - **Cobrança própria** (modelo "Gratuito" com cobrança do parceiro): explique no documento 03 como o lojista paga (Pix, boleto, cartão, link de pagamento...).
+- **Cobrança:** resolvido. O app está como "Grátis, com vendas no aplicativo", e o pagamento é por link do Asaas, com o plano ativado por você em até 24 h. Isso está explicado no documento 03 e no diagrama.
 - **Contas sem plano não veem nada.** Se a equipe instalar na loja dela e você demorar para ativar o plano, ela vai achar que o app não funciona. Por isso a loja de demonstração (item 3) é importante.
 - **Termos de uso.** O app tem página de privacidade, mas não de termos. Se o portal pedir, é preciso criar uma.
 - **NubeSDK.** Desde 5 de junho de 2026 a Nuvemshop exige NubeSDK. O Miaou já usa (scripts Store e Checkout), e isso está no documento 03.

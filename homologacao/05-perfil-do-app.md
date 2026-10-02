@@ -27,7 +27,4 @@ O restante (nome, e-mail, site, URL de redirecionamento, política de privacidad
 
 ## Forma de cobrança
 
-Depende da sua decisão (veja o `LEIA-ME`):
-
-- **Cobrança própria:** marque **Grátis** + **Possui vendas no aplicativo**.
-- **Cobrança pela Nuvemshop:** **Pagamento mensal recorrente**. Exige integrar a API de cobrança no app antes.
+**Grátis** + **Possui vendas no aplicativo** (já configurado). O pagamento dos planos é feito fora da Nuvemshop, por link do Asaas.
