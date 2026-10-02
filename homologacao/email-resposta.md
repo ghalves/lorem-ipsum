@@ -10,7 +10,7 @@ Obrigado pelo retorno. Seguem os artefatos de homologação e os arquivos de pub
 2. **Vídeo de demonstração:** `[PREENCHER: link do YouTube não listado ou Google Drive]`. Mostra a instalação pela Loja de Aplicativos, a criação automática da conta (o app não tem cadastro nem senha próprios), o login pelo admin, o painel, o uso na loja no computador e no celular, a compra atribuída ao provador, a desinstalação e a reinstalação.
 3. **Requisitos técnicos e assinatura** (anexo `03-requisitos-tecnicos-e-assinatura.pdf`): o app tem planos pagos mensais e o botão só aparece na loja com um plano ativo. Para a análise, disponibilizamos:
    - uma loja de demonstração com o Miaou instalado e o plano ativo: `[PREENCHER: URL e acesso]`;
-   - ou, se preferirem usar a loja de vocês, basta nos enviar o ID da loja depois da instalação e ativamos o plano sem custo em até `[PREENCHER: prazo]`.
+   - ou, se preferirem usar a loja de vocês, basta nos enviar o ID da loja depois da instalação e ativamos o plano sem custo em até 24 horas.
 
 **Arquivos para publicação**
 

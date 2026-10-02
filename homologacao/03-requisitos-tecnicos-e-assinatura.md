@@ -68,4 +68,4 @@ Como o botão só aparece com um plano ativo, oferecemos duas formas de validar 
    - URL da loja: `[PREENCHER]`
    - Acesso ao admin: `[PREENCHER usuário/senha ou convidar a equipe como usuário]`
    - Produtos para testar: `[PREENCHER: 1 roupa, 1 calça, 1 óculos]`
-2. **Loja de teste de vocês:** depois de instalar o Miaou, enviem o ID da loja para `suporte@miaou.com.br` (ou respondam este e-mail) e ativamos o plano **Crescer** sem custo em até `[PREENCHER: prazo, ex.: 2 horas úteis]`.
+2. **Loja de teste de vocês:** depois de instalar o Miaou, enviem o ID da loja para `suporte@miaou.com.br` (ou respondam este e-mail) e ativamos o plano **Crescer** sem custo em até 24 horas.
