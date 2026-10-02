@@ -266,12 +266,14 @@ export function App(nube) {
 		}));
 	}
 
-	// Gaveta oficial da loja: drawer_right (Slots > Storefront Slots: painel
-	// colado à direita, altura toda; páginas home, product, category, search,
-	// cart). Fecha ao clicar fora, e avisa com custom:drawer:close (Events >
-	// UI & Custom). O provador registra no log o que a loja mostrou
-	// (janela:visivel).
+	// VERSÃO DE MEDIÇÃO (loja demo): slot corner_bottom_right (Slots > Fixed
+	// slots: position fixed, sem tamanho máximo listado) com o iframe do tamanho
+	// da tela e fundo transparente. O provador desenha o fundo escuro e o card
+	// (sobe de baixo no celular, gaveta flutuante no computador) e registra no
+	// log o que a loja mostrou (janela:visivel). Aguarda a Nuvemshop confirmar
+	// que o uso é aceito; a versão oficial usa drawer_right.
 	const DRAWER = "drawer_right";
+	const CORNER = "corner_bottom_right";
 	function openTryon(resume) {
 		if (!current) return;
 		// limpa o que tiver ficado de uma abertura anterior
@@ -293,8 +295,8 @@ export function App(nube) {
 			visit: current.visit,
 			origin: originOf(state.location.url),
 			image: photo?.src || current.cfg.product?.image || "",
-			layout: "drawer",
-			slot: "drawer",
+			layout: "overlay",
+			slot: "corner",
 			device: phone ? "phone" : "desktop",
 			vw: String(vw),
 			vh: String(vh),
@@ -303,21 +305,16 @@ export function App(nube) {
 		if (variantPhoto?.id) q.set("imageId", String(variantPhoto.id));
 		if (variant?.id) q.set("variantId", String(variant.id));
 		if (resume === "camera") q.set("resume", "camera");
-		openSlot = DRAWER;
+		openSlot = CORNER;
 		if (resume !== "camera") track("tryon_open");
-		// A gaveta acompanha a largura do conteúdo, até 95% da tela (medido na
-		// loja: 440 de 440 no computador; 342 de 360 no celular). No celular fica
-		// uma faixa de 56 px para tocar fora e fechar (folga das gavetas laterais
-		// do Material Design).
-		const w = Math.min(440, phone ? vw - 56 : vw);
-		dbg("abrir", { slot: openSlot, resume: resume || null, screen, width: w, height: vh, variant: variant?.id ?? null });
+		dbg("abrir", { slot: openSlot, resume: resume || null, screen, width: vw, height: vh, variant: variant?.id ?? null });
 		nube.render(
 			openSlot,
 			iframe({
 				src: `${API}/tryon/?${q.toString()}`,
-				width: w,
+				width: vw,
 				height: vh,
-				style: { width: `${w}px`, minWidth: `${w}px`, height: `${vh}px`, border: "0", display: "block", background: "#fff" },
+				style: { width: `${vw}px`, minWidth: `${vw}px`, height: `${vh}px`, border: "0", display: "block", background: "transparent" },
 				onMessage,
 			}),
 		);
