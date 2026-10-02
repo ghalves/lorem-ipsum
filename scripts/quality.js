@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 'use strict';
 /**
- * Realismo das provas (joinha do comprador), para o operador acompanhar a
- * qualidade da IA. Não aparece no painel do lojista.
+ * Realismo das provas (joinha do comprador) e câmera do celular, para o
+ * operador acompanhar a qualidade. Não aparece no painel do lojista.
  *
  *   node scripts/quality.js            # todas as lojas, últimos 30 dias
  *   node scripts/quality.js 123456     # uma loja, com os produtos
@@ -26,6 +26,16 @@ if (!stores.length) { console.log(`Nenhuma prova nos últimos ${days} dias.`); p
 const all = stores.reduce((a, r) => ({ up: a.up + (r.up || 0), down: a.down + (r.down || 0), done: a.done + (r.done || 0) }), { up: 0, down: 0, done: 0 });
 console.log(`Últimos ${days} dias · todas as lojas: ${line(all)}`);
 for (const s of stores) console.log(`  ${s.name || s.id} (${s.id}): ${line(s)}`);
+
+// celulares que fecham a página da loja ao abrir a câmera (Android com pouca memória)
+const cam = db.prepare(`SELECT SUM(type = 'camera_open') AS opens, SUM(type = 'camera_reload') AS reloads
+  FROM events WHERE type IN ('camera_open', 'camera_reload') AND created_at >= datetime('now', ?) ${storeArg ? 'AND store_id = ?' : ''}`)
+  .get(...(storeArg ? [since, Number(storeArg)] : [since]));
+const opens = cam.opens || 0;
+const reloads = cam.reloads || 0;
+console.log(opens
+  ? `\nCâmera do celular: ${Math.round(Math.min(1, reloads / opens) * 100)}% recarregou a página (${reloads} de ${opens})`
+  : '\nCâmera do celular: ninguém usou no período');
 
 if (storeArg) {
   const products = db.prepare(`SELECT j.product_id AS id, p.name, SUM(j.feedback = 1) AS up, SUM(j.feedback = -1) AS down, SUM(j.status = 'done') AS done

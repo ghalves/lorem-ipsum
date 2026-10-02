@@ -336,9 +336,7 @@
                   h('td', { class: 'num', text: nf(p.sales), 'data-short': Number(p.sales) === 1 ? 'venda' : 'vendas' }),
                   h('td', { class: 'num', text: p.tryons ? pct(p.sales / p.tryons) : '0%', 'data-short': 'compraram' }));
               }))) : h('p', { class: 'chart-empty', text: 'Ainda sem provas no período.' }),
-            s.avgSeconds ? h('p', { class: 'muted note' }, icon('timer'), 'Tempo médio de uma prova: ' + String(s.avgSeconds).replace('.', ',') + ' s') : null,
-            // celulares que fecham a página da loja ao abrir a câmera (Android com pouca memória)
-            s.cameraOpens ? h('p', { class: 'muted note' }, 'Câmera do celular: em ' + pct(Math.min(1, s.cameraReloads / s.cameraOpens)) + ' das vezes o celular fechou a página (' + nf(s.cameraReloads) + ' de ' + nf(s.cameraOpens) + ').') : null),
+            s.avgSeconds ? h('p', { class: 'muted note' }, icon('timer'), 'Tempo médio de uma prova: ' + String(s.avgSeconds).replace('.', ',') + ' s') : null),
         ]);
       }).catch(fail);
     }

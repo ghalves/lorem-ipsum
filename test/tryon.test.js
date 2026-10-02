@@ -701,9 +701,11 @@ test('funil: abrir, provar (nova ou reaproveitada) e comprar contam visitas', as
   await ev('camera_open', 'visitafunil1');
   await ev('camera_open', 'visitafunil2');
   await ev('camera_reload', 'visitafunil2');
-  const cam = (await admin('GET', '/tryon?period=today')).body.stats;
-  assert.equal(cam.cameraOpens - after.cameraOpens, 2);
-  assert.equal(cam.cameraReloads - after.cameraReloads, 1);
+  const { getDb } = require('../src/db');
+  const count = (type) => getDb().prepare("SELECT COUNT(*) AS n FROM events WHERE type = ? AND json_extract(meta, '$.v') IN ('visitafunil1', 'visitafunil2')").get(type).n;
+  assert.equal(count('camera_open'), 2);
+  assert.equal(count('camera_reload'), 1);
+  assert.equal((await admin('GET', '/tryon?period=today')).body.stats.cameraOpens, undefined, 'câmera não vai para o painel do lojista');
 });
 
 test('normalização do WhatsApp', () => {
