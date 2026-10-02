@@ -13,11 +13,7 @@
   // "modal": janela do NubeSDK no celular; a loja não arrasta o card, então sem alça,
   // e a altura vai para o SDK (autoresize) até MAXH
   var LAYOUT = params.get('layout');
-  // "overlay": o iframe ocupa a tela inteira (slot corner_* da loja) e o provador
-  // desenha o card que sobe de baixo (celular) ou a gaveta (computador)
-  var OVERLAY = LAYOUT === 'overlay';
-  var OV_DESK = OVERLAY && params.get('device') === 'desktop';
-  var DRAWER = LAYOUT === 'drawer' || OV_DESK;
+  var DRAWER = LAYOUT === 'drawer';
   var MODAL = LAYOUT === 'modal';
   var MAXH = Math.max(320, Number(params.get('maxh')) || 0);
   // foto da variação escolhida na página (cor); o servidor confere se é deste produto
@@ -25,9 +21,6 @@
   var VARIANT_ID = /^\d{1,15}$/.test(params.get('variantId') || '') ? params.get('variantId') : '';
   document.documentElement.classList.toggle('drawer', DRAWER);
   document.documentElement.classList.toggle('modal', MODAL);
-  document.documentElement.classList.toggle('overlay', OVERLAY);
-  document.documentElement.classList.toggle('ov-desk', OV_DESK);
-  document.documentElement.classList.toggle('ov-phone', OVERLAY && !OV_DESK);
 
   // ---------- estado ----------
   var S = {
@@ -77,51 +70,7 @@
   document.addEventListener('visibilitychange', function () { dbg('visibilidade', { estado: document.visibilityState }); });
   window.addEventListener('pagehide', function () { dbg('pagehide', null); });
 
-  var closing = false;
-  function closeTryon() {
-    if (!OVERLAY) return post({ type: 'close' });
-    if (closing) return;
-    closing = true;
-    document.documentElement.classList.remove('is-open');
-    setTimeout(function () { post({ type: 'close' }); }, 280);
-  }
-  if (OVERLAY) {
-    var backdrop = document.createElement('div');
-    backdrop.id = 'backdrop';
-    backdrop.addEventListener('click', closeTryon);
-    document.body.insertBefore(backdrop, document.body.firstChild);
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeTryon(); });
-  }
-  // overlay: só mostra o card se o iframe aparece inteiro na tela; senão pede
-  // o cartão no centro ("fallback") sem ter mostrado nada
-  function checkOverlay() {
-    var wantW = Number(params.get('vw')) || 0, wantH = Number(params.get('vh')) || 0;
-    var done = false;
-    function finish(ok, why, extra) {
-      if (done) return;
-      done = true;
-      dbg(ok ? 'overlay:ok' : 'overlay:fallback', Object.assign({ why: why || null, janela: [window.innerWidth, window.innerHeight], pedida: [wantW, wantH] }, extra || {}));
-      if (!ok) return post({ type: 'fallback', why: why });
-      post({ type: 'overlay-ok' });
-      requestAnimationFrame(function () { requestAnimationFrame(function () {
-        document.documentElement.classList.add('is-open');
-      }); });
-    }
-    if (wantW && Math.abs(window.innerWidth - wantW) > 2) return finish(false, 'largura');
-    if (wantH && Math.abs(window.innerHeight - wantH) > 2) return finish(false, 'altura');
-    if (!('IntersectionObserver' in window)) return finish(true);
-    var io = new IntersectionObserver(function (entries) {
-      io.disconnect();
-      var en = entries[0];
-      var r = en ? en.intersectionRatio : 1;
-      var box = function (b) { return b ? [Math.round(b.x), Math.round(b.y), Math.round(b.width), Math.round(b.height)] : null; };
-      var extra = { ratio: Math.round(r * 1000) / 1000, visivel: en && box(en.intersectionRect), iframe: en && box(en.boundingClientRect) };
-      if (r < 0.99) finish(false, 'fora da tela', extra); else finish(true, null, extra);
-    }, { threshold: [0, 0.5, 0.9, 0.99, 1] });
-    io.observe(document.documentElement);
-    // sem resposta do observador: não deixa o comprador sem nada
-    setTimeout(function () { finish(false, 'sem medida'); }, 1500);
-  }
+  function closeTryon() { post({ type: 'close' }); }
 
   // NubeSDK (iframe com autoresize): a loja ajusta a altura com { type: 'resize', height }
   function postResize(h) {
@@ -164,16 +113,13 @@
   var FULL = { saved: 1, result: 1, history: 1 };
   function reportHeight() {
     var screen = sheet.getAttribute('data-screen');
-    var maxCard = window.innerHeight - 24;
     if (FULL[screen]) {
-      if (OVERLAY && !OV_DESK) { sheet.style.height = maxCard + 'px'; return; }
       if (MODAL) postResize(MAXH);
       return post({ type: 'height', value: 'full' });
     }
     var el = document.querySelector('.screen[data-for="' + screen + '"]');
     // a linha da marca (quando aparece) também entra na altura do card
     var h = ($('grab').offsetHeight || 0) + $('head').offsetHeight + (el ? el.scrollHeight : 300) + ($('brandline').offsetHeight || 0) + 8;
-    if (OVERLAY && !OV_DESK) { sheet.style.height = Math.min(maxCard, Math.max(280, Math.ceil(h))) + 'px'; return; }
     if (MODAL) postResize(Math.min(MAXH, Math.max(320, Math.ceil(h))));
     post({ type: 'height', value: Math.ceil(h) });
   }
@@ -522,18 +468,11 @@
     function move(e) {
       if (!drag) return;
       drag.dy = Math.max(0, e.screenY - drag.y);
-      if (OVERLAY) { sheet.style.transition = 'none'; sheet.style.transform = 'translateY(' + drag.dy + 'px)'; return; }
       post({ type: 'drag', dy: drag.dy });
     }
     function up() {
       if (!drag) return;
       var v = drag.dy / Math.max(1, Date.now() - drag.t);
-      if (OVERLAY) {
-        sheet.style.transition = ''; sheet.style.transform = '';
-        if (drag.dy > 120 || v > 0.8) closeTryon();
-        drag = null;
-        return;
-      }
       post({ type: 'dragEnd', dy: drag.dy, v: v });
       drag = null;
     }
@@ -583,9 +522,8 @@
       S.product = s.product;
       if (s.brand && s.brand.url) { $('brandline').href = s.brand.url; $('brandline').hidden = false; }
       post({ type: 'ready' });
-      if (OVERLAY) checkOverlay();
       // confere se a janela da loja mostra o cartão inteiro (diagnóstico)
-      else if ('IntersectionObserver' in window) {
+      if ('IntersectionObserver' in window) {
         var io = new IntersectionObserver(function (entries) {
           io.disconnect();
           var en = entries[0];
