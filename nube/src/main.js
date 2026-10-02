@@ -434,7 +434,12 @@ export function App(nube) {
 	async function onOrderDone(state, origem) {
 		const order = state.order || {};
 		const payload = state.eventPayload || {};
-		const raw = order.id ?? payload.id ?? payload.order?.id ?? payload.order_id;
+		// Medido na loja real: o pedido desta página não traz id; o id do carrinho é
+		// o número do pedido e aparece também no endereço (/checkout/v3/success/<id>/).
+		// Só vale quando os dois batem.
+		const fromUrl = String(state.location?.url || "").match(/\/success\/(\d+)(?:\/|$|\?)/)?.[1];
+		const fromCart = state.cart?.id != null ? String(state.cart.id) : null;
+		const raw = order.id ?? (fromUrl && fromUrl === fromCart ? fromCart : null);
 		const orderId = Number(raw);
 		const tried = await readTried();
 		const tok = await readJSON(local, TOKEN_KEY, null);
