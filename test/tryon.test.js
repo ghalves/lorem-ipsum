@@ -626,18 +626,15 @@ test('WhatsApp: só celular de verdade, sem número inventado, e um número não
   assert.match((await inv.json()).error, /inventado/);
 });
 
-test('ícone do botão: brilhos sem animação por padrão; o lojista anima ou tira o ícone', async () => {
+test('ícone do botão: brilhos por padrão; o lojista deixa só o texto', async () => {
   const def = await (await fetch(`${base}/api/storefront/${STORE_ID}/config?product=1`)).json();
   assert.equal(def.tryon.icon, true);
-  assert.equal(def.tryon.animate, false);
-  assert.equal((await admin('PUT', '/settings', { tryon: { buttonAnimation: 'sim' } })).status, 400);
-  assert.equal((await admin('PUT', '/settings', { tryon: { buttonAnimation: true, buttonIcon: false } })).status, 200);
+  assert.equal(def.tryon.animate, undefined, 'sem opção de animação');
+  assert.equal((await admin('PUT', '/settings', { tryon: { buttonIcon: 'sim' } })).status, 400);
+  assert.equal((await admin('PUT', '/settings', { tryon: { buttonIcon: false } })).status, 200);
   const cfg = await (await fetch(`${base}/api/storefront/${STORE_ID}/config?product=1`)).json();
-  assert.equal(cfg.tryon.animate, true);
   assert.equal(cfg.tryon.icon, false);
-  await admin('PUT', '/settings', { tryon: { buttonAnimation: false, buttonIcon: true } });
-  const loader = await (await fetch(`${base}/storefront/loader.js`)).text();
-  assert.match(loader, /szp-tw3/, 'script antigo (Script API) continua com a varinha');
+  await admin('PUT', '/settings', { tryon: { buttonIcon: true } });
 });
 
 test('marca Miaou: aparece com link; só o Escalar e o Volume podem remover', async () => {

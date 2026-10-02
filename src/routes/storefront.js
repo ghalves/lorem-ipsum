@@ -82,7 +82,6 @@ router.get('/:storeId/config', loadStore, (req, res) => {
   out.tryon = {
     enabled: avail.enabled, kind: avail.kind || null, button: settings.tryon.button || 'Provar em mim',
     icon: settings.tryon.buttonIcon !== false,
-    animate: settings.tryon.buttonAnimation === true,
     hideOutOfStock: settings.tryon.hideOutOfStock !== false,
   };
   res.json(out);

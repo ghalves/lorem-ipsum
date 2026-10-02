@@ -17,7 +17,6 @@ const DEFAULT_SETTINGS = {
     dailyPerShopper: 10, // provas por comprador em 24 h (protege a cota do mês)
     button: 'Provar em mim',
     buttonIcon: true,      // ícone de brilhos (Hugeicons AiSparkles) antes do texto
-    buttonAnimation: false, // brilhos do ícone piscam
     hideOutOfStock: true,  // sem botão quando todas as variações estão sem estoque
     showBrand: true,       // marca Miaou no provador (só planos Escalar e Volume podem desligar)
   },
