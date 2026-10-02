@@ -4,7 +4,7 @@
  * Roda num web worker da Nuvemshop, sem acesso ao DOM:
  * - página de produto: botão "Provar virtualmente" (com a varinha) logo abaixo
  *   do "Comprar", depois das variações; o provador (a mesma tela /tryon/ de sempre) abre num iframe, em
- *   cartão na janela oficial (modal_content), com a foto da variação
+ *   gaveta oficial da loja (drawer_right), com a foto da variação
  *   escolhida; o "Comprar" do provador põe essa variação no carrinho;
  * - checkout: grava no pedido (order extra) os produtos provados, cada um com
  *   o token assinado pelo servidor. Quando a Nuvemshop avisa que o pedido foi
@@ -210,7 +210,6 @@ export function App(nube) {
 
 	// fecha sempre: o aviso de "janela fechou" pode chegar depois de uma reabertura
 	function closeTryon() {
-		clearTimeout(drawerTimer);
 		if (openSlot) nube.clearSlot(openSlot);
 		openSlot = null;
 		writeJSON(session, REOPEN_KEY, null);
@@ -230,9 +229,7 @@ export function App(nube) {
 		const d = value;
 		if (d?.type !== "height" && d?.type !== "drag" && d?.type !== "resize") dbg("mensagem", d);
 		if (!d || d.source !== "mq") return;
-		if (d.type === "ready") clearTimeout(drawerTimer);
 		if (d.type === "close") closeTryon();
-		else if (d.type === "fallback" && openSlot === DRAWER) useCard(d.why);
 		else if (d.type === "picking" && current) {
 			writeJSON(session, REOPEN_KEY, { p: current.productId, t: Date.now() });
 		} else if (d.type === "picked") writeJSON(session, REOPEN_KEY, null);
@@ -269,31 +266,14 @@ export function App(nube) {
 		}));
 	}
 
-	// Janela oficial (modal_content). Medido na loja real (log "overlay:visivel"):
-	// a janela fica no centro e mostra no máximo 90% da largura e da altura da
-	// tela menos 14 px (celular 360x668 mostrou 310x638; computador 1440x707
-	// mostrou 1282x623); o que passar disso é cortado. O provador abre como um
-	// cartão que cabe nesse limite.
-	const MODAL = "modal_content";
-	// Gaveta oficial: drawer_right (Slots > Storefront Slots: painel colado à
-	// direita, altura toda; páginas home, product, category, search, cart;
-	// fecha com custom:drawer:close, Events > UI & Custom). A documentação não
-	// dá a largura nem o comportamento no celular: o provador mede ao abrir
-	// (log "janela:visivel") e, se a gaveta não aparecer inteira ou não abrir
-	// em 4 s, abre o cartão no centro (modal_content) nesta sessão.
+	// Gaveta oficial da loja: drawer_right (Slots > Storefront Slots: painel
+	// colado à direita, altura toda; páginas home, product, category, search,
+	// cart). Fecha com custom:drawer:close (Events > UI & Custom). A largura e o
+	// comportamento no celular não estão na documentação: o provador registra
+	// no log o que a loja mostrou (janela:visivel).
 	const DRAWER = "drawer_right";
-	let cardOnly = false;
-	let lastResume;
-	let drawerTimer = null;
-	function useCard(why) {
-		dbg("gaveta:cartao", { why });
-		cardOnly = true;
-		openTryon(lastResume);
-	}
 	function openTryon(resume) {
 		if (!current) return;
-		lastResume = resume;
-		clearTimeout(drawerTimer);
 		// limpa o que tiver ficado de uma abertura anterior
 		if (openSlot) nube.clearSlot(openSlot);
 		const state = nube.getState();
@@ -301,9 +281,6 @@ export function App(nube) {
 		const screen = state.device.screen || {};
 		const vw = screen.innerWidth || screen.width || 390;
 		const vh = screen.innerHeight || screen.height || 720;
-		// limite da janela, com 2 px de folga
-		const capW = Math.floor(vw * 0.9) - 16;
-		const capH = Math.floor(vh * 0.9) - 16;
 		const product = state.location.page?.data?.product;
 		const variant = chosenVariant();
 		// na loja real as variações vêm sem image_id: o servidor acha a foto da
@@ -316,57 +293,27 @@ export function App(nube) {
 			visit: current.visit,
 			origin: originOf(state.location.url),
 			image: photo?.src || current.cfg.product?.image || "",
-			layout: phone && cardOnly ? "modal" : "drawer",
+			layout: "drawer",
+			slot: "drawer",
 			device: phone ? "phone" : "desktop",
 			vw: String(vw),
 			vh: String(vh),
-			maxh: String(capH),
 			n: String(++openCount),
 		});
 		if (variantPhoto?.id) q.set("imageId", String(variantPhoto.id));
 		if (variant?.id) q.set("variantId", String(variant.id));
 		if (resume === "camera") q.set("resume", "camera");
-		if (!cardOnly) {
-			q.set("slot", "drawer");
-			openSlot = DRAWER;
-			// computador: largura da gaveta do provador; celular: a tela toda
-			const dw = phone ? vw : Math.min(440, vw);
-			dbg("abrir", { slot: openSlot, resume: resume || null, screen, width: dw, height: vh, variant: variant?.id ?? null });
-			nube.render(
-				openSlot,
-				iframe({
-					src: `${API}/tryon/?${q.toString()}`,
-					width: dw,
-					height: vh,
-					style: { width: `${dw}px`, minWidth: `${dw}px`, height: `${vh}px`, border: "0", display: "block", background: "#fff" },
-					onMessage,
-				}),
-			);
-			// a gaveta não abriu (o provador não avisou "ready"): cartão no centro
-			drawerTimer = setTimeout(() => { if (openSlot === DRAWER) useCard("sem resposta"); }, 4000);
-			return;
-		}
-		openSlot = MODAL;
-		// celular: a largura toda que a janela mostra, e a altura acompanha a tela
-		// do provador (autoresize) até o limite; computador: 440 de largura
-		const w = phone ? Math.min(560, capW) : Math.min(440, capW);
-		const h = phone ? capH : Math.min(720, capH);
-		dbg("abrir", {
-			slot: openSlot, resume: resume || null, screen,
-			width: w, height: h, variant: variant?.id ?? null, imageId: variantPhoto?.id ?? null,
-		});
+		openSlot = DRAWER;
+		// computador: a largura do provador; celular: a tela toda
+		const w = phone ? vw : Math.min(440, vw);
+		dbg("abrir", { slot: openSlot, resume: resume || null, screen, width: w, height: vh, variant: variant?.id ?? null });
 		nube.render(
 			openSlot,
 			iframe({
 				src: `${API}/tryon/?${q.toString()}`,
 				width: w,
-				height: h,
-				autoresize: phone,
-				// sem a borda padrão do iframe, cantos arredondados
-				style: {
-					width: `${w}px`, minWidth: `${w}px`, height: `${h}px`, maxHeight: `${capH}px`,
-					border: "0", display: "block", background: "#fff", borderRadius: "20px",
-				},
+				height: vh,
+				style: { width: `${w}px`, minWidth: `${w}px`, height: `${vh}px`, border: "0", display: "block", background: "#fff" },
 				onMessage,
 			}),
 		);
@@ -476,16 +423,10 @@ export function App(nube) {
 	nube.on("location:updated", handle);
 	nube.on("checkout:ready", () => onCheckout());
 	// a janela fechou (clique fora, Esc ou pelo app): a loja avisa
-	nube.on("custom:modal:close", () => {
-		dbg("janela:fechou", null);
-		if (openSlot === MODAL) openSlot = null;
-	});
+	// a gaveta fechou (pela loja ou pelo app): a loja avisa
 	nube.on("custom:drawer:close", (state) => {
 		dbg("gaveta:fechou", state.eventPayload ?? null);
-		if (openSlot === DRAWER) {
-			clearTimeout(drawerTimer);
-			openSlot = null;
-		}
+		openSlot = null;
 	});
 	nube.on("product:variant_selected", (state) => {
 		const id = variantIdFrom(state.eventPayload);

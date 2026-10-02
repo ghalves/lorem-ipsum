@@ -530,8 +530,6 @@
           var box = function (b) { return b ? [Math.round(b.width), Math.round(b.height)] : null; };
           var ratio = en ? en.intersectionRatio : 1;
           dbg('janela:visivel', { slot: params.get('slot') || 'modal', ratio: Math.round(ratio * 1000) / 1000, visivel: en && box(en.intersectionRect), cartao: en && box(en.boundingClientRect), pos: en && [Math.round(en.boundingClientRect.x), Math.round(en.boundingClientRect.y)] });
-          // na gaveta da loja (drawer_right): se não aparece inteira, pede o cartão no centro
-          if (params.get('slot') === 'drawer' && ratio < 0.95) post({ type: 'fallback', why: 'gaveta cortada' });
         }, { threshold: [0, 0.5, 0.9, 1] });
         io.observe(document.documentElement);
       }
