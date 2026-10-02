@@ -78,17 +78,19 @@
   window.addEventListener('pagehide', function () { dbg('pagehide', null); });
 
   var closing = false;
+  // fecha na hora: o iframe cobre a tela inteira e, enquanto existe, segura os
+  // cliques da página (esperar a animação fazia o próximo clique se perder)
   function closeTryon() {
     if (!OVERLAY) return post({ type: 'close' });
     if (closing) return;
     closing = true;
     document.documentElement.classList.remove('is-open');
-    setTimeout(function () { post({ type: 'close' }); }, 280);
+    post({ type: 'close' });
   }
+  var backdrop = null;
   if (OVERLAY) {
-    var backdrop = document.createElement('div');
+    backdrop = document.createElement('div');
     backdrop.id = 'backdrop';
-    backdrop.addEventListener('click', closeTryon);
     document.body.insertBefore(backdrop, document.body.firstChild);
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeTryon(); });
   }
@@ -502,6 +504,12 @@
   (function () {
     var drag = null;
     function down(e) {
+      if (e.currentTarget === backdrop) {
+        // fundo: toque fecha; no celular, arrastar para baixo também move o card
+        drag = { y: e.screenY, t: Date.now(), dy: 0, fromBackdrop: true };
+        try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) { /* noop */ }
+        return;
+      }
       if (DRAWER || MODAL || e.target.closest('button')) return;
       drag = { y: e.screenY, t: Date.now(), dy: 0 };
       try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) { /* noop */ }
@@ -509,6 +517,7 @@
     function move(e) {
       if (!drag) return;
       drag.dy = Math.max(0, e.screenY - drag.y);
+      if (drag.fromBackdrop && DRAWER) return;
       if (OVERLAY) { sheet.style.transition = 'none'; sheet.style.transform = 'translateY(' + drag.dy + 'px)'; return; }
       post({ type: 'drag', dy: drag.dy });
     }
@@ -516,15 +525,16 @@
       if (!drag) return;
       var v = drag.dy / Math.max(1, Date.now() - drag.t);
       if (OVERLAY) {
+        var tap = drag.fromBackdrop && drag.dy < 8;
         sheet.style.transition = ''; sheet.style.transform = '';
-        if (drag.dy > 120 || v > 0.8) closeTryon();
+        if (tap || drag.dy > 120 || v > 0.8) closeTryon();
         drag = null;
         return;
       }
       post({ type: 'dragEnd', dy: drag.dy, v: v });
       drag = null;
     }
-    [$('grab'), $('head')].forEach(function (el) {
+    [$('grab'), $('head'), backdrop].filter(Boolean).forEach(function (el) {
       el.addEventListener('pointerdown', down);
       el.addEventListener('pointermove', move);
       el.addEventListener('pointerup', up);

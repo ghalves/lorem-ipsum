@@ -33,8 +33,9 @@ a:hover { color: var(--accent-ink); }
 /* overlay: o iframe ocupa a tela inteira (slot corner_* da loja), transparente;
    o fundo escuro e o card são desenhados aqui: card que sobe de baixo no
    celular, gaveta flutuante à direita no computador (classe is-open anima a entrada). */
-html.overlay, html.overlay body { background: transparent; }
-#backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.4); opacity: 0; transition: opacity 240ms var(--ease); }
+html.overlay, html.overlay body { background: transparent; overflow: hidden; }
+/* o fundo não deixa a página da loja rolar por trás; arrastar nele move o card */
+#backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.4); opacity: 0; transition: opacity 240ms var(--ease); touch-action: none; }
 html.overlay.is-open #backdrop { opacity: 1; }
 html.overlay .sheet { position: fixed; background: #fff; transition: transform 280ms cubic-bezier(.2,.8,.2,1), height 240ms var(--ease); }
 html.ov-phone .sheet { left: 0; right: 0; bottom: 0; height: 72%; max-height: calc(100% - 24px); border-radius: 24px 24px 0 0; box-shadow: 0 -8px 32px rgba(0,0,0,.12); transform: translateY(105%); }
@@ -64,7 +65,7 @@ html.drawer .head { padding: 18px 20px 16px; }
 .chip svg { width: 17px; height: 17px; }
 .chip:hover { background: var(--soft); }
 
-.body { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.body { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 /* marca no rodapé do card: discreta, fora do caminho dos botões */
 .brandline { flex: none; display: flex; align-items: center; justify-content: center; gap: 5px; height: 34px;
   padding-bottom: env(safe-area-inset-bottom, 0px); border-top: 1px solid var(--line); font-size: 11.5px; color: var(--muted); text-decoration: none; }
