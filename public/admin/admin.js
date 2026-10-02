@@ -295,7 +295,7 @@
             Object.assign({ label: 'Provas', help: 'Provas prontas no período. Erros não contam.', value: nf(s.tryons),
               note: q.plan.quota ? nf(q.used) + ' de ' + nf(q.plan.quota) + ' no mês' : null, series: col('tryons'), color: 'var(--data-2)' }, cmp(s.tryons, 'tryons')),
             Object.assign({ label: 'Pessoas que provaram', help: 'Compradores diferentes que viram pelo menos uma prova.', value: nf(s.people),
-              note: s.openRate != null ? pct(s.openRate) + ' de quem viu o botão abriu' : null, series: col('people'), color: 'var(--data-2)' }, cmp(s.people, 'people')),
+              note: s.people ? String(Math.round(s.tryons / s.people * 10) / 10).replace('.', ',') + ' provas por pessoa' : null, series: col('people'), color: 'var(--data-2)' }, cmp(s.people, 'people')),
             Object.assign({ label: 'Vendas com o provador', help: 'Pedidos pagos com um produto que o comprador provou antes, em qualquer tamanho.', value: nf(s.sales),
               note: s.people ? pct(s.sales / s.people) + ' de quem provou comprou' : null, series: col('sales'), color: 'var(--data-1)' }, cmp(s.sales, 'sales')),
             { label: 'Ficou realista', help: 'Das provas avaliadas pelos compradores (joinha), quantas eles acharam realistas.', value: pct(s.realistic),
@@ -311,18 +311,18 @@
               barList([
                 { label: 'Viram o botão', n: s.views, wide: true },
                 { label: 'Abriram', n: s.opened, rate: rate(s.opened, s.views), wide: true },
-                { label: 'Provaram', n: s.people, rate: rate(s.people, s.opened), wide: true },
-                { label: 'Clicaram em Comprar', n: s.buys, rate: rate(s.buys, s.people), wide: true },
-                { label: 'Compraram', n: s.sales, rate: rate(s.sales, s.people), wide: true, color: 'var(--data-1)' },
+                { label: 'Provaram', n: s.triedVisits, rate: rate(s.triedVisits, s.opened), wide: true },
+                { label: 'Clicaram em Comprar', n: s.buys, rate: rate(s.buys, s.triedVisits), wide: true },
+                { label: 'Compraram', n: s.sales, rate: rate(s.sales, s.triedVisits), wide: true, color: 'var(--data-1)' },
               ]),
-              h('p', { class: 'muted note', text: 'A porcentagem compara com a etapa anterior. Mostra onde o comprador desiste.' })),
+              h('p', { class: 'muted note', text: 'Cada etapa conta visitas à loja. A porcentagem compara com a etapa anterior, e em Compraram compara com quem provou.' })),
             h('div', { class: 'card' }, h('div', { class: 'card-head' }, h('h2', { text: 'Compartilhamentos' })),
               barList([
                 { label: 'Links criados', n: s.shares, wide: true, color: 'var(--data-2)' },
                 { label: 'Abriram o link', n: s.shareViews, wide: true, color: 'var(--data-2)' },
                 { label: 'Foram à loja', n: s.shareClicks, rate: rate(s.shareClicks, s.shareViews), wide: true, color: 'var(--data-1)' },
               ]),
-              h('p', { class: 'muted note', text: 'Quem recebe a foto no WhatsApp pode abrir o produto e provar também.' }))),
+              h('p', { class: 'muted note', text: 'Quem abre o link compartilhado vê a prova e pode provar também ou ir direto ao produto.' }))),
           h('div', { class: 'card' }, h('div', { class: 'card-head' }, h('h2', { text: 'Produtos mais provados' })),
             // no celular: nome e, logo abaixo, "95 provas · 13 vendas · 14% compraram" (data-short)
             s.top && s.top.length ? h('table', { class: 't top-t' },
@@ -362,7 +362,7 @@
                 h('td', { class: 'hide-sm', text: fmtDate(l.created_at) }),
                 h('td', { class: 'act' }, h('a', { class: 'chip-btn', href: wa, target: '_blank', rel: 'noopener' }, icon('whatsapp'), 'Conversar')));
             }))) : h('p', { class: 'chart-empty', text: on ? 'Os números aparecem aqui quando os compradores fizerem a segunda prova.' : 'Nenhum contato ainda.' })),
-        h('p', { class: 'muted note', text: 'O comprador informou o WhatsApp para continuar provando. Use para falar sobre a loja; não repasse os números.' }),
+        h('p', { class: 'muted note', text: 'O comprador informou o WhatsApp para continuar provando.' }),
       ]);
     }).catch(fail);
   }
@@ -427,7 +427,7 @@
     var me = state.me;
     return h('div', { class: 'card' }, h('div', { class: 'card-head' }, h('h2', { text: 'Instalação na loja' }),
       h('span', { class: 'chip' + (me.scriptInstalled ? ' ok' : ' warn'), text: me.scriptInstalled ? 'Instalado' : 'Não instalado' })),
-      me.scriptInstalled ? h('p', { class: 'muted', style: 'margin:0', text: 'O botão aparece sozinho nas páginas de produto e o checkout liga as vendas ao provador.' })
+      me.scriptInstalled ? h('p', { class: 'muted', style: 'margin:0', text: 'O botão aparece sozinho nas páginas de produto, e as vendas feitas depois de uma prova entram no painel.' })
         : h('div', null,
           me.scriptConfigured ? h('p', null, h('button', { class: 'btn sm primary', type: 'button', text: 'Instalar na loja', onclick: installScript })) : null,
           h('p', { class: 'muted', text: 'Ou cole esta linha no código do tema (Minha Nuvemshop › Layout › Editar código, antes de </body>):' }),

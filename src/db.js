@@ -182,6 +182,9 @@ function migrate(conn) {
     if (!cols.includes(column)) conn.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
   }
   conn.exec('CREATE INDEX IF NOT EXISTS idx_tryon_jobs_ip ON tryon_jobs(store_id, ip, created_at)');
+  // "tryon_open" gravado ao começar uma prova (traz o id da prova) passou a se chamar
+  // "tryon_start"; "tryon_open" agora é a abertura do provador
+  conn.exec(`UPDATE events SET type = 'tryon_start' WHERE type = 'tryon_open' AND json_extract(meta, '$.job') IS NOT NULL`);
   // bancos antigos: cada WhatsApp já informado continua liberando o navegador que o informou
   if (!conn.prepare('SELECT 1 FROM tryon_lead_links LIMIT 1').get()) {
     conn.exec(`INSERT OR IGNORE INTO tryon_lead_links (store_id, phone, shopper_id, created_at)

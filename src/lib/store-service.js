@@ -215,7 +215,7 @@ function orderWasPaid(storeId, orderId) {
 
 // ---------- eventos ----------
 
-const EVENT_TYPES = new Set(['order_paid', 'tryon_view', 'tryon_open', 'tryon_buy', 'tryon_share', 'share_view', 'share_click']);
+const EVENT_TYPES = new Set(['order_paid', 'tryon_view', 'tryon_open', 'tryon_start', 'tryon_buy', 'tryon_share', 'share_view', 'share_click']);
 
 function logEvent(storeId, e) {
   if (!EVENT_TYPES.has(e.type)) return false;

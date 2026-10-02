@@ -670,6 +670,27 @@ test('relatório: hoje e ontem por hora, 7/30/90 dias por dia, comparando com a 
   assert.equal(w.prevEnd, w.end - 864e5, 'hoje até agora contra ontem até a mesma hora');
 });
 
+test('funil: abrir, provar (nova ou reaproveitada) e comprar contam visitas', async () => {
+  museMode = 'ok';
+  const before = (await admin('GET', '/tryon?period=today')).body.stats;
+  const shopper = newShopper();
+  const s = await sessionFor(shopper);
+  const ev = (type, visitId) => fetch(api('/events'), { method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ type, token: s.token, productId: 1, visitId }) });
+  assert.equal((await ev('tryon_open', 'visitafunil1')).status, 200);
+  assert.equal((await ev('tryon_open', 'visitafunil2')).status, 200);
+  const { body: { photoId } } = await upload(shopper, s.token);
+  const job = async (visitId) => (await fetch(api('/jobs'), { method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ shopperId: shopper, token: s.token, photoId, productId: 1, visitId }) })).json();
+  const first = await job('visitafunil1');
+  assert.equal((await waitJob(shopper, first.job.id)).status, 'done');
+  const again = await job('visitafunil2');
+  assert.equal(again.reused, true, 'outra visita, mesma foto: prova reaproveitada');
+  const after = (await admin('GET', '/tryon?period=today')).body.stats;
+  assert.equal(after.opened - before.opened, 2, 'duas visitas abriram o provador');
+  assert.equal(after.triedVisits - before.triedVisits, 2, 'a prova reaproveitada também conta como provou');
+});
+
 test('normalização do WhatsApp', () => {
   const { normalizePhone } = require('../src/tryon/service');
   assert.equal(normalizePhone('21 97539-5040'), '+5521975395040');

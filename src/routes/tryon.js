@@ -122,9 +122,10 @@ router.post('/:storeId/jobs', requireToken, (req, res) => {
     if (config.tryon.debug) {
       console.log(`[debug ${req.store.id}] servidor prova produto=${req.body.productId} variante=${req.body.variantId ?? '-'} imageId=${req.body.imageId ?? '-'} foto=${job.product_image || '(principal)'}${job.reused ? ' (reaproveitada)' : ''}`);
     }
-    if (job.reused) return res.status(200).json({ job: tryon.publicJob(job), reused: true });
+    // começou uma prova (também a reaproveitada): o funil conta a visita como "provou" quando ela fica pronta
     const v = typeof req.body.visitId === 'string' && /^[a-z0-9]{6,40}$/i.test(req.body.visitId) ? req.body.visitId : undefined;
-    svc.logEvent(req.store.id, { type: 'tryon_open', productId: job.product_id, meta: { v, job: job.id } });
+    svc.logEvent(req.store.id, { type: 'tryon_start', productId: job.product_id, meta: { v, job: job.id } });
+    if (job.reused) return res.status(200).json({ job: tryon.publicJob(job), reused: true });
     res.status(201).json({ job: tryon.publicJob(job) });
   } catch (e) { sendError(res, e); }
 });
@@ -190,7 +191,7 @@ router.post('/:storeId/debug', (req, res) => {
 router.post('/:storeId/events', (req, res) => {
   const b = req.body || {};
   if (!verifyEventToken(b.token, req.store.id)) return res.status(401).json({ error: 'token inválido' });
-  if (!['tryon_view', 'tryon_buy'].includes(b.type)) return res.status(400).json({ error: 'evento inválido' });
+  if (!['tryon_view', 'tryon_open', 'tryon_buy'].includes(b.type)) return res.status(400).json({ error: 'evento inválido' });
   const v = typeof b.visitId === 'string' && /^[a-z0-9]{6,40}$/i.test(b.visitId) ? b.visitId : undefined;
   svc.logEvent(req.store.id, { type: b.type, productId: Number(b.productId) || null, meta: v ? { v } : null });
   res.json({ ok: true });

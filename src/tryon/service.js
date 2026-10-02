@@ -811,9 +811,13 @@ function stats(storeId, period = 30) {
   const rated = (j.up || 0) + (j.down || 0);
   const views = ev('tryon_view');
   const opened = ev('tryon_open');
+  // visitas que terminaram uma prova (nova ou reaproveitada)
+  const triedVisits = db.prepare(`SELECT COUNT(DISTINCT COALESCE(json_extract(e.meta, '$.v'), 'e' || e.id)) AS n
+    FROM events e JOIN tryon_jobs j ON j.id = json_extract(e.meta, '$.job') AND j.status = 'done'
+    WHERE e.store_id = ? AND e.type = 'tryon_start' AND e.created_at >= ? AND e.created_at < ?`).get(sid, since, until).n;
   return {
     period: w.key, days: w.days, hourly: w.hourly,
-    views, opened,
+    views, opened, triedVisits,
     tryons: j.done || 0, people: j.people || 0, errors: j.errors || 0,
     openRate: views ? Math.min(1, opened / views) : null,
     realistic: rated ? (j.up || 0) / rated : null, rated,

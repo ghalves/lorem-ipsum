@@ -151,6 +151,7 @@ select.chip-btn { padding: 0 44px 0 18px; }
 select::-ms-expand { display: none; }
 input[type="text"]:focus, input[type="number"]:focus, input[type="search"]:focus, select:focus { border-color: var(--ink); outline: 2px solid var(--focus-ring); outline-offset: 1px; }
 input::placeholder { color: var(--muted); }
+.filters input[type="search"] { width: 320px; max-width: 100%; }
 /* Amostra de cor: quadrado do mesmo tamanho da caixa de seleção. */
 input[type="color"] { width: 20px; height: 20px; border: 1.5px solid var(--border); border-radius: 6px; padding: 0; background: none; cursor: pointer; overflow: hidden; }
 input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }

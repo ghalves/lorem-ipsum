@@ -304,6 +304,7 @@ export function App(nube) {
 		if (variant?.id) q.set("variantId", String(variant.id));
 		if (resume === "camera") q.set("resume", "camera");
 		openSlot = DRAWER;
+		if (resume !== "camera") track("tryon_open");
 		// A gaveta acompanha a largura do conteúdo, até 95% da tela (medido na
 		// loja: 440 de 440 no computador; 342 de 360 no celular). No celular fica
 		// uma faixa de 56 px para tocar fora e fechar (folga das gavetas laterais

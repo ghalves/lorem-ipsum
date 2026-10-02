@@ -12,7 +12,7 @@
 const PLANS = [
   {
     key: 'essencial', name: 'Essencial', price: 97, quota: 150, tagline: 'Para quem está começando com o provador.',
-    features: ['Provador virtual com IA', 'Captura de leads por WhatsApp', 'Painel do lojista com vendas (ROI)', 'Suporte por e-mail'],
+    features: ['Provador em todas as páginas de produto', 'Roupas e óculos', 'Compra direto pelo provador', 'Rastreamento de conversões', 'Captura de leads', 'Suporte por e-mail'],
   },
   {
     key: 'crescer', name: 'Crescer', price: 197, quota: 400, tagline: 'Para quem já vende e quer vender mais.', featured: true,
@@ -20,7 +20,7 @@ const PLANS = [
   },
   {
     key: 'escalar', name: 'Escalar', price: 497, quota: 1200, tagline: 'Para lojas com muitas visitas por dia.', removeBrand: true,
-    features: ['Tudo do Crescer', 'O triplo de provas do Crescer', 'Remover a marca Miaou', 'Suporte prioritário por WhatsApp', 'Instalação assistida na sua loja'],
+    features: ['Tudo do Crescer', 'O triplo de provas do Crescer', 'Remover a marca Miaou', 'Suporte por WhatsApp'],
   },
 ];
 
