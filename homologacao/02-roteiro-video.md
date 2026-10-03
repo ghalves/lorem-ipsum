@@ -44,7 +44,7 @@
 1. Abra a loja numa aba e entre na página da **Polo Tricot**.
 2. Mostre o botão **Provar em mim** na página, perto do **Comprar**.
 3. Clique: o provador abre como gaveta lateral. Envie a foto de corpo inteiro.
-4. Mostre a barra de progresso e o resultado (~20 s).
+4. Mostre a barra de progresso e o resultado.
 5. Clique em **Comprar** no provador: o produto vai para a sacola com a variação escolhida.
 6. Finalize um pedido de teste e marque como **pago** no admin.
 7. De volta ao painel, em **Visão geral**, mostre a venda contabilizada em "Vendas com o provador" (pode levar alguns minutos).

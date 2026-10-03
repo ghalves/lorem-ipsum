@@ -3,7 +3,7 @@
 Portal > Miaou > Brasil > Perguntas frequentes > **+ Adicionar**. Cadastre uma por vez, nesta ordem.
 
 **1. O que é o Miaou?**
-Um provador virtual com inteligência artificial. Na página do produto, o cliente clica em "Provar em mim", envia uma foto e, em cerca de 20 segundos, vê a roupa ou os óculos nele mesmo. Ele pode comprar direto pelo provador.
+Um provador virtual com inteligência artificial. Na página do produto, o cliente clica em "Provar em mim", envia uma foto e vê a roupa ou os óculos nele mesmo. Ele pode comprar direto pelo provador.
 
 **2. Como instalo o Miaou?**
 Clique em "Instalar aplicativo" e aceite as permissões. O painel do Miaou abre sozinho, sem criar conta ou senha. Depois, fale com a Miaou pelo botão "Falar com a Miaou" no painel para liberar o provador na sua loja.

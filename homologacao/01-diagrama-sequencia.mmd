@@ -58,7 +58,7 @@ sequenceDiagram
     V->>M: POST /api/tryon/{store}/photo · POST /api/tryon/{store}/jobs
     M->>IA: Foto + imagem do produto + descrição da peça
     IA-->>M: Imagem gerada
-    M-->>V: Prova pronta (assinada), em cerca de 20 s
+    M-->>V: Prova pronta (assinada)
     C->>V: "Comprar" no provador: adiciona a variação à sacola
     C->>V: Finaliza a compra (script Checkout)
     V->>M: POST /api/storefront/{store}/conversion (pedido + produtos provados)
