@@ -19,7 +19,7 @@ Pacote para responder ao e-mail de homologação. Tudo que não dependia de voc�
 2. **Colar o link do vídeo** no e-mail (único `[PREENCHER]` que sobrou).
 3. **Deixar uma loja de demonstração pronta** com o Miaou instalado, 3 produtos com foto (roupa, calça, óculos) e liberada: `sudo miaou plano <id da loja> crescer`.
 4. **Colar o FAQ no template oficial** da Nuvemshop (se eles mandaram um arquivo) e no Portal de Parceiros > app > FAQ.
-5. **Completar o perfil** no Painel de Parceiros com os textos de `05-perfil-do-app`, o ícone e as 4 imagens de `loja-de-aplicativos/imagens-1920x1080/`.
+5. **Completar o perfil** no Painel de Parceiros com os textos de `05-perfil-do-app`, o ícone e as suas imagens.
 6. **Conferir no portal** se os escopos marcados são exatamente `read_products`, `read_orders` e `write_scripts` (o diagrama cita só esses) e se os 3 webhooks de LGPD estão cadastrados.
 
 ## Pontos de atenção (podem travar a aprovação)

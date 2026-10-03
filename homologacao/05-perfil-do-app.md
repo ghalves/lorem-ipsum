@@ -23,7 +23,7 @@ O restante (nome, e-mail, site, URL de redirecionamento, política de privacidad
 | Ícone | exatamente 200 × 200 px, até 400 KB | `loja-de-aplicativos/icone-200x200.png` |
 | Vídeo do aplicativo | YouTube, até 3 min | Opcional. É um vídeo curto de divulgação, diferente do vídeo da homologação |
 | Perguntas frequentes | até 10 | `loja-de-aplicativos/faq-portal-9-perguntas.md` |
-| Imagens do aplicativo | 3 a 5, exatamente 1920 × 1080 px, até 5 MB | `loja-de-aplicativos/imagens-1920x1080/` (4 imagens, nesta ordem) |
+| Imagens do aplicativo | 3 a 5, exatamente 1920 × 1080 px, até 5 MB | As suas imagens |
 
 ## Forma de cobrança
 
