@@ -1,92 +1,74 @@
-# Miaou · Provador virtual — Roteiro do vídeo de demonstração
+# Miaou · Roteiro do vídeo de homologação (versão enxuta)
 
-**Formato sugerido:** um único vídeo de 6 a 9 minutos, gravado na tela do computador, com áudio narrando (ou legendas). Enviar como link do YouTube **não listado** ou do Google Drive com acesso "qualquer pessoa com o link". As cenas 5 e 6 podem usar o celular (gravação de tela do aparelho), inseridas no mesmo vídeo.
+**Duração:** 4 a 5 minutos, tudo no computador, numa gravação de tela só. Narração é opcional: dá para gravar sem áudio.
+**Envio:** YouTube **não listado** ou Google Drive com "qualquer pessoa com o link".
 
-**Antes de gravar**
+## Antes de gravar
 
-- Loja: https://lojademo317.lojavirtualnuvem.com.br/ (admin em https://lojademo317.lojavirtualnuvem.com.br/admin). Produtos: **Polo Tricot**, **CALÇA BLAIR UVA** e **Óculos de Grau Michael Kors MK4103U - Preto**.
-- O Miaou deve estar **desinstalado** nessa loja no começo da gravação.
-- Deixe pronta uma foto de corpo inteiro (para roupas) e uma selfie (para óculos).
-- Assim que instalar o app na cena 1, libere a loja de teste no servidor (`sudo miaou plano <id da loja> crescer`). Corte essa parte da gravação. Sem isso, o botão não aparece na loja.
-- **Não abra a aba Planos** durante a gravação.
-- Abra o servidor sem `TRYON_DEBUG` ligado e com a chave do OpenRouter (provas reais, não simuladas).
+- Loja: https://lojademo317.lojavirtualnuvem.com.br/ (admin em https://lojademo317.lojavirtualnuvem.com.br/admin).
+- Comece com o Miaou **desinstalado** na loja.
+- Deixe pronta uma foto sua (ou de alguém que autorizou) para a prova da Polo.
+- Assim que instalar na cena 1, libere a loja no servidor (`sudo miaou plano <id da loja> crescer`) e **corte essa parte** da gravação.
+- **Não abra a aba Planos.**
 
 ---
 
-## Cena 1 · Instalação pela Loja de Aplicativos Nuvemshop (lojista sem conta no Miaou) — ~1 min
+## Cena 1 · Instalação pela Nuvemshop (lojista sem conta) — ~40 s
 
-1. Com o admin da loja aberto, digite na barra de endereço `https://www.tiendanube.com/apps/44305/authorize` (link oficial que a Nuvemshop pede para simular a instalação pela loja de apps). **Não instale pelo painel de parceiros.**
-2. Se pedir, entre com a conta da loja.
-3. Mostre a tela de permissões (ler produtos, ler pedidos, criar scripts) e clique em **Aceitar e começar a usar**.
-4. O navegador abre o painel do Miaou já na **Visão geral**, com o nome da loja.
+1. Com o admin aberto, digite na barra de endereço: `https://www.tiendanube.com/apps/44305/authorize`
+2. Mostre a tela de permissões e clique em **Aceitar e começar a usar**.
+3. O painel do Miaou abre sozinho, com o nome da loja.
 
-**Narração:** "O Miaou não tem cadastro separado: a conta é criada automaticamente na instalação, a partir da própria loja Nuvemshop. Não pedimos URL da loja, e-mail ou senha. Na instalação o Miaou cadastra os webhooks, ativa o script da vitrine e importa os produtos."
+> Legenda/narração: "Não há cadastro separado: a conta é criada automaticamente na instalação."
 
-## Cena 2 · Login (lojista que já tem conta) — ~40 s
+## Cena 2 · Login (lojista que já tem conta) — ~20 s
 
 1. Feche a aba do painel.
-2. No admin da Nuvemshop, vá em **Meus aplicativos** e abra o Miaou.
-3. O painel abre direto, sem senha.
-4. (Opcional) Abra o endereço do painel numa aba anônima: aparece "Sessão expirada. Abra o app novamente pelo painel da sua loja Nuvemshop".
+2. No admin, vá em **Meus aplicativos** e abra o **Miaou**: o painel abre direto, sem senha.
 
-**Narração:** "O login é sempre pela Nuvemshop: abrir o app pelo admin autentica o lojista de novo. Não existe senha do Miaou para recuperar; o acesso segue a conta Nuvemshop."
+> "O login é sempre pelo admin da Nuvemshop."
 
-## Cena 3 · Painel e configuração — ~1 min 30 s
+## Cena 3 · Uso na loja e compra — ~2 min
 
-**Narração:** "Não há nenhuma configuração técnica: o botão entra sozinho na loja, sem código e sem mexer no layout. Depois de liberada a loja pela Miaou, o provador já funciona."
+1. Abra a página da **Polo Tricot** e mostre o botão **Provar em mim**.
+2. Clique, envie a foto e mostre o resultado.
+3. Clique em **Comprar** no provador: a Polo vai para a sacola.
+4. Finalize o pedido.
+5. No admin, abra o pedido e marque como **pago**.
+6. No painel do Miaou, em **Visão geral**, mostre a venda em "Vendas com o provador" (pode levar alguns minutos; corte a espera).
 
-1. **Produtos:** os produtos importados, com o tipo reconhecido (roupa ou óculos) e a opção de mudar ou desligar por produto.
-2. **Preferências:** liga/desliga o provador, texto do botão, pedido de WhatsApp, limite por comprador, status "Instalado" do script na loja e e-mail de suporte.
-3. **Leads:** a lista (vazia ou com dados) e a exportação CSV.
+> "A venda só conta quando a Nuvemshop confirma o pagamento e o produto provado está no pedido."
 
-## Cena 4 · Uso na loja pelo comprador (computador) — ~2 min
+## Cena 4 · Produto alterado no admin — ~30 s
 
-1. Abra a loja numa aba e entre na página da **Polo Tricot**.
-2. Mostre o botão **Provar em mim** na página, perto do **Comprar**.
-3. Clique: o provador abre como gaveta lateral. Envie a foto de corpo inteiro.
-4. Mostre a barra de progresso e o resultado.
-5. Clique em **Comprar** no provador: o produto vai para a sacola com a variação escolhida.
-6. Finalize um pedido de teste e marque como **pago** no admin.
-7. De volta ao painel, em **Visão geral**, mostre a venda contabilizada em "Vendas com o provador" (pode levar alguns minutos).
+1. No admin, mude o nome da **CALÇA BLAIR UVA** (por exemplo, para "Calça Blair Uva Wide Leg") e salve.
+2. No painel do Miaou, abra **Produtos**: o nome novo já aparece.
 
-## Cena 4b · Produto alterado no admin (webhook) — ~40 s
+> "O Miaou não consulta a API o tempo todo: a Nuvemshop avisa por webhook."
 
-1. No admin da Nuvemshop, mude o nome da **CALÇA BLAIR UVA** (por exemplo, para "Calça Blair Uva Wide Leg").
-2. No painel do Miaou, abra **Produtos**: a alteração aparece sozinha em alguns segundos.
+## Cena 5 · Desinstalação — ~30 s
 
-**Narração:** "O Miaou não consulta a API periodicamente: a Nuvemshop avisa por webhook e o app busca só o produto alterado. O mesmo vale para pedidos pagos."
+1. Em **Meus aplicativos**, desinstale o Miaou.
+2. Recarregue a página da Polo na loja: o botão **sumiu**.
 
-## Cena 5 · Uso no celular — ~1 min
+## Cena 6 · Reinstalação — ~40 s
 
-1. Abra a página dos **Óculos de Grau Michael Kors** no celular.
-2. Toque em **Provar em mim**: o provador abre em janela (modal).
-3. Toque em **Tirar selfie** e mostre o resultado.
-4. Mostre o **Compartilhar** (link com prévia) e o **Apagar agora**.
+1. Abra de novo `https://www.tiendanube.com/apps/44305/authorize` e aceite as permissões.
+2. O painel volta com o histórico (a venda da cena 3 continua lá).
+3. Recarregue a página da Polo: o botão **voltou**.
 
-## Cena 6 · Desinstalação — ~40 s
-
-1. No admin, em **Meus aplicativos**, desinstale o Miaou.
-2. Recarregue a página do produto na loja: o botão **não aparece mais**.
-3. Recarregue o painel do Miaou que estava aberto: ele mostra "Sessão expirada" (o acesso fecha na hora).
-
-## Cena 7 · Reinstalação — ~40 s
-
-1. Instale o Miaou de novo pela Loja de aplicativos e aceite as permissões.
-2. O painel abre com o **histórico e as preferências preservados**.
-3. Recarregue a página do produto: o botão voltou.
-
-**Narração final:** "Ao reinstalar, o Miaou pega um novo token, cadastra de novo webhooks e scripts e reimporta o catálogo. Os dados da loja só são apagados quando a Nuvemshop envia o webhook de LGPD store/redact. Os três webhooks de LGPD do diagrama são disparados pela própria Nuvemshop e por isso não aparecem no vídeo."
+> "Nenhuma configuração técnica é necessária. Os webhooks de LGPD do diagrama são disparados pela própria Nuvemshop."
 
 ---
 
-### Checklist rápido do vídeo
+## Checklist
 
-- [ ] Instalação pelo link `tiendanube.com/apps/44305/authorize`, não pelo painel de parceiros (tela de permissões aparece)
-- [ ] Conta criada automaticamente (lojista sem conta)
-- [ ] Login pelo admin (lojista com conta) e sessão expirada
-- [ ] Funcionalidade principal na loja: computador e celular, roupa e óculos
-- [ ] Compra e venda atribuída
-- [ ] Produto alterado no admin chega ao Miaou (webhook)
-- [ ] Dito em voz alta: nenhuma configuração técnica é necessária
-- [ ] Desinstalação: botão some e painel fecha
-- [ ] Reinstalação: tudo volta
+- [ ] Instalação pelo link `/apps/44305/authorize`, com a tela de permissões
+- [ ] Conta criada sozinha (lojista sem conta)
+- [ ] Login pelo admin (lojista com conta)
+- [ ] Prova na loja e compra pelo provador
+- [ ] Pedido pago contando como venda no painel
+- [ ] Produto alterado no admin aparecendo no Miaou
+- [ ] Desinstalação: botão some
+- [ ] Reinstalação: painel e botão voltam
+- [ ] Aba Planos não aparece
