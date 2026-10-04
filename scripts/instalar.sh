@@ -244,4 +244,4 @@ else
 fi
 
 echo
-ok "Pronto. Painel: https://$DOMAIN/admin/  ·  Log: sudo miaou logs"
+ok "Pronto. Dashboard: https://$DOMAIN/dashboard/  ·  Log: sudo miaou logs"

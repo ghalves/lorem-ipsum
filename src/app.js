@@ -35,7 +35,7 @@ function createApp({ schedulePurge = false } = {}) {
     if (req.path.startsWith('/tryon')) {
       // Tela do provador virtual: emoldurada pela loja; fotos locais via blob:
       res.set('Content-Security-Policy', "default-src 'self'; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline'; frame-ancestors https: http://localhost:* http://127.0.0.1:*");
-    } else if (req.path.startsWith('/admin')) {
+    } else if (req.path.startsWith('/dashboard') || req.path.startsWith('/admin')) {
       // Painel do lojista: não pode ser emoldurado (clickjacking).
       res.set('X-Frame-Options', 'DENY');
       res.set('Content-Security-Policy', "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'");
@@ -84,7 +84,9 @@ function createApp({ schedulePurge = false } = {}) {
     res.set('Cache-Control', 'no-cache').type('html').send(tryonHtml);
   });
   app.use('/tryon', express.static(tryonDir, { maxAge: config.devMode ? 0 : '7d', index: false }));
-  app.use('/admin', express.static(path.join(pub, 'admin'), { maxAge: 0 }));
+  app.use('/dashboard', express.static(path.join(pub, 'admin'), { maxAge: 0 }));
+  // endereço antigo do painel: continua funcionando (o #session vai junto no redirecionamento)
+  app.get(/^\/admin(\/.*)?$/, (req, res) => res.redirect(301, '/dashboard' + (req.params[0] || '/')));
   // Marca (logo usada no painel, no provador e no cartão da vitrine).
   app.use('/brand', express.static(path.join(pub, 'brand'), {
     maxAge: config.devMode ? 0 : '30d',
@@ -93,7 +95,7 @@ function createApp({ schedulePurge = false } = {}) {
   // Página pública de privacidade e método (link discreto fora do card do provador).
   app.use('/privacidade', express.static(path.join(pub, 'privacidade'), { maxAge: config.devMode ? 0 : '1h' }));
   // em teste, a raiz já entra no painel da loja demo; em produção o painel abre pela Nuvemshop
-  app.get('/', (req, res) => res.redirect(config.devMode ? '/dev/login' : '/admin/'));
+  app.get('/', (req, res) => res.redirect(config.devMode ? '/dev/login' : '/dashboard/'));
 
   app.use((req, res) => res.status(404).json({ error: 'não encontrado' }));
   // eslint-disable-next-line no-unused-vars

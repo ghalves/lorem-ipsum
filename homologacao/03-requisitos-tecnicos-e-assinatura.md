@@ -4,7 +4,7 @@
 
 | Item | Detalhe |
 | --- | --- |
-| Tipo de app | Externo (painel próprio em `https://app.miaou.com.br/admin`) + scripts **NubeSDK** na vitrine e no checkout |
+| Tipo de app | Externo (painel próprio em `https://app.miaou.com.br/dashboard`) + scripts **NubeSDK** na vitrine e no checkout |
 | Autenticação | OAuth 2 da Nuvemshop (Authorization Code). URL de redirecionamento: `https://app.miaou.com.br/auth/callback` |
 | Cadastro / login | Não há cadastro separado. A conta é criada automaticamente na instalação e o login acontece sempre ao abrir o app pelo admin Nuvemshop. Nunca pedimos URL da loja, e-mail ou senha |
 | Escopos | `read_products`, `read_orders`, `write_scripts` |

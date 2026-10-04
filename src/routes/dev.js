@@ -83,7 +83,7 @@ router.get('/ping', (req, res) => res.json({ ok: true }));
 
 router.get('/login', (req, res) => {
   seed();
-  res.redirect(`/admin/#session=${createSession(DEMO_STORE)}`);
+  res.redirect(`/dashboard/#session=${createSession(DEMO_STORE)}`);
 });
 
 // Página de produto no formato dos temas Nuvemshop (LS global, .js-product-form,

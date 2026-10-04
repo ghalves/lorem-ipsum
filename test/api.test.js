@@ -129,7 +129,7 @@ test('instalação via OAuth: token, webhooks, script e catálogo', async () => 
   const r = await fetch(base + '/auth/callback?code=good-code', { redirect: 'manual' });
   assert.equal(r.status, 302);
   const loc = r.headers.get('location');
-  assert.match(loc, /^\/admin\/#session=/);
+  assert.match(loc, /^\/dashboard\/#session=/);
   session = loc.split('session=')[1];
   await wait(150);
   assert.ok(calls.includes(`POST /2025-03/${STORE_ID}/webhooks`));
@@ -272,6 +272,16 @@ test('desinstalar apaga o token e fecha o painel; reinstalar volta', async () =>
   await wait(150);
   assert.equal((await adminApi('GET', '/me')).status, 200, 'reinstalado');
   assert.equal(svc.getStore(STORE_ID).access_token, 'tok-123');
+});
+
+test('painel em /dashboard; o endereço antigo /admin redireciona', async () => {
+  const r = await fetch(base + '/admin/', { redirect: 'manual' });
+  assert.equal(r.status, 301);
+  assert.equal(r.headers.get('location'), '/dashboard/');
+  const d = await fetch(base + '/dashboard/');
+  assert.equal(d.status, 200);
+  assert.match(await d.text(), /Miaou · Dashboard/);
+  assert.equal(d.headers.get('x-frame-options'), 'DENY');
 });
 
 test('aviso de desinstalação atrasado não derruba a loja já reinstalada', async () => {

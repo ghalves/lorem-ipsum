@@ -74,7 +74,7 @@ router.get('/callback', async (req, res, next) => {
       // app/uninstalled chegar deixaria a loja sem eles)
       sync.ensureSetup(storeId).catch((e) => console.error('[setup]', e));
     }
-    res.redirect(`/admin/#session=${createSession(storeId)}`);
+    res.redirect(`/dashboard/#session=${createSession(storeId)}`);
   } catch (err) {
     next(err);
   }

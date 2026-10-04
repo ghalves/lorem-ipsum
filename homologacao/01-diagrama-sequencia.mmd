@@ -25,7 +25,7 @@ sequenceDiagram
         M->>API: GET /products?page=N&per_page=200 [read_products]
         API-->>M: Catálogo (nome, fotos, variações, categorias)
     end
-    M-->>L: Redireciona ao painel Miaou /admin (sessão assinada, 12 h)
+    M-->>L: Redireciona ao dashboard Miaou /dashboard (sessão assinada, 12 h)
     end
 
     rect rgb(240, 248, 236)
@@ -36,7 +36,7 @@ sequenceDiagram
     API-->>M: access_token
     M->>API: GET /webhooks e GET /scripts: recria só o que faltar
     M->>API: GET /store (atualiza os domínios da loja, no máximo a cada 30 s)
-    M-->>L: Painel /admin (Visão geral, Produtos, Leads, Preferências)
+    M-->>L: Dashboard /dashboard (Visão geral, Produtos, Leads, Preferências)
     Note over L,M: Sessão vencida ou aberta fora do admin: "Sessão expirada. Abra o app novamente pelo painel da sua loja"
     L->>M: Painel: sincronizar produtos / reinstalar script
     M->>API: GET /products [read_products] · POST /scripts [write_scripts]
