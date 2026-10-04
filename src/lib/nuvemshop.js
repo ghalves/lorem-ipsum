@@ -65,7 +65,11 @@ function client(storeId, accessToken) {
       throw new NuvemshopError(`${method} ${path} -> ${res.status} (resposta não é JSON)`, res.status, text.slice(0, 500));
     }
     if (res.status === 404 && method === 'GET' && /page=/.test(path)) return [];
-    if (!res.ok) throw new NuvemshopError(`${method} ${path} -> ${res.status}`, res.status, data);
+    if (!res.ok) {
+      // a mensagem da Nuvemshop vai junto no log (ex.: motivo de um 404 em /scripts)
+      const why = data && (data.description || data.message || data.error);
+      throw new NuvemshopError(`${method} ${path} -> ${res.status}${why ? `: ${String(typeof why === 'string' ? why : JSON.stringify(why)).slice(0, 200)}` : ''}`, res.status, data);
+    }
     return data;
   }
 
