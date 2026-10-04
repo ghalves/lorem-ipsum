@@ -13,6 +13,11 @@ const SECRET = 'test-client-secret';
 const STORE_ID = 424242;
 const calls = [];
 let productName = 'Vestido midi';
+// desinstalar na Nuvemshop revoga o token e tira os scripts da loja
+let revoked = false;
+const scripts = new Set();
+function uninstallAtNuvemshop() { revoked = true; scripts.clear(); }
+const count = (call) => calls.filter((c) => c === call).length;
 
 function mockNuvemshop() {
   const app = express();
@@ -20,13 +25,18 @@ function mockNuvemshop() {
   app.use((req, res, next) => { calls.push(`${req.method} ${req.path}`); next(); });
   app.post('/apps/authorize/token', (req, res) => {
     if (req.body.code !== 'good-code' || req.body.client_secret !== SECRET) return res.status(400).json({ error: 'invalid' });
+    revoked = false;
     res.json({ access_token: 'tok-123', token_type: 'bearer', scope: 'read_products,write_scripts', user_id: STORE_ID });
   });
-  const auth = (req, res, next) => (req.get('authorization') === 'Bearer tok-123' ? next() : res.status(401).json({}));
+  const auth = (req, res, next) => (!revoked && req.get('authorization') === 'Bearer tok-123' ? next() : res.status(401).json({}));
   app.get(`/2025-03/${STORE_ID}/store`, auth, (req, res) => res.json({ name: { pt: 'Loja Teste' }, original_domain: 'teste.lojavirtualnuvem.com.br', domains: ['www.minhaloja.com.br'] }));
   app.get(`/2025-03/${STORE_ID}/webhooks`, auth, (req, res) => res.json([]));
   app.post(`/2025-03/${STORE_ID}/webhooks`, auth, (req, res) => res.status(201).json({ id: 1, ...req.body }));
-  app.post(`/2025-03/${STORE_ID}/scripts`, auth, (req, res) => res.status(201).json({ id: 777, params: JSON.parse(req.body.query_params) }));
+  app.get(`/2025-03/${STORE_ID}/scripts`, auth, (req, res) => res.json([...scripts].map((id) => ({ id: 700 + id, script_id: id }))));
+  app.post(`/2025-03/${STORE_ID}/scripts`, auth, (req, res) => {
+    scripts.add(Number(req.body.script_id));
+    res.status(201).json({ id: 777, params: JSON.parse(req.body.query_params) });
+  });
   const product = (id) => ({
     id, name: { pt: id === 1 ? productName : 'Saia' }, handle: { pt: 'p' + id },
     attributes: [{ pt: 'Cor' }, { pt: 'Tamanho' }],
@@ -248,6 +258,7 @@ test('LGPD: pedido de dados e exclusão do cliente pelo WhatsApp', async () => {
 });
 
 test('desinstalar apaga o token e fecha o painel; reinstalar volta', async () => {
+  uninstallAtNuvemshop();
   await hook('app/uninstalled', STORE_ID);
   await wait(100);
   const svc = require('../src/lib/store-service');
@@ -261,6 +272,31 @@ test('desinstalar apaga o token e fecha o painel; reinstalar volta', async () =>
   await wait(150);
   assert.equal((await adminApi('GET', '/me')).status, 200, 'reinstalado');
   assert.equal(svc.getStore(STORE_ID).access_token, 'tok-123');
+});
+
+test('aviso de desinstalação atrasado não derruba a loja já reinstalada', async () => {
+  await hook('app/uninstalled', STORE_ID);
+  await wait(100);
+  const svc = require('../src/lib/store-service');
+  assert.equal(svc.getStore(STORE_ID).uninstalled_at, null, 'continua instalada');
+  assert.equal((await adminApi('GET', '/me')).status, 200);
+  assert.equal((await fetch(`${base}/api/storefront/${STORE_ID}/config?product=1`)).status, 200);
+});
+
+test('reinstalar antes do aviso de desinstalação recria o script; abrir de novo não duplica', async () => {
+  uninstallAtNuvemshop();                       // desinstalou, mas o aviso ainda não chegou
+  const before = count(`POST /2025-03/${STORE_ID}/scripts`);
+  let r = await fetch(base + '/auth/callback?code=good-code', { redirect: 'manual' });
+  session = r.headers.get('location').split('session=')[1];
+  await wait(150);
+  assert.ok(scripts.has(555), 'script associado de novo');
+  assert.equal(count(`POST /2025-03/${STORE_ID}/scripts`), before + 1);
+  await hook('app/uninstalled', STORE_ID);      // o aviso chega atrasado
+  await wait(100);
+  assert.equal((await fetch(`${base}/api/storefront/${STORE_ID}/config?product=1`)).status, 200, 'botão continua na loja');
+  r = await fetch(base + '/auth/callback?code=good-code', { redirect: 'manual' });   // lojista abre o app de novo
+  await wait(150);
+  assert.equal(count(`POST /2025-03/${STORE_ID}/scripts`), before + 1, 'não associa o script duas vezes');
 });
 
 test('LGPD store/redact apaga os dados da loja', async () => {

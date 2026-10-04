@@ -182,18 +182,54 @@ async function ensureWebhooks(storeId) {
   return created;
 }
 
+/**
+ * Associa um script à loja, se ainda não estiver associado. Se a lista não
+ * vier (erro da API), associa assim mesmo, como antes.
+ */
+async function associateOnce(api, scriptId, storeId) {
+  const list = await api.listScripts().catch(() => null);
+  const found = Array.isArray(list) && list.find((s) => Number(s?.script_id ?? s?.id) === Number(scriptId));
+  if (found) return found;
+  return api.associateScript(scriptId, { store: String(storeId) });
+}
+
 /** Associa o script da vitrine (cadastrado no Portal de Parceiros) à loja. */
 async function ensureScript(storeId) {
   const store = svc.getStore(storeId);
   if (!config.nuvemshop.scriptId) return { skipped: 'NUVEMSHOP_SCRIPT_ID não configurado' };
   const api = ns.client(store.id, store.access_token);
-  const res = await api.associateScript(config.nuvemshop.scriptId, { store: String(store.id) });
+  const res = await associateOnce(api, config.nuvemshop.scriptId, store.id);
   svc.setStoreField(store.id, 'script_association_id', res?.id || config.nuvemshop.scriptId);
   if (config.nuvemshop.thankYouScriptId) {
-    try { await api.associateScript(config.nuvemshop.thankYouScriptId, { store: String(store.id) }); }
-    catch (e) { console.warn(`[script] página de obrigado, loja ${store.id}: ${e.message}`); }
+    try { await associateOnce(api, config.nuvemshop.thankYouScriptId, store.id); }
+    catch (e) { console.warn(`[script] checkout, loja ${store.id}: ${e.message}`); }
   }
   return res;
+}
+
+/**
+ * Lojista abriu o app já instalado: confere webhooks e scripts e recria o que
+ * faltar. Cobre a reinstalação feita antes de chegar o aviso app/uninstalled
+ * (a loja ainda constava como instalada e o onInstall não rodaria).
+ */
+async function ensureSetup(storeId) {
+  const steps = { webhooks: null, script: null };
+  try { steps.webhooks = await ensureWebhooks(storeId); } catch (e) { steps.webhooks = `erro: ${e.message}`; }
+  try { steps.script = await ensureScript(storeId); } catch (e) { steps.script = `erro: ${e.message}`; }
+  if ((Array.isArray(steps.webhooks) && steps.webhooks.length) || typeof steps.webhooks === 'string' || typeof steps.script === 'string') {
+    console.log(`[setup] loja ${storeId}`, JSON.stringify(steps));
+  }
+  return steps;
+}
+
+/**
+ * O token salvo ainda funciona? Na desinstalação a Nuvemshop o revoga; se ele
+ * funciona, o app foi reinstalado e o aviso app/uninstalled chegou atrasado.
+ */
+async function tokenStillValid(storeId) {
+  const store = svc.getStore(storeId);
+  if (!store || !store.access_token || store.access_token === 'dev-token') return false;
+  try { await ns.client(store.id, store.access_token).getStore(); return true; } catch { return false; }
 }
 
 /** Tudo o que roda depois da instalação (em segundo plano). */
@@ -206,4 +242,4 @@ async function onInstall(storeId) {
   return steps;
 }
 
-module.exports = { refreshProductIfStale, refreshDomainsThrottled, resetDomainRefresh, syncAllProducts, syncProduct, importOrder, claimMatchesOrder, verifiedTried, claimsFromOrderExtra, ensureWebhooks, ensureScript, onInstall, WEBHOOK_EVENTS };
+module.exports = { refreshProductIfStale, refreshDomainsThrottled, resetDomainRefresh, syncAllProducts, syncProduct, importOrder, claimMatchesOrder, verifiedTried, claimsFromOrderExtra, ensureWebhooks, ensureScript, ensureSetup, tokenStillValid, onInstall, WEBHOOK_EVENTS };

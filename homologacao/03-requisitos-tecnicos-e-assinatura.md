@@ -27,7 +27,8 @@ O app **não altera** produtos, pedidos, clientes nem preços.
 ### Instalação, desinstalação e reinstalação
 
 - **Instalação:** troca o `code` pelo `access_token`, lê os dados da loja (`GET /store`), cadastra os webhooks, associa os scripts e importa o catálogo em segundo plano. O lojista cai direto no painel.
-- **Desinstalação:** ao receber `app/uninstalled`, o Miaou apaga o token, invalida as sessões do painel na hora e o botão deixa de aparecer na loja.
+- **Desinstalação:** ao receber `app/uninstalled`, o Miaou confirma que o token foi revogado (`GET /store`; se ainda funciona, o aviso chegou depois de uma reinstalação e é ignorado), apaga o token, invalida as sessões do painel na hora e o botão deixa de aparecer na loja.
+- **Abrir o app pelo admin:** o Miaou confere webhooks e scripts (`GET /webhooks`, `GET /scripts`) e recria só o que faltar.
 - **Reinstalação:** um novo token é salvo, webhooks, scripts e produtos são configurados de novo e o histórico e as preferências da loja são preservados. Os dados só são apagados com o webhook `store/redact`.
 
 ### Uso eficiente da API

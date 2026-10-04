@@ -47,6 +47,11 @@ router.post('/nuvemshop', (req, res) => {
         await sync.importOrder(storeId, id);
         break;
       case 'app/uninstalled':
+        // aviso atrasado: se o token salvo ainda funciona, a loja já reinstalou
+        if (await sync.tokenStillValid(storeId)) {
+          console.log(`[desinstalação] loja ${storeId}: aviso ignorado, o app foi reinstalado`);
+          break;
+        }
         svc.markUninstalled(storeId);
         break;
       default:

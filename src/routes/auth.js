@@ -69,6 +69,10 @@ router.get('/callback', async (req, res, next) => {
     svc.upsertStore({ id: storeId, accessToken: token.access_token, scope: token.scope, name, domain });
     if (!already || already.uninstalled_at) {
       sync.onInstall(storeId).catch((e) => console.error('[install]', e));
+    } else {
+      // já instalada: confere webhooks e scripts (reinstalação antes do aviso
+      // app/uninstalled chegar deixaria a loja sem eles)
+      sync.ensureSetup(storeId).catch((e) => console.error('[setup]', e));
     }
     res.redirect(`/admin/#session=${createSession(storeId)}`);
   } catch (err) {

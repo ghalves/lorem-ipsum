@@ -34,6 +34,7 @@ sequenceDiagram
     AD->>M: GET /auth/callback?code=... (novo code)
     M->>API: POST /apps/authorize/token
     API-->>M: access_token
+    M->>API: GET /webhooks e GET /scripts: recria só o que faltar
     M->>API: GET /store (atualiza os domínios da loja, no máximo a cada 30 s)
     M-->>L: Painel /admin (Visão geral, Produtos, Leads, Preferências)
     Note over L,M: Sessão vencida ou aberta fora do admin: "Sessão expirada. Abra o app novamente pelo painel da sua loja"
@@ -76,7 +77,9 @@ sequenceDiagram
     L->>AD: Desinstala o Miaou
     AD->>API: Revoga o access_token
     API->>M: Webhook app/uninstalled
+    M->>API: GET /store com o token salvo (confirma que foi revogado)
     M->>M: Apaga o token, fecha o painel e some o botão da loja
+    Note over M,API: Se o token ainda funciona, o aviso chegou depois de uma reinstalação e é ignorado
     L->>AD: Instala de novo
     AD->>M: GET /auth/callback?code=...
     M->>API: POST /apps/authorize/token (novo token)
