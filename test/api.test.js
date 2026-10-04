@@ -274,10 +274,8 @@ test('desinstalar apaga o token e fecha o painel; reinstalar volta', async () =>
   assert.equal(svc.getStore(STORE_ID).access_token, 'tok-123');
 });
 
-test('painel em /dashboard; o endereço antigo /admin redireciona', async () => {
-  const r = await fetch(base + '/admin/', { redirect: 'manual' });
-  assert.equal(r.status, 301);
-  assert.equal(r.headers.get('location'), '/dashboard/');
+test('painel em /dashboard; /admin não existe mais', async () => {
+  assert.equal((await fetch(base + '/admin/', { redirect: 'manual' })).status, 404);
   const d = await fetch(base + '/dashboard/');
   assert.equal(d.status, 200);
   assert.match(await d.text(), /Miaou · Dashboard/);
