@@ -10,6 +10,7 @@
 - Deixe pronta uma foto sua (ou de alguém que autorizou) para a prova da Polo.
 - Assim que instalar na cena 1, libere a loja no servidor (`sudo miaou plano <id da loja> crescer`) e **corte essa parte** da gravação.
 - **Não abra a aba Planos.**
+- **Grave a desinstalação (cena 5) e a reinstalação (cena 6) em seguida, no mesmo dia.** Cerca de 48 h depois de uma desinstalação, a Nuvemshop manda o pedido de LGPD `store/redact` e o Miaou apaga os dados da loja (plano, histórico, produtos). Reinstalando logo, tudo continua lá.
 
 ---
 
