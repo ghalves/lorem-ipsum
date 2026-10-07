@@ -85,16 +85,29 @@ function markUninstalled(storeId) {
     .run(new Date().toISOString(), Number(storeId));
 }
 
-/** LGPD store/redact: apaga todos os dados da loja. */
+/**
+ * LGPD store/redact: apaga os dados da loja. A Nuvemshop manda este pedido no
+ * mesmo instante da desinstalação. Fica só o plano contratado (dado do contrato
+ * com a Miaou): ao reinstalar, o provador volta sem precisar ativar o plano de
+ * novo. Histórico, provas, leads, produtos, preferências, nome e domínio saem.
+ * Loja sem plano sai inteira.
+ */
 function redactStore(storeId) {
   const db = getDb();
   const id = Number(storeId);
+  const plan = getStore(id)?.settings?.tryon?.plan;
   try { require('../tryon/service').deleteStoreFiles(id); } catch { /* sem arquivos */ }
   for (const t of ['events', 'products', 'order_claims',
     'tryon_photos', 'tryon_jobs', 'tryon_products', 'tryon_image_info', 'tryon_leads', 'tryon_lead_links', 'tryon_shares', 'tryon_sales']) {
     db.prepare(`DELETE FROM ${t} WHERE store_id = ?`).run(id);
   }
-  db.prepare('DELETE FROM stores WHERE id = ?').run(id);
+  if (!plan || plan === 'none') {
+    db.prepare('DELETE FROM stores WHERE id = ?').run(id);
+    return { keptPlan: null };
+  }
+  db.prepare('UPDATE stores SET name = NULL, domain = NULL, scope = NULL, last_sync_at = NULL, settings = ? WHERE id = ?')
+    .run(JSON.stringify({ tryon: { plan } }), id);
+  return { keptPlan: plan };
 }
 
 // ---------- produtos ----------

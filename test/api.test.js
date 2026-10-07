@@ -367,12 +367,40 @@ test('reinstalar antes do aviso de desinstalação recria o script; abrir de nov
   assert.equal(count(`POST /2025-03/${STORE_ID}/scripts`), before + 1, 'não associa o script duas vezes');
 });
 
-test('LGPD store/redact apaga os dados da loja', async () => {
+test('LGPD store/redact na desinstalação apaga os dados e guarda só o plano; reinstalar volta com o provador', async () => {
+  const svc = require('../src/lib/store-service');
+  svc.updateSettings(STORE_ID, { tryon: { plan: 'crescer', button: 'Experimentar' } });
+  // a Nuvemshop manda os dois avisos no mesmo instante da desinstalação
+  uninstallAtNuvemshop();
+  await hook('app/uninstalled', STORE_ID);
   const r = await lgpd('store-redact', { store_id: STORE_ID });
   assert.equal(r.status, 200);
-  assert.equal((await fetch(`${base}/api/storefront/${STORE_ID}/config?product=1`)).status, 404);
+  await wait(100);
+  assert.equal((await fetch(`${base}/api/storefront/${STORE_ID}/config?product=1`)).status, 404, 'desinstalada');
   const { getDb } = require('../src/db');
-  for (const t of ['order_claims', 'events', 'products', 'tryon_sales', 'tryon_leads']) {
+  for (const t of ['order_claims', 'events', 'products', 'tryon_sales', 'tryon_leads', 'tryon_jobs']) {
     assert.equal(getDb().prepare(`SELECT COUNT(*) AS n FROM ${t} WHERE store_id = ?`).get(STORE_ID).n, 0, `${t} apagado`);
   }
+  const row = getDb().prepare('SELECT * FROM stores WHERE id = ?').get(STORE_ID);
+  assert.deepEqual(JSON.parse(row.settings), { tryon: { plan: 'crescer' } }, 'só o plano fica');
+  assert.equal(row.name, null);
+  assert.equal(row.domain, null);
+  assert.equal(row.access_token, '');
+  // reinstala: o provador volta sem ativar o plano de novo; preferências voltam ao padrão
+  await fetch(base + '/auth/callback?code=good-code', { redirect: 'manual' });
+  await wait(200);
+  const cfg = await storeCfg(1);
+  assert.equal(cfg.tryon.enabled, true, 'botão volta');
+  assert.equal(cfg.tryon.button, 'Provar em mim', 'preferências zeradas');
+  assert.equal(svc.getStore(STORE_ID).name, 'Loja Teste');
+});
+
+test('LGPD store/redact de loja sem plano apaga tudo', async () => {
+  const svc = require('../src/lib/store-service');
+  svc.updateSettings(STORE_ID, { tryon: { plan: 'none' } });
+  uninstallAtNuvemshop();
+  await hook('app/uninstalled', STORE_ID);
+  await lgpd('store-redact', { store_id: STORE_ID });
+  await wait(100);
+  assert.equal(svc.getStore(STORE_ID), null);
 });

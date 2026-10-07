@@ -84,13 +84,13 @@ sequenceDiagram
     AD->>M: GET /auth/callback?code=...
     M->>API: POST /apps/authorize/token (novo token)
     M->>API: Webhooks, scripts e produtos de novo (mesmo passo 1)
-    M-->>L: Painel com o histórico e as preferências preservados
+    M-->>L: Dashboard zerado (dados apagados pelo store/redact) · plano mantido, o botão volta na loja
     end
 
     rect rgb(238, 238, 238)
     Note over AD,M: 6. LGPD (webhooks obrigatórios, disparados pela Nuvemshop)
-    API->>M: POST /webhooks/lgpd/store-redact
-    M->>M: Apaga todos os dados da loja
+    API->>M: POST /webhooks/lgpd/store-redact (junto com a desinstalação)
+    M->>M: Apaga histórico, provas, leads, produtos e preferências · guarda só o plano contratado
     API->>M: POST /webhooks/lgpd/customers-redact
     M->>M: Apaga o WhatsApp do cliente da lista de leads
     API->>M: POST /webhooks/lgpd/customers-data-request

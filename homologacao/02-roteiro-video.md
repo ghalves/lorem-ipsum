@@ -10,7 +10,7 @@
 - Deixe pronta uma foto sua (ou de alguém que autorizou) para a prova da Polo.
 - Assim que instalar na cena 1, libere a loja no servidor (`sudo miaou plano <id da loja> crescer`) e **corte essa parte** da gravação.
 - **Não abra a aba Planos.**
-- **Grave a desinstalação (cena 5) e a reinstalação (cena 6) em seguida, no mesmo dia.** Cerca de 48 h depois de uma desinstalação, a Nuvemshop manda o pedido de LGPD `store/redact` e o Miaou apaga os dados da loja (plano, histórico, produtos). Reinstalando logo, tudo continua lá.
+- Na desinstalação (cena 5), a Nuvemshop pede na hora a exclusão dos dados da loja (LGPD): o dashboard volta zerado na cena 6, mas o plano continua e o botão volta sozinho. Grave a venda (cena 3) **antes** da desinstalação.
 
 ---
 
@@ -55,10 +55,10 @@
 ## Cena 6 · Reinstalação — ~40 s
 
 1. Abra de novo `https://www.tiendanube.com/apps/44305/authorize` e aceite as permissões.
-2. O painel volta com o histórico (a venda da cena 3 continua lá).
+2. O dashboard abre de novo, **zerado**: na desinstalação a Nuvemshop pede para apagar os dados da loja (LGPD) e o Miaou apaga. O plano continua valendo.
 3. Recarregue a página da Polo: o botão **voltou**.
 
-> "Nenhuma configuração técnica é necessária. Os webhooks de LGPD do diagrama são disparados pela própria Nuvemshop."
+> "Na desinstalação, a Nuvemshop pede a exclusão dos dados da loja e o Miaou apaga tudo, menos o plano contratado. Ao reinstalar, o provador volta a funcionar sem nova configuração."
 
 ---
 
@@ -71,5 +71,5 @@
 - [ ] Pedido pago contando como venda no painel
 - [ ] Produto alterado no admin aparecendo no Miaou
 - [ ] Desinstalação: botão some
-- [ ] Reinstalação: painel e botão voltam
+- [ ] Reinstalação: dashboard abre (zerado) e o botão volta
 - [ ] Aba Planos não aparece

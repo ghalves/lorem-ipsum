@@ -15,7 +15,7 @@ Não. O botão entra sozinho na página do produto, perto do "Comprar", em qualq
 Roupas (blusas, vestidos, calças, saias, camisetas e moda masculina) e óculos. O Miaou reconhece o tipo de cada produto, e você pode mudar ou desligar o provador por produto na aba Produtos.
 
 **5. Como desinstalo o Miaou?**
-No admin da Nuvemshop, em Meus aplicativos, clique em Desinstalar. O botão sai da loja na hora. Se instalar de novo, seu histórico e suas preferências voltam.
+No admin da Nuvemshop, em Meus aplicativos, clique em Desinstalar. O botão sai da loja na hora e, pela LGPD, os dados da loja no Miaou são apagados. Se instalar de novo, o provador volta a funcionar, com o painel zerado.
 
 **6. Como sei se o provador está vendendo?**
 O painel mostra provas, pessoas que provaram, vendas e receita com o provador. A venda conta quando um produto provado é comprado e o pedido é pago.

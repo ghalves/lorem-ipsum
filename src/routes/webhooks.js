@@ -65,8 +65,8 @@ router.post('/nuvemshop', (req, res) => {
 router.post('/lgpd/store-redact', (req, res) => {
   const storeId = req.payload.store_id;
   if (storeId) {
-    svc.redactStore(storeId);
-    console.log(`[lgpd] store/redact loja ${storeId}: dados da loja apagados (plano, histórico e produtos)`);
+    const { keptPlan } = svc.redactStore(storeId);
+    console.log(`[lgpd] store/redact loja ${storeId}: dados apagados${keptPlan ? ` (mantido só o plano ${keptPlan})` : ''}`);
   }
   res.status(200).json({ ok: true });
 });
