@@ -24,8 +24,8 @@ if (!store) { console.error(`Loja ${storeId} não encontrada.`); process.exit(1)
 
 if (arg) {
   if (arg !== 'none' && !isPlan(arg)) { console.error(`Plano "${arg}" não existe.`); process.exit(1); }
-  svc.updateSettings(store.id, { tryon: { plan: arg } });
+  tryon.setPlan(store.id, arg);
   console.log(`Plano: ${arg}.`);
 }
 const q = tryon.quota(svc.getStore(store.id));
-console.log(`${store.name || store.id}: ${q.plan.name} · ${q.used}/${q.plan.quota} provas no mês`);
+console.log(`${store.name || store.id}: ${q.plan.name} · ${q.used}/${q.plan.quota} provas no ciclo · renova em ${new Date(q.renewsAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}`);

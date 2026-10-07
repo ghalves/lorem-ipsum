@@ -50,7 +50,7 @@ comprador clicado em "Comprar" no provador ou não.
 Escalar R$ 497 (1.200). Acima disso, o **Volume**: uma barra com degraus fixos, de 2.500 provas
 (R$ 997) a 10.000 (R$ 2.997), e o preço por prova sempre cai de um degrau para o outro. Escalar e
 Volume podem remover a marca Miaou do provador. Sem teste grátis e sem provas extras. Aos 80% o
-painel avisa; com a cota no fim, o botão sai da loja até o dia 1º. Enquanto a cobrança não estiver
+painel avisa; com a cota no fim, o botão sai da loja até renovar. A cota renova todo mês no dia em que o plano foi ativado (`sudo miaou plano` guarda a data; trocar de plano mantém o dia). Enquanto a cobrança não estiver
 ligada, o plano é definido pelo operador: `sudo miaou plano <loja> crescer` no servidor, ou
 `node scripts/set-plan.js <loja> crescer` (ou `volume-4000`, `none`...).
 

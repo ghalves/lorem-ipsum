@@ -2,7 +2,7 @@
 /**
  * Planos do provador virtual. Sem teste grátis: quem quer experimentar entra no
  * plano de entrada. A cota vale por mês (horário de Brasília); acabou, o botão
- * some da vitrine até o dia 1º. Não há provas extras.
+ * some da vitrine até renovar, no dia do mês em que o plano foi ativado. Não há provas extras.
  *
  * Três planos e, acima do maior, o Volume: uma barra com degraus fixos (cada
  * degrau é um plano próprio, o que facilita cadastrar a cobrança depois).

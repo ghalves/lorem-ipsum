@@ -269,7 +269,13 @@
     return d.length === 11 ? '(' + d.slice(0, 2) + ') ' + d.slice(2, 7) + '-' + d.slice(7)
       : d.length === 10 ? '(' + d.slice(0, 2) + ') ' + d.slice(2, 6) + '-' + d.slice(6) : p;
   }
-  function renewText() { var now = new Date(); return '1º de ' + MONTHS[(now.getMonth() + 1) % 12]; }
+  // dia em que a cota renova (todo mês no dia em que o plano foi ativado)
+  function renewDate(q) {
+    var d = q && q.renewsAt ? new Date(q.renewsAt) : null;
+    if (!d || isNaN(d)) { var n = new Date(); d = new Date(n.getFullYear(), n.getMonth() + 1, 1); }
+    return d;
+  }
+  function renewText(q) { var d = renewDate(q); return (d.getDate() === 1 ? '1º' : d.getDate()) + ' de ' + MONTHS[d.getMonth()]; }
   function downloadLeads() {
     fetch('/api/admin/tryon/leads.csv', { headers: { Authorization: 'Bearer ' + TOKEN } }).then(function (r) {
       if (!r.ok) throw new Error('Não deu para baixar agora');
@@ -772,7 +778,7 @@
             q.exhausted ? h('span', { class: 'chip bad', text: 'Esgotado' }) : h('span', { class: 'chip ok', text: 'Ativo' })),
           h('div', { class: 'usage' + (q.exhausted ? ' bad' : '') }, h('b', { text: nf(q.used) }), h('span', { text: 'de ' + nf(q.plan.quota) + ' provas' })),
           meter,
-          h('p', { class: 'usage-cap', text: 'Renova em ' + renewText() + '. Quando as provas do mês acabam, o botão sai da loja até renovar.' })) : quotaBanner(q),
+          h('p', { class: 'usage-cap', text: 'Renova em ' + renewText(q) + '. Quando as provas acabam, o botão sai da loja até renovar.' })) : quotaBanner(q),
         h('div', { class: 'plans' }, cards, volCard),
       ]);
     }).catch(fail);
@@ -875,8 +881,8 @@
     meter.setAttribute('aria-valuenow', String(p));
     meter.firstElementChild.style.width = (q.used ? Math.max(2, p) : 0) + '%';
     document.getElementById('storePct').textContent = q.exhausted ? 'Provas esgotadas' : p + '% usado';
-    var next = (new Date().getMonth() + 1) % 12 + 1;
-    document.getElementById('storeRenew').textContent = 'Renova 1º/' + String(next).padStart(2, '0');
+    var rd = renewDate(q);
+    document.getElementById('storeRenew').textContent = 'Renova ' + String(rd.getDate()).padStart(2, '0') + '/' + String(rd.getMonth() + 1).padStart(2, '0');
     box.hidden = false;
     btn.textContent = 'Ver planos';
   }

@@ -95,7 +95,8 @@ function markUninstalled(storeId) {
 function redactStore(storeId) {
   const db = getDb();
   const id = Number(storeId);
-  const plan = getStore(id)?.settings?.tryon?.plan;
+  const kept = getStore(id)?.settings?.tryon || {};
+  const plan = kept.plan;
   try { require('../tryon/service').deleteStoreFiles(id); } catch { /* sem arquivos */ }
   for (const t of ['events', 'products', 'order_claims',
     'tryon_photos', 'tryon_jobs', 'tryon_products', 'tryon_image_info', 'tryon_leads', 'tryon_lead_links', 'tryon_shares', 'tryon_sales']) {
@@ -106,7 +107,7 @@ function redactStore(storeId) {
     return { keptPlan: null };
   }
   db.prepare('UPDATE stores SET name = NULL, domain = NULL, scope = NULL, last_sync_at = NULL, settings = ? WHERE id = ?')
-    .run(JSON.stringify({ tryon: { plan } }), id);
+    .run(JSON.stringify({ tryon: { plan, planSince: kept.planSince } }), id);
   return { keptPlan: plan };
 }
 

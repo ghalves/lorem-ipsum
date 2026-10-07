@@ -59,6 +59,28 @@ function monthStart(now = Date.now()) {
   const start = Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), 1) + 3 * 3600000;
   return sqlTime(new Date(start));
 }
+/**
+ * Ciclo da cota: renova todo mês no dia em que o plano foi ativado (00:00 de
+ * Brasília), como a cobrança recorrente. Dia 29 a 31 em mês mais curto: vale o
+ * último dia do mês. Sem data de ativação (lojas de antes desta regra): dia 1º.
+ */
+function planCycle(planSince, now = Date.now()) {
+  const BR = 3 * 3600000;
+  let day = 1;
+  const t = Date.parse(planSince || '');
+  if (Number.isFinite(t)) day = new Date(t - BR).getUTCDate();
+  const at = (y, m) => {
+    const last = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+    return Date.UTC(y, m, Math.min(day, last)) + BR;
+  };
+  const local = new Date(now - BR);
+  let y = local.getUTCFullYear();
+  let m = local.getUTCMonth();
+  if (at(y, m) > now) { m -= 1; if (m < 0) { m = 11; y -= 1; } }
+  const start = at(y, m);
+  const end = m === 11 ? at(y + 1, 0) : at(y, m + 1);
+  return { start: sqlTime(new Date(start)), renewsAt: new Date(end).toISOString() };
+}
 const hoursAgo = (h) => sqlTime(new Date(Date.now() - h * 3600000));
 /** IP guardado só como hash com o segredo do servidor (serve para contar, não para identificar). */
 function ipKey(ip) {
@@ -215,7 +237,8 @@ function brandFor(store) {
 function quota(store) {
   const t = tryonSettings(store);
   const plan = getPlan(t.plan || cfg.defaultPlan);
-  const since = monthStart();
+  const cycle = planCycle(t.planSince);
+  const since = cycle.start;
   const q = getDb().prepare(`SELECT
       SUM(CASE WHEN status = 'done' THEN 1 ELSE 0 END) AS used,
       SUM(CASE WHEN status IN ('queued', 'running') THEN 1 ELSE 0 END) AS pending
@@ -227,12 +250,27 @@ function quota(store) {
     plan: { key: plan.key, name: plan.name, price: plan.price, quota: plan.quota },
     used, pending, remaining,
     // em andamento também reservam: evita passar da cota com várias provas ao mesmo tempo
-    // cota do mês no fim: o botão some da loja até o dia 1º (sem provas extras)
+    // cota do ciclo no fim: o botão some da loja até renovar (sem provas extras)
     available: used + pending < plan.quota,
     alert: plan.quota > 0 && used >= plan.quota * ALERT_AT,
     exhausted: plan.quota > 0 ? used >= plan.quota : true,
     since,
+    renewsAt: cycle.renewsAt,
   };
+}
+
+/**
+ * Define o plano da loja (operador: sudo miaou plano). Plano novo, ou loja que
+ * volta de "sem plano", começa o ciclo da cota hoje; trocar de plano (upgrade)
+ * ou repetir o mesmo plano mantém o dia de renovação.
+ */
+function setPlan(storeId, key) {
+  const store = svc.getStore(storeId);
+  const prev = store?.settings?.tryon || {};
+  const patch = { plan: key };
+  if (key !== 'none' && (!prev.plan || prev.plan === 'none' || !prev.planSince)) patch.planSince = new Date().toISOString();
+  svc.updateSettings(storeId, { tryon: patch });
+  return quota(svc.getStore(storeId));
 }
 
 /** Provador pode aparecer na vitrine desta loja/produto? */
@@ -841,5 +879,5 @@ function stats(storeId, period = 30) {
 module.exports = {
   validShopper, savePhoto, getPhoto, prepare, productKind, availability, quota, needsLead, hasLead, saveLead, listLeads, findLead, deleteLead,
   normalizePhone, validateWhatsapp, brandFor, createJob, uploadBlocked, shopperDailyLimit, getJob, publicJob, history, setFeedback, createShare, getShare, countShare,
-  deleteShopperData, deleteStoreFiles, purge, recordSale, stats, statsWindow, monthStart, parse,
+  deleteShopperData, deleteStoreFiles, purge, recordSale, stats, statsWindow, monthStart, planCycle, setPlan, parse,
 };

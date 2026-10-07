@@ -158,7 +158,7 @@ router.put('/tryon/plan', (req, res) => {
   if (!config.tryon.allowSelfPlan) return res.status(403).json({ error: 'Troca de plano pelo suporte Miaou' });
   const key = String(req.body?.plan || '');
   if (!isPlan(key)) return bad(res, ['Plano inválido']);
-  svc.updateSettings(req.store.id, { tryon: { plan: key } });
+  tryon.setPlan(req.store.id, key);
   res.json({ quota: tryon.quota(svc.getStore(req.store.id)) });
 });
 // ---- aparência do provador ("Estilo da loja") ----
