@@ -14,7 +14,7 @@
 
 ---
 
-## Cena 1 · Instalação pela Nuvemshop (lojista sem conta) — ~40 s
+## Cena 1 · Instalação pela Nuvemshop (lojista sem conta) (~40 s)
 
 1. Com o admin aberto, digite na barra de endereço: `https://www.tiendanube.com/apps/44305/authorize`
 2. Mostre a tela de permissões e clique em **Aceitar e começar a usar**.
@@ -22,14 +22,14 @@
 
 > Legenda/narração: "Não há cadastro separado: a conta é criada automaticamente na instalação."
 
-## Cena 2 · Login (lojista que já tem conta) — ~20 s
+## Cena 2 · Login (lojista que já tem conta) (~20 s)
 
 1. Feche a aba do painel.
 2. No admin, vá em **Meus aplicativos** e abra o **Miaou**: o painel abre direto, sem senha.
 
 > "O login é sempre pelo admin da Nuvemshop."
 
-## Cena 3 · Uso na loja e compra — ~2 min
+## Cena 3 · Uso na loja e compra (~2 min)
 
 1. Abra a página da **Polo Tricot** e mostre o botão **Provar em mim**.
 2. Clique, envie a foto e mostre o resultado.
@@ -40,19 +40,19 @@
 
 > "A venda só conta quando a Nuvemshop confirma o pagamento e o produto provado está no pedido."
 
-## Cena 4 · Produto alterado no admin — ~30 s
+## Cena 4 · Produto alterado no admin (~30 s)
 
 1. No admin, mude o nome da **CALÇA BLAIR UVA** (por exemplo, para "Calça Blair Uva Wide Leg") e salve.
 2. No painel do Miaou, abra **Produtos**: o nome novo já aparece.
 
 > "O Miaou não consulta a API o tempo todo: a Nuvemshop avisa por webhook."
 
-## Cena 5 · Desinstalação — ~30 s
+## Cena 5 · Desinstalação (~30 s)
 
 1. Em **Meus aplicativos**, desinstale o Miaou.
 2. Recarregue a página da Polo na loja: o botão **sumiu**.
 
-## Cena 6 · Reinstalação — ~40 s
+## Cena 6 · Reinstalação (~40 s)
 
 1. Abra de novo `https://www.tiendanube.com/apps/44305/authorize` e aceite as permissões.
 2. O dashboard abre de novo, **zerado**: na desinstalação a Nuvemshop pede para apagar os dados da loja (LGPD) e o Miaou apaga. O plano continua valendo.

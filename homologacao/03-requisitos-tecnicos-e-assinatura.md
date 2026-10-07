@@ -1,4 +1,4 @@
-# Miaou · Provador virtual — Requisitos técnicos e assinatura
+# Miaou · Provador virtual: Requisitos técnicos e assinatura
 
 ## 1. Resumo técnico
 

@@ -1,4 +1,4 @@
-**Assunto:** Re: Homologação do aplicativo Miaou: Provador Virtual — artefatos e arquivos de publicação
+**Assunto:** Re: Homologação do aplicativo Miaou: Provador Virtual, artefatos e arquivos de publicação
 
 Olá, equipe Nuvemshop! Tudo bem?
 
