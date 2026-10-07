@@ -81,6 +81,12 @@ router.get('/', (req, res) => {
 // o painel usa para saber se está num ambiente de teste (volta sozinho para a loja demo)
 router.get('/ping', (req, res) => res.json({ ok: true }));
 
+// "Estilo da loja" na loja demo: a leitura do tema usa esta página, cópia do bloco
+// de estilo de um tema real da Nuvemshop (Ipanema), em vez de um domínio de verdade
+router.get('/tema/', (req, res) => {
+  res.type('html').sendFile(require('node:path').join(__dirname, '..', '..', 'test', 'fixtures', 'tema-ipanema.html'));
+});
+
 router.get('/login', (req, res) => {
   seed();
   res.redirect(`/dashboard/#session=${createSession(DEMO_STORE)}`);

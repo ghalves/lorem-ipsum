@@ -136,11 +136,11 @@
       '@keyframes szp-wave{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(12deg)}}' +
       '@keyframes szp-tw{0%,100%{opacity:.15}40%{opacity:1}}' +
       '@media (prefers-reduced-motion:reduce){.szp-anim svg,.szp-anim path{animation:none!important}}' +
-      '.szp-tryon-ov{position:fixed;inset:0;z-index:2147483000;background:rgba(30,29,28,.38);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:0;transition:opacity 220ms cubic-bezier(.4,0,.2,1)}' +
+      '.szp-tryon-ov{position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.4);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:0;transition:opacity 220ms cubic-bezier(.4,0,.2,1)}' +
       '.szp-tryon-ov.szp-open{opacity:1}' +
       '.szp-sheet{position:fixed;z-index:2147483001;border:0;background:#fff;box-shadow:0 -8px 32px rgba(0,0,0,.12);transition:transform 280ms cubic-bezier(.2,.8,.2,1),height 240ms cubic-bezier(.4,0,.2,1)}' +
-      '@media (max-width:640px){.szp-sheet{left:0;right:0;bottom:0;width:100vw;height:72vh;max-height:calc(100% - 24px);border-radius:24px 24px 0 0;transform:translateY(105%)}.szp-sheet.szp-open{transform:translateY(0)}}' +
-      '@media (min-width:641px){.szp-sheet{right:16px;top:16px;bottom:16px;width:440px;height:calc(100% - 32px);max-width:calc(100vw - 32px);border-radius:20px;box-shadow:0 8px 40px rgba(0,0,0,.14);transform:translateX(calc(100% + 32px))}.szp-sheet.szp-open{transform:translateX(0)}}';
+      '@media (max-width:640px){.szp-sheet{left:0;right:0;bottom:0;width:100vw;height:72vh;max-height:calc(100% - 24px);border-radius:32px 32px 0 0;transform:translateY(105%)}.szp-sheet.szp-open{transform:translateY(0)}}' +
+      '@media (min-width:641px){.szp-sheet{right:16px;top:16px;bottom:16px;width:440px;height:calc(100% - 32px);max-width:calc(100vw - 32px);border-radius:32px;box-shadow:0 20px 25px -5px rgba(0,0,0,.1),0 8px 10px -6px rgba(0,0,0,.1);transform:translateX(calc(100% + 32px))}.szp-sheet.szp-open{transform:translateX(0)}}';
     var stEl = document.createElement('style');
     stEl.id = 'szp-styles';
     stEl.textContent = css;

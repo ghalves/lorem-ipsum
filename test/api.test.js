@@ -66,6 +66,8 @@ function mockNuvemshop() {
       ? [{ product_id: 2, variant_values: ['Preto', 'G'], quantity: 1 }]
       : [{ product_id: 1, variant_values: ['Preto', 'M'], quantity: 1 }],
   }));
+  // página da loja lida pelo "Estilo da loja" (amostra real do tema Ipanema)
+  app.get('/tema/', (req, res) => res.sendFile(require('node:path').join(__dirname, 'fixtures', 'tema-ipanema.html')));
   return app;
 }
 
@@ -81,7 +83,7 @@ test.before(async () => {
   Object.assign(process.env, {
     DATABASE_PATH: ':memory:', SESSION_SECRET: 'sess', NUVEMSHOP_APP_ID: '123',
     NUVEMSHOP_CLIENT_SECRET: SECRET, NUVEMSHOP_API_BASE: mockUrl, NUVEMSHOP_AUTH_BASE: mockUrl,
-    NUVEMSHOP_SCRIPT_ID: '555', APP_URL: 'http://app.test',
+    NUVEMSHOP_SCRIPT_ID: '555', APP_URL: 'http://app.test', STORE_STYLE_URL: `${mockUrl}/tema/`,
   });
   const { createApp } = require('../src/app');
   const app = await listen(createApp());
@@ -175,6 +177,64 @@ test('painel: preferências validadas; campos desconhecidos são ignorados', asy
   for (const path of ['/charts', '/templates', '/reports', '/feedback', '/categories']) {
     assert.equal((await adminApi('GET', path)).status, 404, `${path} não existe mais`);
   }
+});
+
+test('aparência: Estilo da loja só do Crescer para cima, lido sozinho e aplicado no provador', async () => {
+  const svc = require('../src/lib/store-service');
+  const sessionStyle = async () => (await (await fetch(`${base}/api/tryon/${STORE_ID}/session?product=1`)).json()).style;
+  assert.equal(await sessionStyle(), null, 'padrão: Estilo Miaou');
+  // plano Essencial: recurso bloqueado
+  svc.updateSettings(STORE_ID, { tryon: { plan: 'essencial' } });
+  assert.equal((await adminApi('GET', '/me')).body.look.allowed, false);
+  assert.equal((await adminApi('PUT', '/settings', { tryon: { look: { mode: 'loja' } } })).status, 403);
+  assert.equal((await adminApi('POST', '/tryon/look/refresh')).status, 403);
+  // validação
+  for (const look of [{ mode: 'x' }, { buttonBg: 'red;}' }, { buttonRadius: 99 }, 'loja']) {
+    assert.equal((await adminApi('PUT', '/settings', { tryon: { look } })).status, 400, JSON.stringify(look));
+  }
+  // fonte e endereço da fonte não entram pelo painel
+  const sneaky = await adminApi('PUT', '/settings', { tryon: { look: { font: 'Evil', fontHref: 'https://evil.test/x.css' } } });
+  assert.equal(sneaky.status, 200);
+  assert.equal(sneaky.body.settings.tryon.look.font, undefined);
+  // Crescer: ligar o Estilo da loja lê o tema na hora (sem botão)
+  svc.updateSettings(STORE_ID, { tryon: { plan: 'crescer' } });
+  const on = await adminApi('PUT', '/settings', { tryon: { look: { mode: 'loja' } } });
+  assert.equal(on.status, 200);
+  assert.ok(on.body.look.detectedAt, 'leu o tema ao ligar');
+  assert.equal(on.body.look.theme, 'ipanema');
+  let st = await sessionStyle();
+  assert.equal(st.buttonBg, '#000000');
+  assert.equal(st.buttonFg, '#ffffff');
+  assert.equal(st.buttonRadius, 0);
+  assert.equal(st.cardRadius, 8);
+  assert.equal(st.font, 'Zalando Sans');
+  assert.match(st.fontHref, /^https:\/\/fonts\.googleapis\.com\//);
+  // ajuste à mão sobrevive à releitura do tema
+  await adminApi('PUT', '/settings', { tryon: { look: { buttonBg: '#ffff00', buttonFg: '#ffffff', cardRadius: 20 } } });
+  const reread = await adminApi('POST', '/tryon/look/refresh');
+  assert.equal(reread.status, 200);
+  st = await sessionStyle();
+  assert.equal(st.buttonBg, '#ffff00', 'ajuste mantido');
+  assert.equal(st.buttonFg, '#000000', 'contraste garantido');
+  assert.equal(st.cardRadius, 20);
+  assert.equal(st.buttonRadius, 0, 'o resto segue a loja');
+  // voltar ao da loja
+  await adminApi('PUT', '/settings', { tryon: { look: { buttonBg: null, buttonFg: null, cardRadius: null } } });
+  assert.equal((await sessionStyle()).buttonBg, '#000000');
+  // prévia do painel: mesmo cálculo, sem salvar
+  const pv = await adminApi('POST', '/tryon/look/preview', { look: { buttonBg: '#1e3a8a', buttonRadius: 30 } });
+  assert.equal(pv.status, 200);
+  assert.match(pv.body.vars, /--btn-bg:#1e3a8a/);
+  assert.match(pv.body.vars, /--btn-radius:9999px/);
+  assert.equal((await sessionStyle()).buttonBg, '#000000', 'a prévia não salva');
+  // descer de plano: o provador volta ao Estilo Miaou sozinho
+  svc.updateSettings(STORE_ID, { tryon: { plan: 'essencial' } });
+  assert.equal(await sessionStyle(), null);
+  // a página do provador aceita a fonte do Google; a prévia abre sem sessão
+  const csp = (await fetch(`${base}/tryon/?store=${STORE_ID}&preview=1`)).headers.get('content-security-policy');
+  assert.match(csp, /font-src 'self' https:\/\/fonts\.gstatic\.com/);
+  // volta ao padrão para os outros testes
+  svc.updateSettings(STORE_ID, { tryon: { look: { mode: 'miaou' } } });
 });
 
 test('webhook com HMAC válido atualiza produto; inválido é rejeitado', async () => {

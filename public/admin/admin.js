@@ -12,6 +12,7 @@
 
   var view = document.getElementById('view');
   var state = { me: null };
+  var closeNav = function () {};   // fecha a gaveta do celular (definida em chrome(), lá embaixo)
 
   // ---------- helpers ----------
   function h(tag, attrs) {
@@ -56,12 +57,34 @@
     toastTimer = setTimeout(function () { t.className = 'toast'; }, 3200);
   }
   function fail(e) { toast(e.message || 'Erro', true); }
-  // cabeçalho de página do design system: título leve à esquerda, ferramentas à direita
+  // cabeçalho de página: título e subtítulo curto à esquerda, ferramentas à direita
+  // (sub pode ser um texto ou um elemento, como o "Atualizado…" da Visão geral)
   function pageHead(title, sub, tools) {
     return h('div', { class: 'page-head' },
-      h('div', { class: 'tt' }, h('h1', { text: title }), sub ? h('p', { class: 'sub', text: sub }) : null),
+      h('div', { class: 'tt' }, h('h1', { text: title }), sub ? (sub.nodeType ? sub : h('p', { class: 'sub', text: sub })) : null),
       tools ? h('div', { class: 'tools' }, tools) : null);
   }
+
+  // Cores com significado (as mesmas em todo o painel):
+  // rosa = uso do provador, verde = dinheiro. Hex direto porque vão em atributos SVG.
+  var C = { provas: '#f5286a', pessoas: '#f97aa0', vendas: '#22c55e', receita: '#15803d' };
+
+  // "Atualizado neste instante." só vale logo depois de os números chegarem.
+  // Com a tela aberta, a frase envelhece sozinha ("Atualizado há 5 min."), para nunca mentir.
+  var fresh = { timer: null, at: 0, el: null };
+  function freshText(ms) {
+    var min = Math.floor(ms / 60000);
+    if (min < 1) return 'Atualizado neste instante.';
+    if (min < 60) return 'Atualizado há ' + min + ' min.';
+    var hr = Math.floor(min / 60);
+    return 'Atualizado há ' + hr + ' h.';
+  }
+  function paintFresh() { if (fresh.el && fresh.at) fresh.el.textContent = freshText(Date.now() - fresh.at); }
+  function startFresh(el) { stopFresh(); fresh.el = el; fresh.at = 0; }
+  function markFresh() { fresh.at = Date.now(); paintFresh(); clearInterval(fresh.timer); fresh.timer = setInterval(paintFresh, 15000); }
+  function stopFresh() { clearInterval(fresh.timer); fresh.timer = null; fresh.el = null; fresh.at = 0; }
+  // voltar para a aba do navegador: corrige a frase na hora (o intervalo pode ter sido pausado)
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) paintFresh(); });
   // Ícones: Hugeicons Free (Stroke Rounded), carregados de icons.js.
   var ICON = window.VIBE_ICONS || {};
   function icon(name) {
@@ -91,20 +114,20 @@
     svg.appendChild(svgEl('path', { d: d, fill: 'none', stroke: color, 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
     return svg;
   }
+  // cartão de número: rótulo com a bolinha da cor da métrica, valor, micro-gráfico,
+  // variação contra o período anterior (verde sobe, vermelho cai) e uma nota
   function kpi(o) {
-    var box = h('div', { class: 'kpi' },
-      h('div', { class: 'k-lab' }, o.label, o.help ? h('span', { class: 'k-help', title: o.help, text: '?' }) : null),
-      h('div', { class: 'k-val', text: o.value }));
+    var box = h('div', { class: 'kpi', style: '--k:' + o.color },
+      h('div', { class: 'k-lab' }, h('span', { class: 'k-txt', text: o.label }), o.help ? h('span', { class: 'k-help', title: o.help, text: '?' }) : null),
+      h('div', { class: 'k-val' }, o.cur ? h('span', { class: 'cur', text: o.cur }) : null, o.value));
     if (o.delta) {
-      var d = h('div', { class: 'k-delta' + (o.up === true ? ' up' : o.up === false ? ' down' : '') });
-      if (o.up != null) d.appendChild(icon(o.up ? 'arrowUp' : 'arrowDown'));
-      d.appendChild(document.createTextNode(o.delta));
-      box.appendChild(d);
+      box.appendChild(h('div', { class: 'k-delta' + (o.delta.up === true ? ' up' : o.delta.up === false ? ' down' : '') },
+        o.delta.b ? h('b', { text: o.delta.b }) : null, o.delta.text));
     }
     if (o.note) box.appendChild(h('div', { class: 'k-note', text: o.note }));
     if (o.series && o.series.length > 1) {
       var sp = h('div', { class: 'k-spark' });
-      sp.appendChild(sparkline(o.series, o.color || 'var(--data-1)'));
+      sp.appendChild(sparkline(o.series, o.color));
       box.appendChild(sp);
     }
     return box;
@@ -232,6 +255,8 @@
   });
   function go(tab) {
     Array.prototype.forEach.call(tabs.children, function (b) { b.setAttribute('aria-selected', String(b.getAttribute('data-tab') === tab)); });
+    stopFresh();
+    closeNav();
     view.innerHTML = '';
     ({ tryon: renderTryon, leads: renderLeads, prefs: renderPrefs, plan: renderPlan, products: renderProducts })[tab]();
   }
@@ -279,53 +304,76 @@
     var days = h('select', { class: 'chip-btn', 'aria-label': 'Período' },
       PERIODS.map(function (p) { return h('option', { value: p[0], text: p[1], selected: p[0] === '30' }); }));
     function periodText() { var o = days.options[days.selectedIndex]; return o.value === 'today' || o.value === 'yesterday' ? o.text.toLowerCase() : 'últimos ' + o.text; }
+    // com o que a janela atual é comparada (o servidor usa uma janela anterior do mesmo tamanho)
+    function vsText() {
+      var v = days.value;
+      return v === 'today' ? 'vs. ontem' : v === 'yesterday' ? 'vs. anteontem' : 'vs. ' + v + ' dias anteriores';
+    }
+    // variação: "+20%" em verde, "−12%" em vermelho; sem base de comparação, só o período
+    function deltaOf(now, before, fmt) {
+      if (before == null) return { text: periodText() };
+      now = Number(now) || 0; before = Number(before) || 0;
+      if (now === before) return { text: 'Sem mudança ' + vsText() };
+      if (before === 0) return { b: '+' + (fmt || nf)(now), text: ' ' + vsText(), up: true };
+      var p = Math.round((now - before) / before * 100);
+      if (p === 0) return { text: 'Sem mudança ' + vsText() };
+      return { b: (p > 0 ? '+' : '−') + nf(Math.abs(p)) + '%', text: ' ' + vsText(), up: p > 0 };
+    }
+    var updated = h('p', { class: 'sub', text: 'Carregando…' });
+    startFresh(updated);
     var box = h('div');
     // hoje e ontem: série por hora; demais períodos: por dia
     function lbl(row) { return row.hour != null ? String(row.hour).padStart(2, '0') + 'h' : row.day.slice(8, 10) + '/' + row.day.slice(5, 7); }
     // acima de 100% a etapa anterior não registrou tudo (ex.: aberturas contadas só a partir da versão nova): sem porcentagem
     function rate(a, b) { return b && a <= b ? pct(a / b) : null; }
+    var seq = 0;
     function load() {
+      var my = ++seq;
+      if (fresh.at) updated.textContent = 'Atualizando…';
       api('GET', '/tryon?period=' + days.value).then(function (r) {
+        // resposta velha (trocou o período de novo) ou a tela já é outra: ignora
+        if (my !== seq || !document.body.contains(box)) return;
         var q = r.quota, s = r.stats, d = s.daily || [], pv = s.previous;
+        state.me.tryon = q; paintStore();
         var col = function (k) { return d.map(function (x) { return x[k] || 0; }); };
-        var cmp = function (now, key, fmt) { return pv ? { delta: prevText(now, pv[key], fmt), up: upFlag(now, pv[key]) } : { delta: periodText() }; };
         // receita comparada ao plano: só em janelas de 30 dias ou mais (o plano é mensal)
         var planMult = q.plan.price && s.revenue && s.days >= 30 ? s.revenue / (q.plan.price * s.days / 30) : null;
         box.innerHTML = '';
         add(box, [
           quotaBanner(q),
           kpiRow([
-            Object.assign({ label: 'Provas', help: 'Provas prontas no período. Erros não contam.', value: nf(s.tryons),
-              note: q.plan.quota ? nf(q.used) + ' de ' + nf(q.plan.quota) + ' no mês' : null, series: col('tryons'), color: 'var(--data-2)' }, cmp(s.tryons, 'tryons')),
-            Object.assign({ label: 'Pessoas que provaram', help: 'Compradores diferentes que viram pelo menos uma prova.', value: nf(s.people),
-              note: s.people ? String(Math.round(s.tryons / s.people * 10) / 10).replace('.', ',') + ' provas por pessoa' : null, series: col('people'), color: 'var(--data-2)' }, cmp(s.people, 'people')),
-            Object.assign({ label: 'Vendas com o provador', help: 'Pedidos pagos com um produto que o comprador provou antes, em qualquer tamanho.', value: nf(s.sales),
-              note: s.people ? pct(s.sales / s.people) + ' de quem provou comprou' : null, series: col('sales'), color: 'var(--data-1)' }, cmp(s.sales, 'sales')),
-            Object.assign({ label: 'Receita com o provador', help: 'Soma dos produtos provados nos pedidos pagos (preço x quantidade). Outros itens do pedido não entram.', value: brl(s.revenue),
-              note: planMult ? String(Math.round(planMult * 10) / 10).replace('.', ',') + '× o valor do plano' : null, series: col('revenue'), color: 'var(--data-1)' }, cmp(s.revenue, 'revenue', brl)),
+            { label: 'Provas', help: 'Provas prontas no período. Erros não contam.', value: nf(s.tryons), color: C.provas,
+              note: q.plan.quota ? nf(q.used) + ' de ' + nf(q.plan.quota) + ' no mês' : null, series: col('tryons'), delta: deltaOf(s.tryons, pv && pv.tryons) },
+            { label: 'Pessoas que provaram', help: 'Compradores diferentes que viram pelo menos uma prova.', value: nf(s.people), color: C.pessoas,
+              note: s.people ? String(Math.round(s.tryons / s.people * 10) / 10).replace('.', ',') + ' provas por pessoa' : null, series: col('people'), delta: deltaOf(s.people, pv && pv.people) },
+            { label: 'Vendas com o provador', help: 'Pedidos pagos com um produto que o comprador provou antes, em qualquer tamanho.', value: nf(s.sales), color: C.vendas,
+              note: s.people ? pct(s.sales / s.people) + ' de quem provou comprou' : null, series: col('sales'), delta: deltaOf(s.sales, pv && pv.sales) },
+            { label: 'Receita com o provador', help: 'Soma dos produtos provados nos pedidos pagos (preço x quantidade). Outros itens do pedido não entram.', cur: 'R$', value: nf(Math.round(s.revenue || 0)), color: C.receita,
+              note: planMult ? String(Math.round(planMult * 10) / 10).replace('.', ',') + '× o valor do plano' : null, series: col('revenue'), delta: deltaOf(s.revenue, pv && pv.revenue, brl) },
           ]),
           h('div', { class: 'card' }, h('div', { class: 'card-head' }, h('h2', { text: 'Quem provou e quem comprou' })),
             s.tryons ? lineChart(d, [
-              { key: 'people', label: 'Pessoas que provaram', color: 'var(--data-2)' },
-              { key: 'sales', label: 'Vendas', color: 'var(--data-1)' },
+              { key: 'people', label: 'Pessoas que provaram', color: C.provas },
+              { key: 'sales', label: 'Vendas', color: C.vendas },
             ], lbl) : h('p', { class: 'chart-empty', text: 'As provas aparecem aqui assim que os compradores começarem a usar.' })),
           h('div', { class: 'grid cols-2' },
+            // rosa do claro ao escuro a cada etapa; verde só onde entra dinheiro (Compraram)
             h('div', { class: 'card' }, h('div', { class: 'card-head' }, h('h2', { text: 'Do botão à compra' })),
               barList([
-                { label: 'Viram o botão', n: s.views, wide: true },
-                { label: 'Abriram', n: s.opened, rate: rate(s.opened, s.views), wide: true },
-                { label: 'Provaram', n: s.triedVisits, rate: rate(s.triedVisits, s.opened), wide: true },
-                { label: 'Clicaram em Comprar', n: s.buys, rate: rate(s.buys, s.triedVisits), wide: true },
-                { label: 'Compraram', n: s.sales, rate: rate(s.sales, s.triedVisits), wide: true, color: 'var(--data-1)' },
+                { label: 'Viram o botão', n: s.views, wide: true, color: 'var(--pink-3)' },
+                { label: 'Abriram', n: s.opened, rate: rate(s.opened, s.views), wide: true, color: 'var(--pink-2)' },
+                { label: 'Provaram', n: s.triedVisits, rate: rate(s.triedVisits, s.opened), wide: true, color: 'var(--pink-15)' },
+                { label: 'Clicaram em Comprar', n: s.buys, rate: rate(s.buys, s.triedVisits), wide: true, color: 'var(--pink)' },
+                { label: 'Compraram', n: s.sales, rate: rate(s.sales, s.triedVisits), wide: true, color: 'var(--green)' },
               ]),
-              h('p', { class: 'muted note', text: 'Cada etapa conta visitas à loja. A porcentagem compara com a etapa anterior, e em Compraram compara com quem provou.' })),
+              h('p', { class: 'note', text: 'Cada etapa conta visitas à loja. A porcentagem compara com a etapa anterior, e em Compraram compara com quem provou.' })),
             h('div', { class: 'card' }, h('div', { class: 'card-head' }, h('h2', { text: 'Compartilhamentos' })),
               barList([
-                { label: 'Links criados', n: s.shares, wide: true, color: 'var(--data-2)' },
-                { label: 'Abriram o link', n: s.shareViews, wide: true, color: 'var(--data-2)' },
-                { label: 'Foram à loja', n: s.shareClicks, rate: rate(s.shareClicks, s.shareViews), wide: true, color: 'var(--data-1)' },
+                { label: 'Links criados', n: s.shares, wide: true, color: 'var(--pink-3)' },
+                { label: 'Abriram o link', n: s.shareViews, wide: true, color: 'var(--pink-2)' },
+                { label: 'Foram à loja', n: s.shareClicks, rate: rate(s.shareClicks, s.shareViews), wide: true, color: 'var(--pink)' },
               ]),
-              h('p', { class: 'muted note', text: 'Quem abre o link compartilhado vê a prova e pode provar também ou ir direto ao produto.' }))),
+              h('p', { class: 'note', text: 'Quem abre o link compartilhado vê a prova e pode provar também ou ir direto ao produto.' }))),
           h('div', { class: 'card' }, h('div', { class: 'card-head' }, h('h2', { text: 'Produtos mais provados' })),
             // no celular: nome e, logo abaixo, "95 provas · 13 vendas · 14% compraram" (data-short)
             s.top && s.top.length ? h('table', { class: 't top-t' },
@@ -334,14 +382,20 @@
                 return h('tr', null, h('td', { text: p.name || ('#' + p.id) }),
                   h('td', { class: 'num', text: nf(p.tryons), 'data-short': Number(p.tryons) === 1 ? 'prova' : 'provas' }),
                   h('td', { class: 'num', text: nf(p.sales), 'data-short': Number(p.sales) === 1 ? 'venda' : 'vendas' }),
-                  h('td', { class: 'num', text: p.tryons ? pct(p.sales / p.tryons) : '0%', 'data-short': 'compraram' }));
+                  h('td', { class: 'num conv', text: p.tryons ? pct(p.sales / p.tryons) : '0%', 'data-short': 'compraram' }));
               }))) : h('p', { class: 'chart-empty', text: 'Ainda sem provas no período.' }),
-            s.avgSeconds ? h('p', { class: 'muted note' }, icon('timer'), 'Tempo médio de uma prova: ' + String(s.avgSeconds).replace('.', ',') + ' s') : null),
+            s.avgSeconds ? h('p', { class: 'note' }, icon('timer'), 'Tempo médio de uma prova: ' + String(s.avgSeconds).replace('.', ',') + ' s') : null),
         ]);
-      }).catch(fail);
+        markFresh();
+      }).catch(function (e) {
+        if (my !== seq) return;
+        // não diz que está atualizado se não está: volta à idade real dos números (ou avisa)
+        if (fresh.at) paintFresh(); else updated.textContent = 'Não deu para carregar agora.';
+        fail(e);
+      });
     }
     days.addEventListener('change', load);
-    add(view, [pageHead('Visão geral', null, [days]), box]);
+    add(view, [pageHead('Visão geral', updated, [days]), box]);
     load();
   }
 
@@ -350,7 +404,7 @@
     api('GET', '/tryon/leads?limit=500').then(function (r) {
       var leads = r.leads, on = !!(state.me.settings.tryon || {}).leadCapture;
       add(view, [
-        pageHead('Leads', null,
+        pageHead('Leads', 'Converse com quem já provou.',
           leads.length ? [chipBtn('Baixar planilha', 'download', downloadLeads)] : null),
         on ? null : h('div', { class: 'banner' }, icon('whatsapp'), h('div', { class: 'banner-t' }, h('b', { text: 'A captura de WhatsApp está desligada' }),
           h('span', { text: 'Ligue em Preferências: o comprador faz a primeira prova e informa o WhatsApp para continuar.' })),
@@ -365,7 +419,7 @@
                 h('td', { class: 'hide-sm', text: fmtDate(l.created_at) }),
                 h('td', { class: 'act' }, h('a', { class: 'chip-btn', href: wa, target: '_blank', rel: 'noopener' }, icon('whatsapp'), 'Conversar')));
             }))) : h('p', { class: 'chart-empty', text: on ? 'Os números aparecem aqui quando os compradores fizerem a segunda prova.' : 'Nenhum contato ainda.' })),
-        h('p', { class: 'muted note', text: 'O comprador informou o WhatsApp para continuar provando.' }),
+        h('p', { class: 'note', text: 'O comprador informou o WhatsApp para continuar provando.' }),
       ]);
     }).catch(fail);
   }
@@ -387,7 +441,7 @@
       dailyOpts.sort(function (a, b) { return a - b; }).map(function (n) { return h('option', { value: n, text: pl(n, 'prova', 'provas'), selected: f.dailyPerShopper === n }); }));
     var btnText = h('input', { type: 'text', value: f.button, maxlength: '40', oninput: function (e) { f.button = e.target.value; } });
     add(view, [
-      pageHead('Preferências'),
+      pageHead('Preferências', 'Personalize o provador da sua loja.'),
       h('div', { class: 'card' }, h('div', { class: 'card-head' }, h('h2', { text: 'Na loja' })),
         sw('enabled', 'Provador na loja', 'Mostra o botão nas páginas de produto com foto.'),
         sw('buttonIcon', 'Ícone no botão', 'Mostra o ícone antes do texto. Desligado, o botão fica só com o texto.'),
@@ -396,6 +450,7 @@
           ? sw('showBrand', 'Marca Miaou no provador', 'Mostra "Provador virtual por Miaou" no rodapé do provador e do link compartilhado.')
           : sw('showBrand', 'Marca Miaou no provador', 'Para remover a marca, suba para o plano Escalar.', true),
         h('label', { class: 'f', style: 'margin:14px 0 0' }, 'Texto do botão', btnText)),
+      lookCard(f),
       h('div', { class: 'card' }, h('div', { class: 'card-head' }, h('h2', { text: 'WhatsApp' })),
         sw('leadCapture', 'Pedir o WhatsApp', 'O comprador faz as primeiras provas livre; para continuar, informa o WhatsApp. Os números ficam em Leads.'),
         h('div', { class: 'pref' }, h('div', null, h('b', { text: 'Quando pedir' }), h('span', { class: 'muted', text: 'Quantas provas o comprador faz antes.' })), freeSel)),
@@ -405,10 +460,191 @@
       installCard(),
       supportCard(),
       h('div', { class: 'row', style: 'justify-content:flex-end' }, h('button', { class: 'btn primary', text: 'Salvar', onclick: function () {
-        api('PUT', '/settings', { tryon: { enabled: f.enabled, leadCapture: f.leadCapture, freeBeforeLead: f.freeBeforeLead, dailyPerShopper: f.dailyPerShopper, buttonIcon: f.buttonIcon, hideOutOfStock: f.hideOutOfStock, showBrand: f.showBrand, button: f.button.trim() } })
+        api('PUT', '/settings', { tryon: { enabled: f.enabled, leadCapture: f.leadCapture, freeBeforeLead: f.freeBeforeLead, dailyPerShopper: f.dailyPerShopper, buttonIcon: f.buttonIcon, hideOutOfStock: f.hideOutOfStock, showBrand: f.showBrand, button: f.button.trim(), look: f.look } })
           .then(function () { toast('Preferências salvas'); return loadMe(); }).then(function () { go('prefs'); }).catch(fail);
       } })),
     ]);
+  }
+
+  // Aparência do provador: Estilo Miaou ou Estilo da loja. O Miaou lê sozinho
+  // as cores do botão, os cantos e a fonte do tema (e relê a cada 12 h); o
+  // lojista só ajusta o que quiser. A prévia é o provador de verdade num
+  // celular, com um produto da própria loja. Recurso do plano Crescer para cima.
+  var PILL = 30;
+  function lookCard(f) {
+    var me = state.me;
+    var L = me.look || { allowed: false, mode: 'miaou' };
+    // f.look guarda só os ajustes (null = seguir a loja) e o modo
+    f.look = { mode: L.mode === 'loja' && L.allowed ? 'loja' : 'miaou',
+      buttonBg: L.adjusted && L.adjusted.buttonBg ? L.buttonBg : null, buttonFg: L.adjusted && L.adjusted.buttonFg ? L.buttonFg : null,
+      buttonRadius: L.adjusted && L.adjusted.buttonRadius ? L.buttonRadius : null, cardRadius: L.adjusted && L.adjusted.cardRadius ? L.cardRadius : null,
+      useStoreFont: L.useStoreFont !== false };
+    var eff = L;                    // valores efetivos (vêm do servidor a cada ajuste)
+    var lastStyle = null;
+    var screen = 'start';
+    var product = null;
+    var body = h('div', { class: 'look-ctl' });
+
+    // ---- prévia: o provador real num celular ----
+    var frame = h('iframe', { class: 'phone-screen', title: 'Prévia do provador', tabindex: '-1',
+      src: '/tryon/?store=' + encodeURIComponent(me.store.id) + '&preview=1&layout=overlay' });
+    // atrás do provador, a página do produto (como na loja: o card sobe por cima dela)
+    var storeImg = h('div', { class: 'ps-img' });
+    var storeName = h('b', { class: 'ps-name', text: 'Produto da sua loja' });
+    var storePrice = h('span', { class: 'ps-price' });
+    var storePage = h('div', { class: 'phone-store', 'aria-hidden': 'true' },
+      h('div', { class: 'ps-bar' }, h('i'), h('span', { text: (me.store.name || 'Sua loja').toUpperCase() }), h('i')),
+      storeImg, h('div', { class: 'ps-info' }, storeName, storePrice, h('span', { class: 'ps-buy', text: 'Comprar' })));
+    var ready = false;
+    function sendPreview() {
+      if (!ready) return;
+      frame.contentWindow.postMessage({ source: 'miaou-admin', type: 'look', style: f.look.mode === 'loja' ? lastStyle : null, screen: screen, product: product }, location.origin);
+    }
+    // uma escuta só, mesmo voltando a Preferências várias vezes
+    if (window.__lookMsg) window.removeEventListener('message', window.__lookMsg);
+    window.__lookMsg = function (e) {
+      if (e.origin === location.origin && e.data && e.data.source === 'mq-preview' && e.data.type === 'ready' && e.source === frame.contentWindow) { ready = true; sendPreview(); }
+    };
+    window.addEventListener('message', window.__lookMsg);
+    api('GET', '/products?limit=30').then(function (r) {
+      var p = (r.items || []).find(function (x) { return x.image; });
+      if (p) {
+        product = { name: p.name, price: p.price, image: p.image };
+        storeImg.style.backgroundImage = 'url("' + String(p.image).replace(/["\\]/g, '') + '")';
+        storeName.textContent = p.name;
+        storePrice.textContent = p.price ? 'R$ ' + Number(p.price).toFixed(2).replace('.', ',') : '';
+        sendPreview();
+      }
+    }).catch(function () {});
+    var tabs = h('div', { class: 'seg seg-sm', role: 'group', 'aria-label': 'Tela da prévia' },
+      [['start', 'Início'], ['generating', 'Gerando'], ['result', 'Resultado']].map(function (o) {
+        return h('button', { type: 'button', 'aria-pressed': String(o[0] === screen), text: o[1], onclick: function (e) {
+          screen = o[0];
+          Array.prototype.forEach.call(tabs.children, function (b) { b.setAttribute('aria-pressed', String(b === e.currentTarget)); });
+          sendPreview();
+        } });
+      }));
+    // celular: barra de status (hora, sinal, Wi-Fi, bateria), recorte no topo,
+    // o provador como app aberto e a barra de início embaixo
+    var clock = h('span', { class: 'sb-time', text: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) });
+    var sbIcons = h('span', { class: 'sb-icons' });
+    sbIcons.innerHTML =
+      '<svg viewBox="0 0 18 12" aria-hidden="true"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>' +
+      '<svg viewBox="0 0 16 12" aria-hidden="true"><path d="M8 2.2c2.4 0 4.6.9 6.2 2.5l1.3-1.4C13.5 1.3 10.9.2 8 .2S2.5 1.3.5 3.3l1.3 1.4C3.4 3.1 5.6 2.2 8 2.2z"/><path d="M8 5.6c1.5 0 2.8.6 3.8 1.5l1.3-1.4C11.8 4.4 10 3.6 8 3.6S4.2 4.4 2.9 5.7l1.3 1.4c1-.9 2.3-1.5 3.8-1.5z"/><path d="M8 9c.7 0 1.3.3 1.7.7L8 11.6 6.3 9.7C6.7 9.3 7.3 9 8 9z"/></svg>' +
+      '<svg class="bat" viewBox="0 0 27 13" aria-hidden="true"><rect x=".5" y=".5" width="23" height="12" rx="3.5" fill="none" stroke-opacity=".35"/><rect x="2" y="2" width="17" height="9" rx="2"/><path d="M25 4.5v4c.8-.3 1.5-1.1 1.5-2s-.7-1.7-1.5-2z" fill-opacity=".4"/></svg>';
+    var phone = h('div', { class: 'phone' },
+      h('i', { class: 'phone-btn vol-up' }), h('i', { class: 'phone-btn vol-down' }), h('i', { class: 'phone-btn power' }),
+      h('div', { class: 'phone-glass' },
+        h('div', { class: 'phone-status' }, clock, h('span', { class: 'phone-notch' }), sbIcons),
+        h('div', { class: 'phone-app' }, storePage, frame),
+        h('div', { class: 'phone-home' }, h('span'))));
+
+    var timer;
+    function refresh() {
+      if (f.look.mode !== 'loja') { lastStyle = null; sendPreview(); return; }
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        api('POST', '/tryon/look/preview', { look: { buttonBg: f.look.buttonBg, buttonFg: f.look.buttonFg, buttonRadius: f.look.buttonRadius, cardRadius: f.look.cardRadius, useStoreFont: f.look.useStoreFont } })
+          .then(function (r) { lastStyle = r.style; eff = Object.assign({}, eff, r.look); sendPreview(); paintValues(); })
+          .catch(fail);
+      }, 120);
+    }
+    // ler o tema (automático: ao ligar o Estilo da loja pela primeira vez)
+    function readStore() {
+      body.classList.add('busy');
+      return api('POST', '/tryon/look/refresh').then(function (r) { eff = Object.assign({ allowed: true }, r.look); })
+        .catch(function (e) { toast(e.message, true); })
+        .then(function () { body.classList.remove('busy'); render(); });
+    }
+
+    var refs = {};
+    function source(key) {
+      if (!f.look[key] && f.look[key] !== 0) return h('span', { class: 'src', text: 'da loja' });
+      return h('button', { type: 'button', class: 'src link', text: 'usar o da loja', onclick: function () { f.look[key] = null; refresh(); render(); } });
+    }
+    function pxLabel(key, v) {
+      if (key === 'buttonRadius' && v >= PILL) return 'Pílula';
+      return v === 0 ? '0' : v + ' px';
+    }
+    function paintValues() {
+      ['buttonBg', 'buttonFg'].forEach(function (k) { if (refs[k]) { refs[k].input.value = eff[k]; refs[k].hex.textContent = eff[k]; } });
+      ['buttonRadius', 'cardRadius'].forEach(function (k) { if (refs[k]) { refs[k].input.value = eff[k]; refs[k].input.style.setProperty('--fill', (eff[k] / refs[k].max * 100) + '%'); refs[k].out.textContent = pxLabel(k, eff[k]); } });
+    }
+    function colorRow(key, label, hint) {
+      var hex = h('span', { class: 'hex', text: eff[key] });
+      var input = h('input', { type: 'color', value: eff[key], 'aria-label': label, oninput: function (e) {
+        f.look[key] = e.target.value; eff[key] = e.target.value; hex.textContent = e.target.value; refresh();
+      }, onchange: function () { render(); } });
+      refs[key] = { input: input, hex: hex };
+      return h('div', { class: 'pref' }, h('div', null, h('b', null, label, ' ', source(key)), hint ? h('span', { class: 'muted', text: hint }) : null),
+        h('label', { class: 'swatch' }, input, hex));
+    }
+    function rangeRow(key, label, hint, max) {
+      var out = h('output', { class: 'px', text: pxLabel(key, eff[key]) });
+      var input = h('input', { type: 'range', min: '0', max: String(max), step: '1', value: String(eff[key]), 'aria-label': label,
+        style: '--fill:' + (eff[key] / max * 100) + '%',
+        oninput: function (e) {
+          var v = Number(e.target.value);
+          f.look[key] = v; eff[key] = v; out.textContent = pxLabel(key, v);
+          e.target.style.setProperty('--fill', (v / max * 100) + '%'); refresh();
+        }, onchange: function () { render(); } });
+      refs[key] = { input: input, out: out, max: max };
+      return h('div', { class: 'pref pref-range' }, h('div', null, h('b', null, label, ' ', source(key)), hint ? h('span', { class: 'muted', text: hint }) : null),
+        h('div', { class: 'range' }, input, out));
+    }
+    function render() {
+      body.innerHTML = '';
+      refs = {};
+      var locked = !L.allowed;
+      var seg = h('div', { class: 'seg', role: 'group', 'aria-label': 'Aparência do provador' },
+        [['miaou', 'Estilo Miaou'], ['loja', 'Estilo da loja']].map(function (o) {
+          return h('button', { type: 'button', disabled: locked && o[0] === 'loja', 'aria-pressed': String(f.look.mode === o[0]), text: o[1], onclick: function () {
+            if (f.look.mode === o[0]) return;
+            f.look.mode = o[0];
+            if (o[0] === 'loja' && !eff.detectedAt) { render(); readStore(); return; }
+            render();
+          } });
+        }));
+      add(body, h('div', { class: 'look-mode' }, seg));
+      if (locked) {
+        add(body, h('div', { class: 'look-lock' },
+          h('p', { class: 'muted', text: 'O Estilo da loja deixa o provador com as cores, os cantos e a fonte do seu tema. Faz parte dos planos a partir do Crescer.' }),
+          h('button', { class: 'chip-btn', type: 'button', text: 'Ver planos', onclick: function () { go('plan'); } })));
+      } else if (f.look.mode === 'miaou') {
+        add(body, h('p', { class: 'muted look-note', text: 'O provador usa o visual do Miaou.' }));
+      } else if (!eff.detectedAt) {
+        add(body, h('p', { class: 'muted look-note', text: 'Lendo as cores e a fonte do tema da sua loja…' }));
+      } else {
+        add(body, [
+          colorRow('buttonBg', 'Cor do botão principal'),
+          colorRow('buttonFg', 'Texto do botão'),
+          rangeRow('buttonRadius', 'Border-radius dos botões', null, PILL),
+          rangeRow('cardRadius', 'Border-radius das fotos e cartões', null, 28),
+          h('div', { class: 'pref' }, h('div', null, h('b', { text: 'Fonte da loja' }),
+            h('span', { class: 'muted', text: eff.font ? eff.font + (eff.fontHeading && eff.fontHeading !== eff.font ? ', títulos em ' + eff.fontHeading : '') : 'Não encontramos a fonte do tema; o provador usa a fonte do Miaou.' })),
+            h('label', { class: 'switch' }, h('input', { type: 'checkbox', checked: f.look.useStoreFont && !!eff.font, disabled: !eff.font, onchange: function (e) { f.look.useStoreFont = e.target.checked; refresh(); } }), h('span'))),
+        ]);
+      }
+      refresh();
+    }
+    render();
+    // o celular se encolhe por inteiro (como uma imagem) quando falta espaço: telas de 320 px
+    var PHONE_W = 318;   // largura do celular com bordas e botões laterais
+    var fit = h('div', { class: 'phone-fit' }, phone);
+    var prev = h('div', { class: 'look-prev' }, fit, tabs);
+    function scalePhone() {
+      var w = prev.clientWidth;
+      if (!w) return;
+      var k = Math.min(1, w / PHONE_W);
+      // zoom (e não transform): a janela do provador dentro do celular encolhe junto
+      phone.style.zoom = k < 1 ? String(Math.floor(k * 1000) / 1000) : '';
+    }
+    if ('ResizeObserver' in window) new ResizeObserver(scalePhone).observe(prev);
+    else window.addEventListener('resize', scalePhone);
+    requestAnimationFrame(scalePhone);
+    return h('div', { class: 'card' }, h('div', { class: 'card-head' }, h('h2', { text: 'Aparência do provador' }),
+      !L.allowed ? h('span', { class: 'chip', text: 'Crescer ou maior' }) : null),
+      h('div', { class: 'look-grid' }, body, prev));
   }
 
   // Suporte: e-mail da Miaou, com botão para copiar.
@@ -439,17 +675,21 @@
   }
 
   // ---------- planos ----------
-  // Cartões grandes (preço em destaque, cota, o que inclui, botão largo). O
-  // plano mais escolhido fica escuro. Acima do maior, o Volume: uma barra com
-  // degraus fixos, cada um com preço por prova menor.
+  // Cartões no formato da referência: nome, preço ("R$" pequeno, valor grande,
+  // "/mês" em cinza), provas por mês com a economia em verde, todos os
+  // recursos do plano e o botão largo. Acima do
+  // maior plano, o Volume: o cartão escuro com o degradê do Miaou e uma barra
+  // com degraus fixos, cada um com preço por prova menor.
   // desconto por prova em relação ao plano de entrada (só quando existe)
   function saving(p, base) {
     var pct = Math.round((1 - (p.price / p.quota) / (base.price / base.quota)) * 100);
     return pct >= 5 ? pct : 0;
   }
+  function planName(plan) { return plan.key.indexOf('volume-') === 0 ? 'Volume ' + nf(plan.quota) : plan.name; }
   function renderPlan() {
     api('GET', '/tryon?days=30').then(function (r) {
       var q = r.quota;
+      state.me.tryon = q; paintStore();
       var usedPct = q.plan.quota ? Math.min(1, q.used / q.plan.quota) : 0;
       var contact = 'mailto:' + (state.me.supportEmail || 'suporte@miaou.com.br') + '?subject=' + encodeURIComponent('Plano do provador · loja ' + state.me.store.id);
       var ladder = r.plans.concat(r.volume || []);
@@ -465,98 +705,79 @@
         return ladder.indexOf(p) > curIdx ? 'Subir de plano' : 'Mudar de plano';
       }
       var base = r.plans[0];
-      function saveChip(p) {
+      function price(v) {
+        return h('div', { class: 'price' }, h('span', { class: 'cur', text: 'R$' }), h('span', { class: 'big', text: nf(v) }), h('span', { class: 'per', text: '/mês' }));
+      }
+      function billed(p) {
         var pct = saving(p, base);
-        return h('div', { class: 'pc-save' }, pct ? h('span', { text: 'Prova ' + pct + '% mais barata' }) : null);
+        return h('div', { class: 'billed' }, nf(p.quota) + ' provas por mês', pct ? [' ', h('span', { class: 'save', text: '(prova ' + pct + '% mais barata)' })] : null);
       }
       function planButton(p, dark) {
         var cur = p.key === q.plan.key;
-        return h('button', { class: 'pc-btn' + (dark ? ' light' : ''), type: 'button', disabled: cur, onclick: function () { choose(p); } },
-          cur ? 'Seu plano atual' : [actionText(p), icon('arrow-right')]);
+        return h('button', { class: 'btn ' + (dark ? 'light' : 'primary'), type: 'button', disabled: cur, onclick: function () { choose(p); } },
+          cur ? 'Seu plano atual' : actionText(p));
       }
+      // todos os recursos do plano, com o check do Hugeicons
       function feats(list) {
-        return h('ul', { class: 'pc-feat' }, (list || []).map(function (x) { return h('li', null, icon('check'), x); }));
+        return h('ul', { class: 'feats' }, (list || []).map(function (x) { return h('li', null, icon('check'), h('span', { text: x })); }));
       }
       var cards = r.plans.map(function (p) {
-        var cur = p.key === q.plan.key;
-        var dark = !!p.featured;
-        var tag = cur ? h('span', { class: 'pc-pill', text: 'Seu plano' })
-          : p.featured ? h('span', { class: 'pc-pill', text: 'Mais escolhido' }) : null;
-        return h('div', { class: 'price-card' + (dark ? ' dark' : '') + (cur ? ' on' : '') },
-          h('div', { class: 'pc-head' }, h('h3', { text: p.name }), tag),
-          h('div', { class: 'pc-price' }, h('b', { text: brl(p.price) }), h('span', { text: '/ mês' })),
-          h('p', { class: 'pc-tag', text: p.tagline }),
-          h('hr'),
-          h('div', { class: 'pc-quota' }, h('b', { text: nf(p.quota) }), h('span', { text: 'provas / mês' })),
-          saveChip(p),
-          h('hr'),
-          feats(p.features),
-          planButton(p, dark));
+        return h('article', { class: 'plan' },
+          h('div', { class: 'plan-top' },
+            h('h3', { text: p.name }),
+            h('div', { class: 'price-box' }, price(p.price), billed(p)),
+            feats(p.features)),
+          planButton(p, false));
       });
 
-      // Volume: barra com os degraus acima do maior plano
+      // Volume: cartão escuro com a barra dos degraus acima do maior plano
       var vol = r.volume || [];
-      var volBox = null;
+      var volCard = null;
       if (vol.length) {
         var at = Math.max(0, vol.findIndex(function (p) { return p.key === q.plan.key; }));
-        var priceB = h('b'), quotaB = h('b'), saveSlot = h('div'), btnSlot = h('div', { class: 'pc-btn-slot' });
+        var priceSlot = h('div'), billedSlot = h('div'), btnSlot = h('div');
         var range = h('input', { type: 'range', min: '0', max: String(vol.length - 1), step: '1', value: String(at), class: 'vol-range', 'aria-label': 'Provas por mês no plano Volume' });
         var ticks = h('div', { class: 'vol-ticks' }, vol.map(function (p, i) {
           return h('button', { type: 'button', text: nf(p.quota), onclick: function () { range.value = String(i); paint(); } });
         }));
-        var curVol = vol.some(function (p) { return p.key === q.plan.key; });
-        var pill = h('span', { class: 'pc-pill', text: curVol ? 'Seu plano' : 'Acima de ' + nf(r.plans[r.plans.length - 1].quota) + ' provas' });
-        function paint() {
+        var paint = function () {
           var i = Number(range.value);
           var p = vol[i];
-          range.style.setProperty('--fill', (i / (vol.length - 1) * 100) + '%');
-          priceB.textContent = brl(p.price);
-          quotaB.textContent = nf(p.quota);
-          saveSlot.innerHTML = '';
-          saveSlot.appendChild(saveChip(p));
+          range.style.setProperty('--fill', (vol.length > 1 ? i / (vol.length - 1) * 100 : 100) + '%');
+          priceSlot.innerHTML = ''; priceSlot.appendChild(price(p.price));
+          billedSlot.innerHTML = ''; billedSlot.appendChild(billed(p));
           range.setAttribute('aria-valuetext', nf(p.quota) + ' provas por ' + brl(p.price) + ' ao mês');
           Array.prototype.forEach.call(ticks.children, function (b, k) { b.className = k === i ? 'on' : ''; });
-          btnSlot.innerHTML = '';
-          btnSlot.appendChild(planButton(p, false));
-        }
+          btnSlot.innerHTML = ''; btnSlot.appendChild(planButton(p, true));
+        };
         range.addEventListener('input', paint);
-        volBox = h('div', { class: 'price-card vol' + (curVol ? ' on' : '') },
-          h('div', { class: 'vol-l' },
-            h('div', { class: 'pc-head' }, h('h3', { text: 'Volume' }), pill),
-            h('p', { class: 'pc-tag', text: 'Escolha exatamente quantas provas sua loja precisa.' }),
-            h('div', { class: 'vol-slider' }, range, ticks),
+        volCard = h('div', { class: 'glow' }, h('article', { class: 'plan night' },
+          h('div', { class: 'plan-top' },
+            h('h3', { text: 'Volume' }),
+            h('p', { class: 'plan-desc', text: 'Acima de ' + nf(r.plans[r.plans.length - 1].quota) + ' provas. Escolha exatamente quantas sua loja precisa.' }),
+            h('div', { class: 'price-box' }, priceSlot, billedSlot),
+            h('div', null, range, ticks),
             feats(vol[0].features)),
-          h('div', { class: 'vol-r' },
-            h('div', { class: 'pc-price' }, priceB, h('span', { text: '/ mês' })),
-            h('div', { class: 'pc-quota' }, quotaB, h('span', { text: 'provas / mês' })),
-            saveSlot,
-            btnSlot));
+          btnSlot));
         paint();
       }
 
-      var meter = h('div', { class: 'meter' + (q.exhausted ? ' bad' : q.alert ? ' warn' : '') }, h('i', { style: 'width:' + Math.round(usedPct * 100) + '%' }));
+      var meter = h('div', { class: 'meter' + (q.exhausted ? ' bad' : q.alert ? ' warn' : ''), role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100',
+        'aria-valuenow': String(Math.round(usedPct * 100)), 'aria-label': 'Provas usadas no mês' },
+        h('i', { style: 'width:' + (q.used ? Math.max(2, Math.round(usedPct * 100)) : 0) + '%' }));
       add(view, [
-        pageHead('Planos'),
+        pageHead('Planos', 'Preços em reais, cobrança mensal.'),
         q.plan.key !== 'none' ? h('div', { class: 'card' },
-          h('div', { class: 'card-head' }, h('h2', { text: 'Uso deste mês' }), h('span', { class: 'chip', text: 'Plano ' + (q.plan.key.indexOf('volume-') === 0 ? 'Volume ' + nf(q.plan.quota) : q.plan.name) })),
-          h('div', { class: 'usage' }, h('b', { text: nf(q.used) }), h('span', { text: 'de ' + nf(q.plan.quota) + ' provas' })),
+          h('div', { class: 'card-head', style: 'margin-bottom:12px' }, h('h2', { text: 'Uso deste mês' }),
+            q.exhausted ? h('span', { class: 'chip bad', text: 'Esgotado' }) : h('span', { class: 'chip ok', text: 'Ativo' })),
+          h('div', { class: 'usage' + (q.exhausted ? ' bad' : '') }, h('b', { text: nf(q.used) }), h('span', { text: 'de ' + nf(q.plan.quota) + ' provas' })),
           meter,
-          h('p', { class: 'muted', style: 'margin:10px 0 0', text: 'Renova em ' + renewText() + '. Quando as provas do mês acabam, o botão sai da loja até renovar.' })) : quotaBanner(q),
-        h('div', { class: 'pricing' }, cards),
-        volBox,
-        h('p', { class: 'muted note pc-note', text: 'Preços em reais, cobrança mensal. A cota renova todo dia 1º.' }),
+          h('p', { class: 'usage-cap', text: 'Renova em ' + renewText() + '. Quando as provas do mês acabam, o botão sai da loja até renovar.' })) : quotaBanner(q),
+        h('div', { class: 'plans' }, cards, volCard),
       ]);
     }).catch(fail);
   }
 
-  function prevText(now, before, fmt) {
-    if (before == null) return 'últimos 30 dias';
-    return 'Anteriormente ' + (fmt || nf)(before);
-  }
-  function upFlag(now, before) {
-    if (before == null || now === before) return null;
-    return now > before;
-  }
   function syncProducts(e) {
     var b = e.currentTarget; b.disabled = true; b.textContent = 'Sincronizando…';
     api('POST', '/products/sync').then(function (r) { toast(r.count + ' produtos sincronizados'); return loadMe(); })
@@ -621,7 +842,7 @@
     search.addEventListener('input', function () { clearTimeout(t); t = setTimeout(function () { page = 1; load(); }, 250); });
     load();
     add(view, [
-      pageHead('Produtos', null,
+      pageHead('Produtos', 'Escolha em quais produtos o botão aparece.',
         [chipBtn('Sincronizar catálogo', 'refresh', syncProducts)]),
       h('div', { class: 'row filters', style: 'margin-bottom:12px' }, search),
       box,
@@ -629,13 +850,49 @@
   }
 
   // ---------- início ----------
+  // cartão da loja no menu: status, interruptor e uso do mês
   var enabled = document.getElementById('enabled');
+  function paintEnabled(on) {
+    var lab = document.getElementById('enabledLabel');
+    lab.textContent = on ? 'Ativo na loja' : 'Desativado';
+    lab.classList.toggle('off', !on);
+  }
+  function paintStore() {
+    var q = state.me && state.me.tryon;
+    var box = document.getElementById('storeQuota');
+    var btn = document.getElementById('storePlanBtn');
+    if (!q || !q.plan || q.plan.key === 'none' || !q.plan.quota) {
+      box.hidden = true;
+      btn.textContent = 'Escolher plano';
+      return;
+    }
+    var p = Math.min(100, Math.round(q.used / q.plan.quota * 100));
+    var meter = document.getElementById('storeMeter');
+    document.getElementById('storePlan').textContent = 'Plano ' + planName(q.plan);
+    document.getElementById('storeUsed').textContent = nf(q.used);
+    document.getElementById('storeOf').textContent = 'de ' + nf(q.plan.quota) + ' provas';
+    meter.className = 'meter' + (q.exhausted ? ' bad' : q.alert ? ' warn' : '');
+    meter.setAttribute('aria-valuenow', String(p));
+    meter.firstElementChild.style.width = (q.used ? Math.max(2, p) : 0) + '%';
+    document.getElementById('storePct').textContent = q.exhausted ? 'Provas esgotadas' : p + '% usado';
+    var next = (new Date().getMonth() + 1) % 12 + 1;
+    document.getElementById('storeRenew').textContent = 'Renova 1º/' + String(next).padStart(2, '0');
+    box.hidden = false;
+    btn.textContent = 'Ver planos';
+  }
+  document.getElementById('storePlanBtn').addEventListener('click', function () { go('plan'); });
   enabled.addEventListener('change', function () {
-    api('PUT', '/settings', { enabled: enabled.checked }).then(function (r) {
+    var on = enabled.checked;
+    paintEnabled(on);
+    api('PUT', '/settings', { enabled: on }).then(function (r) {
       state.me.settings = r.settings;
-      document.getElementById('enabledLabel').textContent = enabled.checked ? 'Ativo na loja' : 'Desativado';
-      toast(enabled.checked ? 'Provador ativado na loja' : 'Provador desativado');
-    }).catch(fail);
+      toast(on ? 'Provador ativado na loja' : 'Provador desativado');
+    }).catch(function (e) {
+      // não salvou: o interruptor volta para o estado de verdade
+      enabled.checked = !on;
+      paintEnabled(!on);
+      fail(e);
+    });
   });
 
   function loadMe() {
@@ -644,7 +901,8 @@
       var sn = document.getElementById('storeName');
       if (sn) sn.textContent = me.store.name || ('Loja #' + me.store.id);
       enabled.checked = me.settings.enabled;
-      document.getElementById('enabledLabel').textContent = me.settings.enabled ? 'Ativo na loja' : 'Desativado';
+      paintEnabled(me.settings.enabled);
+      paintStore();
     });
   }
   function currentTab() {
@@ -669,6 +927,7 @@
       if (btn) btn.setAttribute('aria-expanded', String(open));
       if (btn) btn.setAttribute('aria-label', open ? 'Fechar menu' : 'Abrir menu');
     }
+    closeNav = function () { setNav(false); };
     if (btn) btn.addEventListener('click', function () { setNav(!document.body.classList.contains('nav-open')); });
     if (scrim) scrim.addEventListener('click', function () { setNav(false); });
     tabs.addEventListener('click', function () { setNav(false); });

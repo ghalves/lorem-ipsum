@@ -29,15 +29,28 @@
         <button role="tab" data-tab="plan" data-icon="dashboard-speed" aria-selected="false">Planos</button>
         <button role="tab" data-tab="prefs" data-icon="settings" aria-selected="false">Preferências</button>
       </nav>
+      <!-- loja: status, interruptor e uso do mês (cartão escuro com o degradê do Miaou) -->
       <div class="side-foot">
-        <div class="store-row">
-          <div class="store-id">
-            <b id="storeName">Loja</b>
-            <span id="enabledLabel">Ativo na loja</span>
+        <div class="glow">
+          <div class="night store">
+            <div class="store-top">
+              <div class="store-id">
+                <b id="storeName">Loja</b>
+                <span class="state" id="enabledLabel">Ativo na loja</span>
+              </div>
+              <label class="switch" title="Ativar ou desativar na loja">
+                <input type="checkbox" id="enabled" aria-label="Provador ativo na loja"><span></span>
+              </label>
+            </div>
+            <div class="store-quota" id="storeQuota" hidden>
+              <hr>
+              <div class="store-plan" id="storePlan"></div>
+              <div class="store-use"><b id="storeUsed">0</b><span id="storeOf"></span></div>
+              <div class="meter" id="storeMeter" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-label="Provas usadas no mês"><i></i></div>
+              <div class="store-cap"><span id="storePct"></span><span id="storeRenew"></span></div>
+            </div>
+            <button class="btn light sm block" type="button" id="storePlanBtn">Ver planos</button>
           </div>
-          <label class="switch" title="Ativar ou desativar na loja">
-            <input type="checkbox" id="enabled"><span></span>
-          </label>
         </div>
       </div>
     </aside>

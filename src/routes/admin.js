@@ -7,6 +7,7 @@ const config = require('../config');
 const { verifySession } = require('../lib/session');
 const tryon = require('../tryon/service');
 const { PLANS, VOLUME, isPlan, getPlan } = require('../tryon/plans');
+const storeStyle = require('../lib/store-style');
 
 const router = express.Router();
 router.use(express.json({ limit: '20kb' }));
@@ -33,6 +34,8 @@ router.get('/me', wrap(async (req, res) => {
     if (await sync.refreshDomainsThrottled(req.store.id, 30 * 1000)) req.store = svc.getStore(req.store.id);
   } catch (e) { console.warn(`[domínios] loja ${req.store.id}: ${e.message}`); }
   const s = req.store;
+  // Estilo da loja ligado e leitura velha: relê o tema em segundo plano (sem botão)
+  if (storeStyle.needsRefresh(s.settings.tryon.look)) refreshLook(s.id).catch(() => {});
   res.json({
     store: { id: s.id, name: s.name, domain: s.domain, installed_at: s.installed_at, last_sync_at: s.last_sync_at },
     scriptInstalled: Boolean(s.script_association_id),
@@ -41,12 +44,13 @@ router.get('/me', wrap(async (req, res) => {
     settings: s.settings,
     tryon: tryon.quota(s),
     brandRemovable: Boolean(getPlan(s.settings.tryon.plan || config.tryon.defaultPlan).removeBrand),
+    look: { allowed: storeStyle.planAllows(s), ...storeStyle.effectiveLook(s.settings.tryon.look) },
     supportEmail: config.supportEmail,
     counts: { products: svc.listProducts(s.id, { limit: 1 }).total },
   });
 }));
 
-router.put('/settings', (req, res) => {
+router.put('/settings', wrap(async (req, res) => {
   const patch = req.body || {};
   const clean = Object.fromEntries(Object.entries(patch).filter(([k]) => ['enabled', 'selectors', 'tryon'].includes(k)));
   const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
@@ -88,10 +92,31 @@ router.put('/settings', (req, res) => {
       if (!b || b.length > 40) return bad(res, ['Texto do botão: de 1 a 40 caracteres']);
       out.button = b;
     }
+    if ('look' in t) {
+      // fonte e endereço da fonte só mudam pela leitura da loja (servidor), nunca pelo painel
+      const r = storeStyle.sanitizeLook(t.look);
+      if (r.errors) return bad(res, r.errors);
+      if (r.look.mode === 'loja' && !storeStyle.planAllows(req.store)) {
+        return res.status(403).json({ error: 'O Estilo da loja faz parte dos planos a partir do Crescer' });
+      }
+      out.look = r.look;
+    }
     clean.tryon = out;
   }
-  res.json({ settings: svc.updateSettings(req.store.id, clean) });
-});
+  let settings = svc.updateSettings(req.store.id, clean);
+  // acabou de ligar o Estilo da loja: lê o tema agora, para o provador já sair certo
+  if (storeStyle.needsRefresh(settings.tryon.look)) {
+    try { settings = await refreshLook(req.store.id); } catch { /* lê de novo na próxima abertura do painel */ }
+  }
+  res.json({ settings, look: { allowed: storeStyle.planAllows(svc.getStore(req.store.id)), ...storeStyle.effectiveLook(settings.tryon.look) } });
+}));
+
+/** Lê o tema da loja e guarda o resultado (não mexe no modo nem nos ajustes do lojista). */
+async function refreshLook(storeId) {
+  const store = svc.getStore(storeId);
+  const detected = await storeStyle.detectStoreStyle(store);
+  return svc.updateSettings(storeId, { tryon: { look: storeStyle.lookFromDetected(detected) } });
+}
 
 // ---- produtos ----
 router.get('/products', (req, res) => {
@@ -136,6 +161,26 @@ router.put('/tryon/plan', (req, res) => {
   svc.updateSettings(req.store.id, { tryon: { plan: key } });
   res.json({ quota: tryon.quota(svc.getStore(req.store.id)) });
 });
+// ---- aparência do provador ("Estilo da loja") ----
+// Leitura do tema, chamada sozinha pelo painel ao ligar o Estilo da loja (não há botão).
+router.post('/tryon/look/refresh', wrap(async (req, res) => {
+  if (!storeStyle.planAllows(req.store)) return res.status(403).json({ error: 'O Estilo da loja faz parte dos planos a partir do Crescer' });
+  try {
+    const settings = await refreshLook(req.store.id);
+    res.json({ look: storeStyle.effectiveLook(settings.tryon.look) });
+  } catch (e) {
+    res.status(422).json({ error: e.message });
+  }
+}));
+// Prévia no painel: o estilo final (com contraste garantido) para ajustes ainda não salvos.
+router.post('/tryon/look/preview', (req, res) => {
+  const r = storeStyle.sanitizeLook(req.body?.look || {});
+  if (r.errors) return bad(res, r.errors);
+  const look = { ...req.store.settings.tryon.look, ...r.look, mode: 'loja' };
+  const style = storeStyle.publicStyle({ settings: { tryon: { look } } }, { ignorePlan: true });
+  res.json({ style, vars: storeStyle.styleVars(style), look: storeStyle.effectiveLook(look) });
+});
+
 router.get('/tryon/leads', (req, res) => res.json({ leads: tryon.listLeads(req.store.id, { limit: req.query.limit }) }));
 router.get('/tryon/leads.csv', (req, res) => {
   const cell = (v) => {

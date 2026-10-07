@@ -137,6 +137,38 @@
     });
   }
 
+  // ---------- estilo da loja ----------
+  // Preferências › Aparência: "Estilo da loja" manda cores do botão, cantos e
+  // fonte do tema (já validados no servidor). Sem estilo, fica o do Miaou.
+  function applyStoreLook(st) {
+    if (!st) return;
+    var root = document.documentElement.style;
+    var fam = function (f) { return '"' + f + '", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'; };
+    root.setProperty('--btn-bg', st.buttonBg);
+    root.setProperty('--btn-fg', st.buttonFg);
+    root.setProperty('--btn-border', st.buttonBorder);
+    root.setProperty('--btn-radius', st.buttonRadius + 'px');
+    root.setProperty('--card-radius', st.cardRadius + 'px');
+    if (st.font) {
+      root.setProperty('--font-body', fam(st.font));
+      root.setProperty('--font-heading', fam(st.fontHeading || st.font));
+      if (st.fontHref && /^https:\/\/fonts\.googleapis\.com\//.test(st.fontHref) && !document.querySelector('link[href="' + st.fontHref.replace(/"/g, '') + '"]')) {
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = st.fontHref;
+        document.head.appendChild(link);
+      }
+    }
+    document.documentElement.classList.add('look-store');
+  }
+
+  // volta ao Estilo Miaou (a prévia do painel troca de estilo sem recarregar)
+  function resetStoreLook() {
+    var root = document.documentElement.style;
+    ['--btn-bg', '--btn-fg', '--btn-border', '--btn-radius', '--card-radius', '--font-body', '--font-heading'].forEach(function (k) { root.removeProperty(k); });
+    document.documentElement.classList.remove('look-store');
+  }
+
   // ---------- telas ----------
   var BARE = { generating: 1, lead: 1, error: 1, off: 1, loading: 1 };
   function show(screen) {
@@ -587,6 +619,7 @@
       S.hasLead = Boolean(s.hasLead);
       S.product = s.product;
       if (s.brand && s.brand.url) { $('brandline').href = s.brand.url; $('brandline').hidden = false; }
+      applyStoreLook(s.style);
       post({ type: 'ready' });
       if (OVERLAY) checkOverlay();
       // confere se a janela da loja mostra o cartão inteiro (diagnóstico)
@@ -637,5 +670,33 @@
       show('off');
     });
   }
-  init();
+
+  // Prévia do painel (Preferências › Aparência): o provador de verdade, sem
+  // sessão nem envio de foto. Só aceita mensagens do próprio Miaou (mesma origem).
+  function initPreview() {
+    document.documentElement.classList.add('preview');
+    $('brandline').hidden = false;
+    $('genStatus').textContent = 'Vestindo a peça em você…';
+    $('genFill').style.width = '62%';
+    $('genPct').textContent = '62%';
+    window.addEventListener('message', function (e) {
+      if (e.origin !== location.origin || !e.data || e.data.source !== 'miaou-admin') return;
+      var d = e.data;
+      if (d.type !== 'look') return;
+      resetStoreLook();
+      applyStoreLook(d.style || null);
+      var p = d.product || {};
+      ['startThumbImg', 'genProduct', 'resultThumb'].forEach(function (id) { if (p.image) $(id).src = p.image; });
+      if (d.photo || p.image) { $('resultImg').src = d.photo || p.image; $('genPhoto').src = d.photo || p.image; $('savedImg').src = d.photo || p.image; }
+      $('resultName').textContent = p.name || 'Produto da sua loja';
+      $('resultPrice').textContent = p.price ? 'R$ ' + Number(p.price).toFixed(2).replace('.', ',') : '';
+      show(['start', 'generating', 'result'].indexOf(d.screen) >= 0 ? d.screen : 'start');
+    });
+    show('start');
+    // modo da loja no celular: o card sobe de baixo sobre a página do produto
+    if (OVERLAY) requestAnimationFrame(function () { requestAnimationFrame(function () { document.documentElement.classList.add('is-open'); }); });
+    if (window.parent !== window) window.parent.postMessage({ source: 'mq-preview', type: 'ready' }, location.origin);
+  }
+  if (params.get('preview') === '1') initPreview();
+  else init();
 })();

@@ -8,34 +8,34 @@
   <link rel="icon" href="/brand/favicon-192.png" sizes="192x192">
   <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
   <style>
-    /* Design system: Warm Neutral SaaS (v1) */
-    :root { --ink:#1e1d1c; --muted:#78756f; --line:rgba(30,29,28,.06); --border:#dfdcd9; --panel:#f7f6f3;
-      --accent:#00bb7f; --accent-ink:#007956; --bad:#fb2c36;
-      font-family:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--ink);
-      font-feature-settings:"cv11","ss01"; }
-    * { box-sizing:border-box; }
-    body { margin:0; background:var(--panel); line-height:1.7; -webkit-font-smoothing:antialiased; }
-    main { max-width:704px; margin:0 auto; padding:80px 24px; background:#fff; min-height:100vh; }
-    h1 { font-size:44px; line-height:1.12; letter-spacing:-.015em; font-weight:400; margin:0 0 8px; }
-    h2 { font-size:24px; line-height:1.22; letter-spacing:-.02em; font-weight:500; margin:3.6rem 0 .9rem; }
-    p, li { font-size:15px; line-height:1.7; letter-spacing:-.003em; color:var(--ink); }
-    .sub { color:var(--muted); margin:0 0 8px; }
-    ol, ul { padding-left:20px; }
-    li { margin-bottom:10px; }
-    b { font-weight:500; color:var(--ink); }
-    a { color:inherit; text-decoration:none; }
-    a:hover { text-decoration:underline; text-underline-offset:3px; }
-    .box { border:0; border-radius:24px; background:var(--panel); padding:40px; margin:3.6rem 0 0; }
-    .box h2 { margin-top:0; }
-    button { font:inherit; height:46px; padding:0 28px; border-radius:9999px; font-weight:500; font-size:15px; cursor:pointer;
-      background:var(--ink); color:#f7f6f3; border:1px solid var(--ink); transition:150ms cubic-bezier(.4,0,.2,1); }
-    button:hover { opacity:.9; }
-    button:disabled { background:var(--border); border-color:var(--border); color:#fff; cursor:not-allowed; opacity:1; }
-    .msg { font-size:14px; margin:12px 0 0; }
-    .msg.ok { color:var(--accent-ink); } .msg.err { color:var(--bad); }
-    footer { color:var(--muted); font-size:13px; margin-top:80px; border-top:1px solid var(--line); padding-top:20px; }
-    .logo { height:30px; width:auto; display:block; margin:0 0 32px; }
-    @media (max-width:768px) { main { padding:52px 20px; } h1 { font-size:32px; } .logo { height:26px; margin-bottom:24px; } }
+    @font-face { font-family: "Rethink Sans"; font-style: normal; font-display: swap; font-weight: 400 800; src: url(/fonts/rethink-sans-latin-ext-wght-normal.woff2) format('woff2-variations'); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; } @font-face { font-family: "Rethink Sans"; font-style: normal; font-display: swap; font-weight: 400 800; src: url(/fonts/rethink-sans-latin-wght-normal.woff2) format('woff2-variations'); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+/* Estilo Miaou, monocromático (o comprador pode ser de qualquer loja): Rethink Sans, cinzas neutros, tinta quase preta */
+:root { --ink:#030712; --black:#030712; --muted:#6b7280; --line:#e4e4e7; --border:#d4d4d8; --panel:#f4f4f5;
+  --accent:#030712; --ok-ink:#15803d; --bad:#dc2626;
+  font-family:"Rethink Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--ink); letter-spacing:-.15px; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--panel); line-height:1.7; -webkit-font-smoothing:antialiased; }
+main { max-width:760px; margin:48px auto; padding:72px 64px; background:#fff; border-radius:32px; border:1px solid var(--line); }
+h1 { font-size:48px; line-height:1.1; letter-spacing:-2px; font-weight:700; margin:0 0 14px; color:var(--black); }
+h2 { font-size:26px; line-height:1.25; letter-spacing:-.6px; font-weight:700; margin:3.2rem 0 .9rem; color:var(--black); }
+p, li { font-size:16px; line-height:1.7; color:#384154; }
+.sub { color:#475573; font-size:20px; margin:0 0 8px; font-weight:400; }
+ol, ul { padding-left:20px; }
+li { margin-bottom:10px; }
+b { font-weight:700; color:var(--black); }
+a { color:inherit; text-decoration:none; }
+a:hover { text-decoration:underline; text-underline-offset:3px; }
+.box { border-radius:24px; background:var(--panel); padding:40px; margin:3.2rem 0 0; }
+.box h2 { margin-top:0; }
+button { font:inherit; height:48px; padding:0 28px; border-radius:9999px; font-weight:700; font-size:15px; cursor:pointer;
+  background:var(--ink); color:#fff; border:0; transition:150ms cubic-bezier(.4,0,.2,1); }
+button:hover { background:#171b26; }
+button:disabled { background:var(--border); color:#fff; cursor:not-allowed; }
+.msg { font-size:14px; margin:12px 0 0; }
+.msg.ok { color:var(--ok-ink); } .msg.err { color:var(--bad); }
+footer { color:var(--muted); font-size:13px; margin-top:72px; border-top:1px solid var(--line); padding-top:20px; }
+.logo { height:30px; width:auto; display:block; margin:0 0 40px; }
+@media (max-width:768px) { main { margin:0; border-radius:0; border:0; padding:52px 20px; } h1 { font-size:34px; letter-spacing:-1.2px; } .logo { height:26px; margin-bottom:28px; } }
   </style>
 </head>
 <body>

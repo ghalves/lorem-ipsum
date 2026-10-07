@@ -34,11 +34,13 @@ function createApp({ schedulePurge = false } = {}) {
     res.set('Referrer-Policy', 'strict-origin-when-cross-origin');
     if (req.path.startsWith('/tryon')) {
       // Tela do provador virtual: emoldurada pela loja; fotos locais via blob:
-      res.set('Content-Security-Policy', "default-src 'self'; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline'; frame-ancestors https: http://localhost:* http://127.0.0.1:*");
+      // fontes do Google só para o "Estilo da loja" (o tema da loja já usa o mesmo serviço)
+      res.set('Content-Security-Policy', "default-src 'self'; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; frame-ancestors https: http://localhost:* http://127.0.0.1:*");
     } else if (req.path.startsWith('/dashboard')) {
       // Painel do lojista: não pode ser emoldurado (clickjacking).
       res.set('X-Frame-Options', 'DENY');
-      res.set('Content-Security-Policy', "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'");
+      // fontes do Google só na prévia do "Estilo da loja" em Preferências
+      res.set('Content-Security-Policy', "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; frame-ancestors 'none'");
     }
     next();
   });
@@ -90,6 +92,9 @@ function createApp({ schedulePurge = false } = {}) {
     maxAge: config.devMode ? 0 : '30d',
     setHeaders: (res) => res.set('Access-Control-Allow-Origin', '*'),
   }));
+  // Fonte Rethink Sans hospedada aqui mesmo: a CSP só permite arquivos do próprio servidor
+  // (e assim o navegador do comprador não fala com o Google). Os arquivos não mudam.
+  app.use('/fonts', express.static(path.join(pub, 'fonts'), { maxAge: config.devMode ? 0 : '365d', immutable: !config.devMode }));
   // Página pública de privacidade e método (link discreto fora do card do provador).
   app.use('/privacidade', express.static(path.join(pub, 'privacidade'), { maxAge: config.devMode ? 0 : '1h' }));
   // em teste, a raiz já entra no painel da loja demo; em produção o painel abre pela Nuvemshop

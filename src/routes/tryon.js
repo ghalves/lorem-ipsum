@@ -87,6 +87,8 @@ router.get('/:storeId/session', (req, res) => {
     history: shopper ? tryon.history(req.store.id, shopper, 1).length > 0 : false,
     storeName: req.store.name || '',
     brand: tryon.brandFor(req.store),
+    // "Estilo da loja": cores, cantos e fonte do tema (null = Estilo Miaou)
+    style: require('../lib/store-style').publicStyle(req.store),
     leadCapture: Boolean(t.leadCapture),
     freeBeforeLead: Math.max(0, Math.floor(Number(t.freeBeforeLead ?? 1))),
     debug: config.tryon.debug,

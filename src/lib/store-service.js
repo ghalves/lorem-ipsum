@@ -19,6 +19,8 @@ const DEFAULT_SETTINGS = {
     buttonIcon: true,      // ícone de brilhos (Hugeicons AiSparkles) antes do texto
     hideOutOfStock: true,  // sem botão quando todas as variações estão sem estoque
     showBrand: true,       // marca Miaou no provador (só planos Escalar e Volume podem desligar)
+    // aparência do provador: 'miaou' (padrão) ou 'loja' (cores, cantos e fonte lidos do tema; ver lib/store-style.js)
+    look: { mode: 'miaou' },
   },
 };
 

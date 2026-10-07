@@ -15,11 +15,11 @@ const PLANS = [
     features: ['Provador em todas as páginas de produto', 'Qualquer tipo de peça', 'Compra direto pelo provador', 'Rastreamento de conversões', 'Captura de leads', 'Suporte por e-mail'],
   },
   {
-    key: 'crescer', name: 'Crescer', price: 197, quota: 400, tagline: 'Para quem já vende e quer vender mais.', featured: true,
-    features: ['Tudo do Essencial', 'Quase o triplo de provas do Essencial', 'Suporte prioritário'],
+    key: 'crescer', name: 'Crescer', price: 197, quota: 400, tagline: 'Para quem já vende e quer vender mais.', featured: true, storeLook: true,
+    features: ['Tudo do Essencial', 'Quase o triplo de provas do Essencial', 'Provador com o visual da sua loja', 'Suporte prioritário'],
   },
   {
-    key: 'escalar', name: 'Escalar', price: 497, quota: 1200, tagline: 'Para lojas com muitas visitas por dia.', removeBrand: true,
+    key: 'escalar', name: 'Escalar', price: 497, quota: 1200, tagline: 'Para lojas com muitas visitas por dia.', removeBrand: true, storeLook: true,
     features: ['Tudo do Crescer', 'O triplo de provas do Crescer', 'Remover a marca Miaou', 'Suporte por WhatsApp'],
   },
 ];
@@ -35,7 +35,7 @@ const VOLUME = [
   { quota: 4000, price: 1497 },
   { quota: 6000, price: 1997 },
   { quota: 10000, price: 2997 },
-].map((v) => ({ key: `volume-${v.quota}`, name: 'Volume', volume: true, removeBrand: true, features: VOLUME_FEATURES, ...v }));
+].map((v) => ({ key: `volume-${v.quota}`, name: 'Volume', volume: true, removeBrand: true, storeLook: true, features: VOLUME_FEATURES, ...v }));
 
 const ALL = PLANS.concat(VOLUME);
 
@@ -56,7 +56,10 @@ function showBrand(planKey, tryonSettings) {
   return !(getPlan(planKey).removeBrand && tryonSettings && tryonSettings.showBrand === false);
 }
 
+/** "Estilo da loja" (provador com as cores, cantos e fonte do tema): do Crescer para cima. */
+function storeLookAllowed(planKey) { return Boolean(getPlan(planKey).storeLook); }
+
 /** Aviso ao lojista quando a cota do mês passa deste ponto. */
 const ALERT_AT = 0.8;
 
-module.exports = { PLANS, VOLUME, ALL, NONE, getPlan, isPlan, showBrand, ALERT_AT };
+module.exports = { PLANS, VOLUME, ALL, NONE, getPlan, isPlan, showBrand, storeLookAllowed, ALERT_AT };
